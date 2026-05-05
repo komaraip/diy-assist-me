@@ -3,9 +3,12 @@ services:
     build: .
     container_name: thesis
     restart: unless-stopped
-    ports:
-      - '127.0.0.1:3002:80'
+    networks:
+      - web_network
     deploy:
       resources:
         limits:
-          memory: 256M # React statis sangat ringan, 256MB sudah sangat cukup
+          memory: 256M
+networks:
+  web_network:
+    external: true
