@@ -1,0 +1,563 @@
+{
+  "dataset_name": "diy_dataset",
+  "schema_version": "1.0",
+  "created_at": "2026-04-08",
+  "curation_notes": {
+    "method": "manual_curation",
+    "alignment_with_paper": [
+      "title",
+      "materials",
+      "steps.step_index",
+      "steps.step_text",
+      "optional_images"
+    ],
+    "content_policy_note": "Materials and steps are paraphrased summaries from source tutorials, not verbatim copies of the full articles.",
+    "source_scope": "Instructables tutorials relevant to hands-busy, quick-breakfast, cleaning, and simple DIY contexts."
+  },
+  "tutorials": [
+    {
+      "id": "tutorial_001",
+      "title": "Easy Chocolate Ice Cream (Eggless and No Ice Cream Machine)",
+      "category": "cooking",
+      "tags": [
+        "dessert",
+        "hands-busy",
+        "family-activity",
+        "quick-prep"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/Easy-Chocolate-Ice-Cream-Eggless-and-No-Ice-Cream-/",
+      "verification_level": "page_open",
+      "summary": "Homemade chocolate ice cream made with a small ingredient list and a bag-of-ice method instead of an ice cream machine.",
+      "materials": [
+        "heavy whipping cream",
+        "whole milk",
+        "white sugar",
+        "semi-sweet chocolate chips",
+        "unsweetened cocoa powder",
+        "vanilla extract",
+        "rock salt",
+        "zip bags",
+        "whisk",
+        "bowl",
+        "towel"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Whisk together the milk and cream in a bowl."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Warm the mixture, then add sugar, chocolate chips, and cocoa powder until the chocolate softens and the dry ingredients dissolve."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Stir in vanilla and let the ice-cream base cool before chilling briefly."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Seal the base in a small zip bag, place it inside a larger bag with ice and rock salt, then shake until it thickens."
+        },
+        {
+          "step_index": 5,
+          "step_text": "Freeze longer if you want a firmer texture, then scoop and serve."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_002",
+      "title": "5 Minute Breakfast Quesadilla",
+      "category": "cooking",
+      "tags": [
+        "breakfast",
+        "quick",
+        "microwave-free",
+        "hands-busy"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/5-Minute-Breakfast-Quesadilla/",
+      "verification_level": "page_open",
+      "summary": "A very fast breakfast wrap built from a tortilla or pita, scrambled egg, cheese, and leftover vegetables.",
+      "materials": [
+        "tortilla or wrap",
+        "egg",
+        "cheese slice",
+        "salt",
+        "leftover vegetables",
+        "pan",
+        "small bowl",
+        "wooden spatula"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Warm the tortilla or wrap gently in a covered pan."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Crack and beat the egg in a bowl, then scramble it in the pan with a little salt."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Tear or fold the cheese into smaller pieces so it melts faster."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Place the cooked egg, cheese, and any leftover vegetables onto the wrap."
+        },
+        {
+          "step_index": 5,
+          "step_text": "Heat briefly on low to melt the cheese, fold the wrap, and serve."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_003",
+      "title": "5-Minute Breakfast Rice",
+      "category": "cooking",
+      "tags": [
+        "breakfast",
+        "quick",
+        "leftovers",
+        "vegetarian-option"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/5-Minute-Breakfast-Rice/",
+      "verification_level": "page_open",
+      "summary": "A quick sweet breakfast that repurposes leftover rice with liquid, fat, and sweetener.",
+      "materials": [
+        "cooked brown rice",
+        "water or soy milk or milk",
+        "butter or margarine",
+        "sweetener or sugar",
+        "saucepan"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Add cooked rice, liquid, and butter or margarine to a saucepan."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Heat until the rice is hot and most of the liquid has cooked off."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Stir in sweetener until fully mixed."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Serve in a bowl and add optional fruit or other toppings if desired."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_004",
+      "title": "Microwave Scrambled Eggs",
+      "category": "cooking",
+      "tags": [
+        "breakfast",
+        "microwave",
+        "very-quick",
+        "single-serve"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/Microwave-Scrambled-Eggs/",
+      "verification_level": "page_open",
+      "summary": "A single-egg microwave breakfast prepared in a silicone cupcake liner or mug.",
+      "materials": [
+        "egg",
+        "silicone cupcake liner or mug",
+        "cheese (optional)",
+        "salt and pepper (optional)",
+        "bowl",
+        "fork",
+        "microwave"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Crack the egg into a bowl and beat it with a fork."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Mix in any add-ins such as cheese, milk, salt, or pepper."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Pour the mixture into a silicone liner or mug and microwave for about a minute, watching to avoid overflow."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Let it cool slightly, then eat immediately."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_005",
+      "title": "Easy Cheesy Egg Bread (using the Microwave)",
+      "category": "cooking",
+      "tags": [
+        "breakfast",
+        "microwave",
+        "college-friendly",
+        "very-quick"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/Easy-Cheesy-Egg-Bread-using-the-Microwave/",
+      "verification_level": "page_open",
+      "summary": "A microwave breakfast using bread, egg, cheese, and a mug for fast cooking with minimal cleanup.",
+      "materials": [
+        "slice of bread",
+        "egg",
+        "shredded cheese",
+        "optional chopped vegetables",
+        "optional spices",
+        "microwave-safe mug"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Fold the bread into a mug and crack the egg into the center."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Add shredded cheese and any extra toppings."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Microwave for about 1 to 2 minutes until the egg is set and the cheese melts."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Serve hot straight from the mug."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_006",
+      "title": "Breakfast Taquitos",
+      "category": "cooking",
+      "tags": [
+        "breakfast",
+        "meal-prep",
+        "batch-cooking",
+        "hands-busy"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/Breakfast-Taquitos/",
+      "verification_level": "json_api",
+      "summary": "A make-ahead breakfast tortilla filled with scrambled eggs and other savory fillings, then baked until crisp.",
+      "materials": [
+        "tortillas",
+        "eggs",
+        "butter",
+        "spinach",
+        "cheese",
+        "sundried tomatoes",
+        "Italian sausage or another protein",
+        "spring onions",
+        "salt and pepper",
+        "baking paper",
+        "frying pan",
+        "spatula",
+        "oven tray",
+        "optional salsa or guacamole"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Cook scrambled eggs in butter, season them, and add spinach or other fillings until everything is ready to use."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Place a moderate amount of filling into the center of each tortilla without overstuffing it."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Roll each tortilla into a cylinder, place seam-side down on a lined tray, and brush lightly with butter if desired."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Bake until browned and crisp, or use an air fryer or frying pan for a crispy finish."
+        },
+        {
+          "step_index": 5,
+          "step_text": "Freeze individually for meal prep if needed, then reheat later and serve with sauces."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_007",
+      "title": "Homemade Instant Oatmeal",
+      "category": "cooking",
+      "tags": [
+        "breakfast",
+        "portable",
+        "office-friendly",
+        "make-ahead"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/Homemade-instant-oatmeal/",
+      "verification_level": "rich_search_snippet",
+      "summary": "A dry oatmeal mix for quick breakfasts at school or work, with an optional apple-cinnamon variation.",
+      "materials": [
+        "quick-cooking oats",
+        "nonfat dry milk powder (optional)",
+        "salt",
+        "sweetener or sugar",
+        "cinnamon (optional)",
+        "dried apple bits (optional)",
+        "storage bag or container",
+        "hot water"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Add oats, milk powder, salt, and sweetener to a storage container; add cinnamon and dried apple if you want the apple-cinnamon version."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Seal the container and shake or stir until the dry mix is evenly combined."
+        },
+        {
+          "step_index": 3,
+          "step_text": "When ready to eat, pour the mix into a bowl, add hot water, stir, and let it sit a few minutes before serving."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_008",
+      "title": "Easy and Delicious Fruit Snack!!!",
+      "category": "cooking",
+      "tags": [
+        "snack",
+        "fruit",
+        "no-cook",
+        "quick"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/Easy-and-Delicious-Fruit-Snack/",
+      "verification_level": "rich_search_snippet",
+      "summary": "A no-cook fruit snack built from sliced fruit and a light maple syrup drizzle.",
+      "materials": [
+        "apple",
+        "banana",
+        "pear",
+        "mandarin",
+        "maple syrup"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Slice the banana, apple, and pear, and peel or separate the mandarin."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Arrange the fruit pieces together and drizzle maple syrup on top."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Serve immediately as a quick snack or breakfast side."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_009",
+      "title": "How to Clean Your Shoes",
+      "category": "cleaning",
+      "tags": [
+        "footwear",
+        "maintenance",
+        "white-shoes",
+        "household"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/How-to-Clean-Your-Shoes/",
+      "verification_level": "page_open",
+      "summary": "A simple shoe-cleaning routine using toothpaste for the uppers and diluted bleach for the laces.",
+      "materials": [
+        "white shoes",
+        "toothpaste",
+        "toothbrush",
+        "bleach",
+        "water",
+        "bowl",
+        "wash cloth or towel"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Gather the shoes, toothpaste, toothbrush, bleach, water, bowl, and cloth."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Soak the shoelaces in a diluted bleach-and-water mixture while you clean the shoes."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Use a wet toothbrush and toothpaste to scrub dirty sections of the shoe and let the paste sit briefly."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Wipe the toothpaste off with water and a cloth until the surface looks clean."
+        },
+        {
+          "step_index": 5,
+          "step_text": "Dry the shoes and laces, then re-lace the shoes."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_010",
+      "title": "How to Clean Your Shoes Without Shoe Cleaner.",
+      "category": "cleaning",
+      "tags": [
+        "footwear",
+        "budget",
+        "white-shoes",
+        "household"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/How-to-Clean-Your-Shoes-Without-Shoe-Cleaner/",
+      "verification_level": "page_open",
+      "summary": "A low-cost shoe-cleaning method that uses soap powder and an old toothbrush instead of a dedicated shoe cleaner.",
+      "materials": [
+        "dirty shoes",
+        "soap powder",
+        "old toothbrush",
+        "sink",
+        "rag or towel"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Scrub the outsole with soap powder and a wet toothbrush until visible dirt lifts."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Brush the vamp carefully so the inside of the shoe does not get too wet."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Clean the toe cap with extra care and wipe away excess moisture if needed."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Remove the laces, scrub them separately with soap, and rinse if necessary."
+        },
+        {
+          "step_index": 5,
+          "step_text": "Leave everything in a warm place to dry before wearing again."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_011",
+      "title": "Cleaning Your Room! Fast and Easy",
+      "category": "organizing",
+      "tags": [
+        "room-cleaning",
+        "organizing",
+        "household",
+        "stepwise"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/Cleaning-Your-Room%21-Fast-and-Easy/",
+      "verification_level": "page_open",
+      "summary": "A room-cleaning workflow that starts with visible surfaces and ends with floors and reset steps.",
+      "materials": [
+        "laundry basket or hamper",
+        "trash bag",
+        "cleaning cloth",
+        "vacuum",
+        "optional wood oil or surface cleaner"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Start by making the bed so the room looks more orderly right away."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Collect and sort laundry, then clear and reset the nightstand."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Put away random items and clear dresser or tabletop clutter."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Sort and reset shelves or a desk, removing garbage and loose electronics."
+        },
+        {
+          "step_index": 5,
+          "step_text": "Sweep or vacuum the floor and edges, then put tools away and finish the reset."
+        }
+      ],
+      "optional_images": []
+    },
+    {
+      "id": "tutorial_012",
+      "title": "How to Clean Birkenstocks",
+      "category": "cleaning",
+      "tags": [
+        "footwear",
+        "maintenance",
+        "sandals",
+        "specific-care"
+      ],
+      "source": "Instructables",
+      "source_url": "https://www.instructables.com/How-to-Clean-Birkenstocks/",
+      "verification_level": "rich_search_snippet",
+      "summary": "A sandal-cleaning guide focused on the footbed, with an optional leather-strap conditioning step.",
+      "materials": [
+        "Birkenstock sandals",
+        "old toothbrush",
+        "baking soda",
+        "water",
+        "cup and spoon",
+        "cloth rag",
+        "optional leather cleaner"
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_text": "Wipe off loose dirt from the footbed using a damp cloth and minimal water."
+        },
+        {
+          "step_index": 2,
+          "step_text": "Mix baking soda with water to form a cleaning paste."
+        },
+        {
+          "step_index": 3,
+          "step_text": "Scrub the footbed with the paste using an old toothbrush in circular motions."
+        },
+        {
+          "step_index": 4,
+          "step_text": "Wipe away excess paste with a damp cloth."
+        },
+        {
+          "step_index": 5,
+          "step_text": "Let the sandals dry overnight in a dark, dry place away from direct sunlight."
+        },
+        {
+          "step_index": 6,
+          "step_text": "Optionally condition the leather straps with diluted leather cleaner to finish the restoration."
+        }
+      ],
+      "optional_images": []
+    }
+  ]
+}
