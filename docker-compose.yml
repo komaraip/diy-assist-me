@@ -1,0 +1,11 @@
+services:
+  thesis:
+    build: .
+    container_name: thesis
+    restart: unless-stopped
+    ports:
+      - '3002:80'
+    deploy:
+      resources:
+        limits:
+          memory: 256M # React statis sangat ringan, 256MB sudah sangat cukup
