@@ -1,18 +1,14 @@
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { LiveFeedback } from "../components/tutorial/LiveFeedback.jsx";
-import { MaterialsPanel } from "../components/tutorial/MaterialsPanel.jsx";
 import { StepCard } from "../components/tutorial/StepCard.jsx";
-import { StepOverview } from "../components/tutorial/StepOverview.jsx";
-import { TouchControls } from "../components/tutorial/TouchControls.jsx";
-import { TutorialSearch } from "../components/tutorial/TutorialSearch.jsx";
-import { VoiceControlPanel } from "../components/tutorial/VoiceControlPanel.jsx";
+import { TutorialBottomBar } from "../components/tutorial/TutorialBottomBar.jsx";
+import { TutorialToolsSheet } from "../components/tutorial/TutorialToolsSheet.jsx";
 import { useVoiceCommands } from "../hooks/useVoiceCommands.js";
 import { logTouchInteraction } from "../services/logService.js";
 import { getTutorialById } from "../services/tutorialService.js";
 import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
-import { VOICE_INTENTS } from "../utils/voiceIntents.js";
+import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
 
 const SCROLL_AMOUNT_RATIO = 0.6;
 const PAGE_AMOUNT_RATIO = 0.9;
@@ -33,11 +29,16 @@ export function TutorialDetailPage({
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isMaterialsOpen, setIsMaterialsOpen] = useState(false);
   const [isOverviewOpen, setIsOverviewOpen] = useState(false);
+  const [activeMobilePanel, setActiveMobilePanel] = useState(null);
+  const [activePanelTrigger, setActivePanelTrigger] = useState(null);
   const [tutorialSearchQuery, setTutorialSearchQuery] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const tutorialShellRef = useRef(null);
   const tutorialMainRef = useRef(null);
+  const commandsButtonRef = useRef(null);
+  const materialsButtonRef = useRef(null);
+  const desktopCommandsButtonRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -62,19 +63,9 @@ export function TutorialDetailPage({
   const currentStep = steps[activeStepIndex] || null;
   const isFirstStep = activeStepIndex === 0;
   const isLastStep = activeStepIndex === steps.length - 1;
-  const isStudyMode = !!studyContext?.sessionId;
   const isVoiceCondition = studyContext?.modality === "voice";
   const voiceControlsEnabled = allowedModality !== "touch";
   const progressValue = steps.length ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
-  const searchResults = useMemo(() => {
-    if (!tutorialSearchQuery.trim()) return [];
-    const query = tutorialSearchQuery.trim().toLowerCase();
-    return steps.filter((step) => {
-      const text = [step.title, step.instruction, ...(step.keywords || [])].join(" ").toLowerCase();
-      return text.includes(query);
-    });
-  }, [steps, tutorialSearchQuery]);
-
   function logTutorialTouch(eventType, details = {}) {
     void logTouchInteraction({
       participantId: studyContext?.participantId || null,
@@ -143,11 +134,15 @@ export function TutorialDetailPage({
     });
   }
 
-  function handleToggleMaterials() {
-    const nextValue = !isMaterialsOpen;
+  function setMaterialsVisibility(nextValue) {
+    if (isMaterialsOpen === nextValue) return;
     setIsMaterialsOpen(nextValue);
     setFeedbackMessage(nextValue ? "Materials shown." : "Materials hidden.");
     logTutorialTouch(nextValue ? "materials_open" : "materials_close");
+  }
+
+  function handleToggleMaterials() {
+    setMaterialsVisibility(!isMaterialsOpen);
   }
 
   function handleToggleOverview() {
@@ -168,6 +163,10 @@ export function TutorialDetailPage({
     goToStep(index, "search_result_jump", { query: tutorialSearchQuery });
   }
 
+  function handleOverviewJump(index) {
+    goToStep(index, "overview_step_jump");
+  }
+
   function handleComplete() {
     setIsCompleted(true);
     setFeedbackMessage(`Tutorial complete. You reviewed ${steps.length} steps.`);
@@ -179,6 +178,32 @@ export function TutorialDetailPage({
         completedAtStep: activeStepIndex + 1,
       },
     });
+  }
+
+  function handleOpenCommandsPanel(trigger = null) {
+    setActivePanelTrigger(trigger);
+    setActiveMobilePanel("commands");
+  }
+
+  function handleOpenMaterialsPanel(trigger = null) {
+    setMaterialsVisibility(true);
+    setActivePanelTrigger(trigger);
+    setActiveMobilePanel("materials");
+  }
+
+  function handleCloseMobilePanel() {
+    if (activeMobilePanel === "materials") {
+      setMaterialsVisibility(false);
+    }
+    setActivePanelTrigger(null);
+    setActiveMobilePanel(null);
+  }
+
+  function openMobilePanelIfCompact(panel) {
+    if (isCompactTutorialViewport()) {
+      setActivePanelTrigger(null);
+      setActiveMobilePanel(panel);
+    }
   }
 
   function getScrollableTutorialTarget() {
@@ -301,7 +326,8 @@ export function TutorialDetailPage({
         });
       }
       case VOICE_INTENTS.SHOW_MATERIALS: {
-        setIsMaterialsOpen(true);
+        setMaterialsVisibility(true);
+        openMobilePanelIfCompact("materials");
         setFeedbackMessage("Materials shown.");
         return voiceSuccess("voice_command", "Materials panel opened.", {
           stepIndexBefore,
@@ -309,7 +335,10 @@ export function TutorialDetailPage({
         });
       }
       case VOICE_INTENTS.CLOSE_MATERIALS: {
-        setIsMaterialsOpen(false);
+        setMaterialsVisibility(false);
+        if (activeMobilePanel === "materials") {
+          setActiveMobilePanel(null);
+        }
         setFeedbackMessage("Materials hidden.");
         return voiceSuccess("voice_command", "Materials panel closed.", {
           stepIndexBefore,
@@ -336,6 +365,8 @@ export function TutorialDetailPage({
       }
       case VOICE_INTENTS.HELP: {
         const message = "Showing voice command examples.";
+        setActivePanelTrigger(null);
+        setActiveMobilePanel("commands");
         setFeedbackMessage(message);
         return voiceSuccess("voice_command", message, {
           stepIndexBefore,
@@ -416,7 +447,31 @@ export function TutorialDetailPage({
     getStepIndex: () => activeStepIndex,
     onCommand: executeVoiceCommand,
   });
+  const isVoiceOn =
+    voiceCommands.isVoiceEnabled ||
+    voiceCommands.isRestarting ||
+    voiceCommands.voiceState === VOICE_STATES.LISTENING ||
+    voiceCommands.voiceState === VOICE_STATES.PROCESSING;
+  const isVoiceListening = voiceCommands.voiceState === VOICE_STATES.LISTENING;
+  const commandPopoverId = "tutorial-command-popover";
+  const materialsPopoverId = "tutorial-materials-popover";
+  const commandTriggerRef =
+    activePanelTrigger === "desktopCommands"
+      ? desktopCommandsButtonRef
+      : activePanelTrigger === "mobileCommands"
+        ? commandsButtonRef
+        : null;
+  const materialsTriggerRef = activePanelTrigger === "mobileMaterials" ? materialsButtonRef : null;
   const TutorialHeading = embedded ? "h2" : "h1";
+
+  function handleToggleVoice() {
+    if (!voiceControlsEnabled || !voiceCommands.browserSupported) return;
+    if (isVoiceOn) {
+      voiceCommands.stopListening();
+    } else {
+      voiceCommands.startListening();
+    }
+  }
 
   return (
     <section className={embedded ? "study-tutorial-embed" : "page-section tutorial-page-section"}>
@@ -426,142 +481,130 @@ export function TutorialDetailPage({
           {backLabel}
         </Link>
       ) : null}
-      <div className="detail-shell tutorial-detail-shell" ref={tutorialShellRef}>
-        <div className="tutorial-runner-header">
-          <div>
-            <p className="eyebrow">{isStudyMode ? "Guided tutorial" : "Tutorial"}</p>
-            {isLoading ? (
-              <p className="status-note">Loading tutorial...</p>
-            ) : resultMeta.error ? (
-              <>
-                <TutorialHeading>Tutorial unavailable</TutorialHeading>
-                <p>We could not load this tutorial. Please try another one.</p>
-              </>
-            ) : (
-              <>
-                <TutorialHeading>{tutorial.title}</TutorialHeading>
-                <p>{tutorial.description}</p>
-              </>
-            )}
-          </div>
+      <div className="detail-shell tutorial-detail-shell tutorial-runner" ref={tutorialShellRef}>
+        {isLoading ? (
+          <section className="tutorial-content-card tutorial-loading-card">
+            <p className="status-note">Loading tutorial...</p>
+          </section>
+        ) : null}
 
-          {tutorial && currentStep ? (
-            <div className="tutorial-meta-row">
-              <span>{tutorial.category}</span>
-              <span>{tutorial.estimatedMinutes} min</span>
-              <span>{steps.length} steps</span>
-              {isStudyMode ? <span>{formatModeLabel(studyContext.conditionId)}</span> : null}
-              {isStudyMode ? <span>{formatTaskType(studyContext.trialType)}</span> : null}
-              {isStudyMode ? <span>{formatModality(studyContext.modality)}</span> : null}
-            </div>
-          ) : null}
-        </div>
+        {!isLoading && resultMeta.error ? (
+          <section className="tutorial-content-card tutorial-loading-card">
+            <TutorialHeading>Tutorial unavailable</TutorialHeading>
+            <p>We could not load this tutorial. Please try another one.</p>
+          </section>
+        ) : null}
 
         {tutorial && currentStep ? (
-          <div className="tutorial-task-layout">
-            <section className="tutorial-main-column" aria-label="Current tutorial step" ref={tutorialMainRef}>
-              <div className="progress-shell" aria-label={`Step ${activeStepIndex + 1} of ${steps.length}`}>
-                <span style={{ width: `${progressValue}%` }} />
-              </div>
+          <>
+            <div className="tutorial-task-layout">
+              <section
+                className="tutorial-main-column tutorial-content-card"
+                aria-label="Current tutorial step"
+                ref={tutorialMainRef}
+              >
+                <div className="tutorial-runner-header">
+                  <div className="tutorial-header-topline">
+                    <h className="eyebrow">Tutorial</h>
 
-              <LiveFeedback message={feedbackMessage} />
-
-              {isCompleted ? (
-                <section className="completion-summary" aria-live="polite">
-                  <CheckCircle2 aria-hidden="true" />
-                  <div>
-                    <h2>Tutorial complete</h2>
-                    <p>
-                      {isStudyMode
-                        ? "Nice work. You can review steps, search this tutorial, or continue the guided session when ready."
-                        : "Nice work. You can review steps, search this tutorial, or return to the catalog when ready."}
-                    </p>
+                    <div className="tutorial-meta-row">
+                      <span>{tutorial.category}</span>
+                      {tutorial.estimatedMinutes ? <span>{tutorial.estimatedMinutes} min</span> : null}
+                      <span>{steps.length} steps</span>
+                    </div>
                   </div>
-                </section>
-              ) : null}
 
-              <StepCard
-                step={currentStep}
-                stepIndex={activeStepIndex}
-                totalSteps={steps.length}
-                isCurrent
-              />
+                  <div>
+                    <TutorialHeading>{tutorial.title}</TutorialHeading>
+                  </div>
+                </div>
 
-              <TouchControls
+                <div className="tutorial-progress-block">
+                  <span className="tutorial-progress-label">
+                    Step {activeStepIndex + 1} of {steps.length}
+                  </span>
+                  <div
+                    className="progress-shell"
+                    aria-label={`Step ${activeStepIndex + 1} of ${steps.length}`}
+                    role="progressbar"
+                    aria-valuemin={1}
+                    aria-valuemax={steps.length}
+                    aria-valuenow={activeStepIndex + 1}
+                  >
+                    <span style={{ width: `${progressValue}%` }} />
+                  </div>
+                </div>
+
+                <StepCard step={currentStep} isCurrent />
+              </section>
+
+              <TutorialToolsSheet
+                commandPopoverId={commandPopoverId}
+                materialsPopoverId={materialsPopoverId}
+                activeMobilePanel={activeMobilePanel}
+                onCloseMobilePanel={handleCloseMobilePanel}
+                commandTriggerRef={commandTriggerRef}
+                materialsTriggerRef={materialsTriggerRef}
+                desktopCommandTriggerRef={desktopCommandsButtonRef}
+                voiceControlsEnabled={voiceControlsEnabled}
+                voicePanelProps={{
+                  voiceState: voiceCommands.voiceState,
+                  isVoiceEnabled: voiceCommands.isVoiceEnabled,
+                  isRestarting: voiceCommands.isRestarting,
+                  browserSupported: voiceCommands.browserSupported,
+                  transcript: voiceCommands.transcript,
+                  errorMessage: voiceCommands.errorMessage,
+                  voiceFeedback: voiceCommands.voiceFeedback,
+                }}
+                isVoiceOn={isVoiceOn}
+                onToggleVoice={handleToggleVoice}
+                onOpenCommandsPanel={handleOpenCommandsPanel}
+                commandHints={voiceCommands.commandHints}
+                materials={tutorial.materials || []}
+                isMaterialsOpen={isMaterialsOpen}
+                onToggleMaterials={handleToggleMaterials}
                 isFirstStep={isFirstStep}
                 isLastStep={isLastStep}
-                isOverviewOpen={isOverviewOpen}
                 isCompleted={isCompleted}
                 onPrevious={handlePrevious}
-                onNext={handleNext}
                 onRepeat={handleRepeat}
-                onToggleOverview={handleToggleOverview}
+                onNext={handleNext}
                 onComplete={handleComplete}
               />
-            </section>
+            </div>
 
-            <aside className="tutorial-side-column" aria-label="Tutorial tools">
-              {voiceControlsEnabled ? (
-                <VoiceControlPanel
-                  voiceState={voiceCommands.voiceState}
-                  isVoiceEnabled={voiceCommands.isVoiceEnabled}
-                  isRestarting={voiceCommands.isRestarting}
-                  browserSupported={voiceCommands.browserSupported}
-                  transcript={voiceCommands.transcript}
-                  errorMessage={voiceCommands.errorMessage}
-                  voiceFeedback={voiceCommands.voiceFeedback}
-                  lastParse={voiceCommands.lastParse}
-                  commandHints={voiceCommands.commandHints}
-                  showCommandHints={voiceCommands.showCommandHints}
-                  onToggleHints={() => voiceCommands.setShowCommandHints((current) => !current)}
-                  onStartListening={voiceCommands.startListening}
-                  onStopListening={voiceCommands.stopListening}
-                />
-              ) : (
-                <p className="status-note" role="status">
-                  Voice commands are off in touch mode. Use the buttons below.
-                </p>
-              )}
+            <TutorialBottomBar
+              showVoiceControl={voiceControlsEnabled}
+              isVoiceOn={isVoiceOn}
+              browserSupported={voiceCommands.browserSupported}
+              onToggleVoice={handleToggleVoice}
+              isListening={isVoiceListening}
+              isFirstStep={isFirstStep}
+              isLastStep={isLastStep}
+              isCompleted={isCompleted}
+              onPrevious={handlePrevious}
+              onRepeat={handleRepeat}
+              onNext={handleNext}
+              onComplete={handleComplete}
+              onOpenCommands={() => handleOpenCommandsPanel("mobileCommands")}
+              onOpenMaterials={() => handleOpenMaterialsPanel("mobileMaterials")}
+              isCommandsOpen={activeMobilePanel === "commands"}
+              isMaterialsOpen={activeMobilePanel === "materials"}
+              commandsPanelId={commandPopoverId}
+              materialsPanelId={materialsPopoverId}
+              commandsButtonRef={commandsButtonRef}
+              materialsButtonRef={materialsButtonRef}
+            />
 
-              <MaterialsPanel
-                materials={tutorial.materials || []}
-                isOpen={isMaterialsOpen}
-                onToggle={handleToggleMaterials}
-              />
-
-              {/* <TutorialSearch
-                query={tutorialSearchQuery}
-                onQueryChange={handleTutorialSearchChange}
-                results={searchResults}
-                onJumpToStep={handleSearchJump}
-              /> */}
-
-              <StepOverview
-                steps={steps}
-                activeStepIndex={activeStepIndex}
-                onJumpToStep={(index) => goToStep(index, "overview_step_jump")}
-                isOpen={isOverviewOpen}
-              />
-            </aside>
-          </div>
+            <div className="tutorial-mobile-safe-space" aria-hidden="true" />
+          </>
         ) : null}
       </div>
     </section>
   );
 }
 
-function formatModeLabel(conditionId) {
-  if (conditionId === "condition_1") return "Mode 1";
-  if (conditionId === "condition_2") return "Mode 2";
-  return "Guided mode";
-}
-
-function formatTaskType(trialType) {
-  return trialType === "practice" ? "Practice" : "Task";
-}
-
-function formatModality(modality) {
-  if (modality === "voice") return "Voice mode";
-  if (modality === "touch") return "Touch mode";
-  return "Tutorial mode";
+function isCompactTutorialViewport() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+  return window.matchMedia("(max-width: 900px)").matches;
 }

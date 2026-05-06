@@ -3,15 +3,16 @@ import { Search } from "lucide-react";
 export function TutorialSearch({ query, onQueryChange, results, onJumpToStep }) {
   return (
     <section className="tutorial-search" aria-label="Search inside tutorial">
+      <h2>Search</h2>
       <label className="search-field">
-        <span>Search within this tutorial</span>
+        <span>Find a step</span>
         <span className="search-input-wrap">
           <Search aria-hidden="true" />
           <input
             type="search"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Find a material, action, or keyword..."
+            placeholder="Search materials or steps..."
           />
         </span>
       </label>
