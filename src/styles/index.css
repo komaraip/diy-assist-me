@@ -3298,12 +3298,12 @@ code {
     border: 0;
     background: transparent;
     box-shadow: none;
-    padding: 0 12px calc(12px + env(safe-area-inset-bottom));
+    padding: 0 20px calc(20px + env(safe-area-inset-bottom));
   }
 
   .tutorial-mobile-safe-space {
     display: block;
-    height: calc(92px + env(safe-area-inset-bottom));
+    height: calc(108px + env(safe-area-inset-bottom));
   }
 
   .tutorial-bottom-bar-inner {
@@ -3312,8 +3312,8 @@ code {
     align-items: center;
     justify-content: space-between;
     gap: 0.15rem;
-    width: min(480px, calc(100vw - 24px));
-    max-width: 480px;
+    width: min(440px, calc(100vw - 40px));
+    max-width: 440px;
     min-height: 60px;
     margin-inline: auto;
     border: 1px solid rgba(51, 56, 54, 0.1);
@@ -3391,8 +3391,8 @@ code {
   }
 
   .tutorial-bottom-bar {
-    padding-right: 12px;
-    padding-left: 12px;
+    padding-right: 20px;
+    padding-left: 20px;
   }
 
   .tutorial-bottom-bar-inner {
