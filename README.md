@@ -14,7 +14,7 @@ The app uses JavaScript/JSX only. It does not use TypeScript or Next.js.
 
 ## Firebase Configuration
 
-Copy `.env.example` to `.env` and fill the Firebase values when Firestore persistence is needed:
+Copy `.env.example` to `.env` and fill the Firebase values when Firestore persistence and admin access are needed:
 
 ```bash
 VITE_FIREBASE_API_KEY=
@@ -23,10 +23,11 @@ VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
-VITE_ADMIN_PASSCODE=
 ```
 
-When Firebase values are missing or reads/writes fail, the app uses localStorage fallback collections with the same collection names:
+Public study data can still use local fallback behavior when Firebase values are missing or reads/writes fail. Admin authentication and tutorial CRUD require Firebase and will be blocked until Firebase is configured.
+
+The app uses these Firestore collections:
 
 - `tutorials`
 - `participants`
@@ -36,10 +37,92 @@ When Firebase values are missing or reads/writes fail, the app uses localStorage
 - `susResponses`
 - `debriefResponses`
 - `observerNotes`
+- `admins`
+- `adminUsernames`
 
-## Admin Passcode
+## Admin Authentication
 
-Set `VITE_ADMIN_PASSCODE` to unlock `/admin` and `/exports`. This is prototype-level client-side gating only. It is not a replacement for Firebase Auth or Firestore security rules.
+Admin access uses Firebase Authentication plus Firestore admin profile documents. Enable the Firebase Auth Email/Password provider in Firebase Console.
+
+Admins sign in with username and password. The username is not an email address in the UI. The app resolves the username through Firestore and then verifies the password with Firebase Auth.
+
+Create admin accounts outside the frontend:
+
+1. Create a Firebase Authentication user with email/password.
+2. Create `admins/{uid}`:
+
+```json
+{
+  "uid": "firebase-auth-uid",
+  "username": "adminuser",
+  "email": "admin@example.com",
+  "displayName": "Admin User",
+  "role": "admin",
+  "isActive": true,
+  "createdAt": "server timestamp or ISO string",
+  "updatedAt": "server timestamp or ISO string"
+}
+```
+
+3. Create `adminUsernames/{usernameLower}`:
+
+```json
+{
+  "uid": "firebase-auth-uid",
+  "username": "adminuser",
+  "email": "admin@example.com",
+  "isActive": true
+}
+```
+
+The frontend must not create admin passwords or hardcode admin accounts. For multiple admins, repeat the same Auth user plus Firestore profile and username lookup setup for each account.
+
+Client-side route protection is not enough for real security. Firestore security rules should restrict reads and writes.
+
+Recommended rules concept:
+
+- Public users can read active `tutorials` if public browsing is intended.
+- Only authenticated active admins can create, update, or delete tutorials.
+- Only authenticated active admins can read admin dashboard collections.
+- Admin profile writes should be restricted to `super_admin` accounts or managed manually/server-side.
+- Store only minimal non-sensitive data in `adminUsernames`; use generic login errors to reduce username enumeration.
+
+## Tutorial Content CRUD
+
+Open `/admin/tutorials` after signing in. Tutorial CRUD writes to Firestore `tutorials/{tutorialId}` only.
+
+The tutorial manager supports:
+
+- listing tutorials
+- searching by title or ID
+- filtering by category
+- creating tutorials
+- editing tutorials
+- deleting tutorials with confirmation
+- repeatable tags, materials, optional images, and steps
+- step reordering with automatic `step_index` normalization
+
+Tutorial documents should use fields compatible with the public tutorial normalizer:
+
+- `id`
+- `title`
+- `category`
+- `tags`
+- `source`
+- `source_url`
+- `verification_level`
+- `summary`
+- `materials`
+- `steps`
+- `optional_images`
+- `estimated_minutes`
+- `difficulty`
+- `risk_level`
+- `active`
+- `createdAt`
+- `updatedAt`
+
+Materials can be strings or objects with `name`, `quantity`, `unit`, and `notes`; new admin-created materials use object form. Steps use `step_index`, `step_text`, `imageUrl`, `imageAlt`, and `keywords`.
 
 ## Browser Guidance
 
@@ -72,7 +155,7 @@ Condition IDs are `condition_1` and `condition_2`; modality is stored separately
 
 ## Admin Review
 
-Open `/admin` after setting `VITE_ADMIN_PASSCODE`.
+Open `/admin` and sign in with an active admin username and password.
 
 The admin dashboard includes:
 
@@ -81,10 +164,11 @@ The admin dashboard includes:
 - Interaction log viewer with filters for session, participant, condition, task, modality, event type, and command success.
 - Chapter 4 summary metric preview.
 - Chapter 4 evidence checklist.
+- A separate Tutorials admin section for tutorial content CRUD.
 
 ## Export Usage
 
-Open `/exports`, unlock with the admin passcode, generate exports, and download the required files:
+Open `/admin/export` or `/exports`, sign in as an admin, generate exports, and download the required files:
 
 - `task_trials_export.csv`
 - `sus_responses_export.csv`

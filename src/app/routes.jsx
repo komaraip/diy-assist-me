@@ -10,6 +10,7 @@ import { StudyTaskPage } from "../pages/StudyTaskPage.jsx";
 import { SUSPage } from "../pages/SUSPage.jsx";
 import { DebriefPage } from "../pages/DebriefPage.jsx";
 import { AdminPage } from "../pages/AdminPage.jsx";
+import { AdminTutorialsPage } from "../pages/AdminTutorialsPage.jsx";
 import { HelpPage } from "../pages/HelpPage.jsx";
 import { ExportsPage } from "../pages/ExportsPage.jsx";
 import { NotFoundPage } from "../pages/NotFoundPage.jsx";
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
     element: <AdminLayout />,
     children: [
       { index: true, element: <AdminPage /> },
+      { path: "tutorials", element: <AdminTutorialsPage /> },
       { path: "export", element: <ExportsPage /> },
     ],
   },

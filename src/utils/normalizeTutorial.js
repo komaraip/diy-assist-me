@@ -15,7 +15,8 @@ export function normalizeTutorial(rawTutorial, index = 0) {
   const title = rawTutorial.title || `Tutorial ${index + 1}`;
   const category = CATEGORY_LABELS[rawTutorial.category] || toTitleCase(rawTutorial.category || "general");
   const steps = Array.isArray(rawTutorial.steps) ? rawTutorial.steps : [];
-  const estimatedMinutes = Math.max(5, steps.length * 5);
+  const estimatedMinutesValue = Number(rawTutorial.estimated_minutes ?? rawTutorial.estimatedMinutes);
+  const estimatedMinutes = estimatedMinutesValue > 0 ? estimatedMinutesValue : Math.max(5, steps.length * 5);
 
   const normalizedSteps = steps.map((step, stepIndex) => {
     const stepNumber = Number(step.step_index || step.stepNumber || stepIndex + 1);
@@ -24,8 +25,8 @@ export function normalizeTutorial(rawTutorial, index = 0) {
       stepNumber,
       title: `Step ${stepNumber}`,
       instruction,
-      imageUrl: step.imageUrl || "",
-      imageAlt: step.imageAlt || `${title} step ${stepNumber}`,
+      imageUrl: step.imageUrl || step.image || step.image_url || "",
+      imageAlt: step.imageAlt || step.image_alt || `${title} step ${stepNumber}`,
       keywords: buildKeywords([title, instruction, ...(rawTutorial.tags || [])]),
       estimatedSeconds: step.estimatedSeconds || 60,
     };
@@ -52,7 +53,7 @@ export function normalizeTutorial(rawTutorial, index = 0) {
     sourceMetadata: {
       source: rawTutorial.source || "",
       sourceUrl: rawTutorial.source_url || rawTutorial.sourceUrl || "",
-      verificationLevel: rawTutorial.verification_level || "",
+      verificationLevel: rawTutorial.verification_level || rawTutorial.verificationLevel || "",
     },
     createdAt: rawTutorial.createdAt || null,
     updatedAt: rawTutorial.updatedAt || null,
