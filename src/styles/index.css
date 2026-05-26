@@ -1873,12 +1873,12 @@ button:disabled {
   font-weight: 900;
 }
 
-.guided-progress-list strong,
-.guided-progress-list span {
+.guided-progress-list li > div > strong,
+.guided-progress-list li > div > span {
   display: block;
 }
 
-.guided-progress-list span {
+.guided-progress-list li > div > span {
   color: var(--muted);
   font-size: 0.88rem;
 }
