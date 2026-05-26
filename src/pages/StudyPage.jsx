@@ -21,6 +21,63 @@ const setupProgressSteps = [
   { id: "feedback", label: "Share feedback", status: "Answer quick questions at the end." },
 ];
 
+const environmentFields = [
+  {
+    field: "deviceType",
+    label: "Device type",
+    placeholder: "Select device type",
+    options: ["Laptop", "Desktop computer", "Tablet", "Smartphone"],
+  },
+  {
+    field: "browserName",
+    label: "Browser name",
+    placeholder: "Select browser",
+    options: ["Google Chrome desktop", "Microsoft Edge desktop", "Safari", "Firefox", "Other browser"],
+  },
+  {
+    field: "microphonePermissionStatus",
+    label: "Microphone permission status",
+    placeholder: "Select microphone status",
+    options: ["Allowed", "Blocked", "Prompt not shown yet", "Not checked"],
+  },
+  {
+    field: "roomNoiseLevelNote",
+    label: "Room noise level",
+    placeholder: "Select room noise level",
+    options: ["Quiet room", "Low background noise", "Moderate background noise", "Noisy room"],
+  },
+  {
+    field: "internetConnectionNote",
+    label: "Internet connection",
+    placeholder: "Select internet condition",
+    options: ["Stable connection", "Slow but usable", "Unstable connection", "Disconnected"],
+  },
+  {
+    field: "taskEnvironmentNote",
+    label: "Task environment",
+    placeholder: "Select task environment",
+    options: [
+      "Desk-based hands-busy simulation",
+      "Kitchen-like controlled setup",
+      "Workshop-like controlled setup",
+      "Other controlled setup",
+    ],
+  },
+  {
+    field: "researcherObservationNote",
+    label: "Extra setup note",
+    placeholder: "Select extra setup note",
+    fullWidth: true,
+    options: [
+      "No extra setup issue observed",
+      "Participant needed setup clarification",
+      "Microphone or browser issue observed",
+      "Internet or environment issue observed",
+      "Facilitator intervention needed",
+    ],
+  },
+];
+
 export function StudyPage() {
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [environment, setEnvironment] = useState(initialEnvironment);
@@ -39,6 +96,13 @@ export function StudyPage() {
     if (!consentConfirmed) {
       setSessionResult({ data: null, source: "local", warning: null, error: "Please confirm consent before creating a guided session." });
       setStatusMessage("Please confirm consent before creating a guided session.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!hasCompleteEnvironment(environment)) {
+      setSessionResult({ data: null, source: "local", warning: null, error: "Please complete all setup notes before creating a guided session." });
+      setStatusMessage("Please complete all setup notes before creating a guided session.");
       setIsSubmitting(false);
       return;
     }
@@ -92,6 +156,7 @@ export function StudyPage() {
                 type="checkbox"
                 checked={consentConfirmed}
                 onChange={(event) => setConsentConfirmed(event.target.checked)}
+                required
               />
               <span>I confirm consent before creating a guided session.</span>
             </label>
@@ -112,6 +177,7 @@ export function StudyPage() {
                 <select
                   value={sequenceAssignment}
                   onChange={(event) => setSequenceAssignment(event.target.value)}
+                  required
                 >
                   {SEQUENCE_ASSIGNMENTS.map((assignment) => (
                     <option key={assignment.value} value={assignment.value}>
@@ -125,6 +191,7 @@ export function StudyPage() {
                 <select
                   value={tutorialRotation}
                   onChange={(event) => setTutorialRotation(event.target.value)}
+                  required
                 >
                   {TUTORIAL_ROTATIONS.map((rotation) => (
                     <option key={rotation.value} value={rotation.value}>
@@ -143,55 +210,31 @@ export function StudyPage() {
             <h2 id="environment-heading">Setup notes</h2>
             <p>
               Record Chrome desktop, microphone permission, internet condition, and room noise before
-              testing. Current browser voice support: {speechSupportStatus}.
+              testing. Select one option for each setup field. Current browser voice support: {speechSupportStatus}.
             </p>
             <div className="form-grid">
-              <TextInput
-                label="Device type"
-                value={environment.deviceType}
-                onChange={(value) => updateEnvironment("deviceType", value)}
-                placeholder="Laptop, tablet, or phone"
-              />
-              <TextInput
-                label="Browser name"
-                value={environment.browserName}
-                onChange={(value) => updateEnvironment("browserName", value)}
-                placeholder="Google Chrome desktop"
-              />
-              <TextInput
-                label="Microphone permission status"
-                value={environment.microphonePermissionStatus}
-                onChange={(value) => updateEnvironment("microphonePermissionStatus", value)}
-                placeholder="Allowed, blocked, or not checked"
-              />
-              <TextInput
-                label="Room noise level note"
-                value={environment.roomNoiseLevelNote}
-                onChange={(value) => updateEnvironment("roomNoiseLevelNote", value)}
-                placeholder="Quiet room, light background noise, or noisy room"
-              />
-              <TextInput
-                label="Internet connection note"
-                value={environment.internetConnectionNote}
-                onChange={(value) => updateEnvironment("internetConnectionNote", value)}
-                placeholder="Stable, slow, or disconnected"
-              />
-              <TextInput
-                label="Task environment note"
-                value={environment.taskEnvironmentNote}
-                onChange={(value) => updateEnvironment("taskEnvironmentNote", value)}
-                placeholder="Optional notes about the device, browser, and room setup."
-              />
+              {environmentFields.filter((field) => !field.fullWidth).map((field) => (
+                <SelectInput
+                  key={field.field}
+                  label={field.label}
+                  value={environment[field.field]}
+                  onChange={(value) => updateEnvironment(field.field, value)}
+                  placeholder={field.placeholder}
+                  options={field.options}
+                />
+              ))}
             </div>
-            <label className="field-label full-width-field">
-              Extra setup note
-              <textarea
-                value={environment.researcherObservationNote}
-                onChange={(event) => updateEnvironment("researcherObservationNote", event.target.value)}
-                placeholder="Optional notes about the device, browser, and room setup."
-                rows="3"
+            {environmentFields.filter((field) => field.fullWidth).map((field) => (
+              <SelectInput
+                key={field.field}
+                label={field.label}
+                value={environment[field.field]}
+                onChange={(value) => updateEnvironment(field.field, value)}
+                placeholder={field.placeholder}
+                options={field.options}
+                fullWidth
               />
-            </label>
+            ))}
           </div>
         </section>
 
@@ -216,13 +259,22 @@ export function StudyPage() {
   );
 }
 
-function TextInput({ label, value, onChange, placeholder = "" }) {
+function SelectInput({ label, value, onChange, placeholder, options, fullWidth = false }) {
   return (
-    <label className="field-label">
+    <label className={fullWidth ? "field-label full-width-field" : "field-label"}>
       {label}
-      <input type="text" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      <select value={value} onChange={(event) => onChange(event.target.value)} required>
+        <option value="" disabled>{placeholder}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
     </label>
   );
+}
+
+function hasCompleteEnvironment(environment) {
+  return environmentFields.every((field) => String(environment[field.field] || "").trim());
 }
 
 function getSpeechSupportStatus() {
