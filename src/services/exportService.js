@@ -1,7 +1,7 @@
 import packageJson from "../../package.json";
 import { loadAdminData, buildSessionBundles } from "./adminDataService.js";
 import { toCsv } from "../utils/csvExport.js";
-import { buildAnalysisReadyRows, calculateChapter4Metrics } from "../utils/chapter4Metrics.js";
+import { buildAnalysisReadyRows, buildTaskTrialValidation, calculateChapter4Metrics } from "../utils/chapter4Metrics.js";
 import { buildExportMetadata, toPrettyJson } from "../utils/jsonExport.js";
 import { serviceSuccess } from "../utils/serviceResult.js";
 
@@ -25,6 +25,7 @@ export async function generateExportFiles() {
     appVersion: packageJson.version,
   });
   const metrics = calculateChapter4Metrics(data);
+  const taskTrialValidations = buildTaskTrialValidation(data);
   const researchSummary = {
     exportedAt: metadata.exportedAt,
     appVersion: metadata.appVersion,
@@ -74,6 +75,7 @@ export async function generateExportFiles() {
         recordCounts: getRecordCounts(data),
         researchQuestions: metrics.researchQuestions,
         dataQuality: metrics.dataQuality,
+        taskTrialValidations,
         sessions: buildSessionBundles(data),
       }),
     },
@@ -114,6 +116,7 @@ export function downloadTextFile({ fileName, content, mimeType }) {
 
 function buildTaskTrialsCsv(data) {
   const context = buildSessionContext(data);
+  const validationContext = buildValidationContext(data);
   return toCsv(data.taskTrials || [], [
     { header: "participantCode", value: (row) => row.participantCode || context.getSession(row)?.participantCode || "" },
     { header: "participantId", key: "participantId" },
@@ -135,13 +138,26 @@ function buildTaskTrialsCsv(data) {
     { header: "researcherNote", key: "researcherNote" },
     { header: "taskScript", value: (row) => stringifyList(row.taskScript || context.getTask(row)?.taskScript) },
     { header: "requiredActions", value: (row) => stringifyList(row.requiredActions || context.getTask(row)?.requiredActions) },
+    { header: "requiredActionsMet", value: (row) => validationContext.getValidation(row)?.requiredActionsMet ?? "" },
+    { header: "missingRequiredActions", value: (row) => stringifyList(validationContext.getValidation(row)?.missingRequiredActions) },
+    { header: "requiredActionCompletionRate", value: (row) => validationContext.getValidation(row)?.requiredActionCompletionRate ?? "" },
     { header: "targetKeyword", value: (row) => row.targetKeyword || context.getTask(row)?.targetKeyword || "" },
     { header: "targetStep", value: (row) => row.targetStep ?? context.getTask(row)?.targetStep ?? "" },
     { header: "successCriteria", value: (row) => row.successCriteria || context.getTask(row)?.successCriteria || "" },
     { header: "browserName", value: (row) => context.getSession(row)?.environment?.browserName || "" },
+    { header: "detectedBrowserName", value: (row) => context.getSession(row)?.browserInfo?.detectedBrowserName || "" },
+    { header: "detectedBrowserVersion", value: (row) => context.getSession(row)?.browserInfo?.detectedBrowserVersion || "" },
+    { header: "speechRecognitionSupported", value: (row) => context.getSession(row)?.browserInfo?.speechRecognitionSupported ?? "" },
+    { header: "isSecureContext", value: (row) => context.getSession(row)?.browserInfo?.isSecureContext ?? "" },
+    { header: "userAgent", value: (row) => context.getSession(row)?.browserInfo?.userAgent || "" },
     { header: "deviceType", value: (row) => context.getSession(row)?.environment?.deviceType || "" },
     { header: "roomNoiseLevelNote", value: (row) => context.getSession(row)?.environment?.roomNoiseLevelNote || "" },
     { header: "internetConnectionNote", value: (row) => context.getSession(row)?.environment?.internetConnectionNote || "" },
+    { header: "voiceCommandSuccessCount", value: (row) => validationContext.getValidation(row)?.voiceCommandSuccessCount ?? "" },
+    { header: "voiceRecognitionErrorCount", value: (row) => validationContext.getValidation(row)?.voiceRecognitionErrorCount ?? "" },
+    { header: "fallbackTouchActionCount", value: (row) => validationContext.getValidation(row)?.fallbackTouchActionCount ?? "" },
+    { header: "voiceTrialValidity", value: (row) => validationContext.getValidation(row)?.voiceTrialValidity || "" },
+    { header: "exclusionReason", value: (row) => validationContext.getValidation(row)?.exclusionReason || "" },
   ]);
 }
 
@@ -268,6 +284,17 @@ function buildAnalysisReadyCsv(data) {
     { header: "voice_fallback_count", key: "voice_fallback_count" },
     { header: "voice_no_match_count", key: "voice_no_match_count" },
     { header: "voice_command_failed_count", key: "voice_command_failed_count" },
+    { header: "voice_trial_validity", key: "voice_trial_validity" },
+    { header: "voice_trial_exclusion_reason", key: "voice_trial_exclusion_reason" },
+    { header: "voiceCommandSuccessCount", key: "voiceCommandSuccessCount" },
+    { header: "voiceRecognitionErrorCount", key: "voiceRecognitionErrorCount" },
+    { header: "fallbackTouchActionCount", key: "fallbackTouchActionCount" },
+    { header: "touch_requiredActionsMet", key: "touch_requiredActionsMet" },
+    { header: "touch_missingRequiredActions", key: "touch_missingRequiredActions" },
+    { header: "touch_requiredActionCompletionRate", key: "touch_requiredActionCompletionRate" },
+    { header: "voice_requiredActionsMet", key: "voice_requiredActionsMet" },
+    { header: "voice_missingRequiredActions", key: "voice_missingRequiredActions" },
+    { header: "voice_requiredActionCompletionRate", key: "voice_requiredActionCompletionRate" },
     { header: "invalid_pair", key: "invalid_pair" },
     { header: "exclusion_reason", key: "exclusion_reason" },
   ]);
@@ -306,6 +333,29 @@ function buildSessionContext(data) {
     getCondition,
     getTask,
   };
+}
+
+function buildValidationContext(data) {
+  const validations = buildTaskTrialValidation(data);
+  const validationById = new Map(validations.filter((validation) => validation.trialId).map((validation) => [validation.trialId, validation]));
+  const validationByTask = new Map(validations.map((validation) => [getValidationTaskKey(validation), validation]));
+
+  function getValidation(row) {
+    return validationById.get(row.id) || validationByTask.get(getValidationTaskKey(row)) || null;
+  }
+
+  return {
+    getValidation,
+  };
+}
+
+function getValidationTaskKey(row) {
+  return [
+    row.sessionId || "",
+    row.conditionId || "",
+    row.taskId || "",
+    row.trialType || "",
+  ].join("|");
 }
 
 function stringifyList(value) {

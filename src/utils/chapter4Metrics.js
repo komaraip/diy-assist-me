@@ -1,3 +1,6 @@
+const VOICE_RECOGNITION_ERROR_THRESHOLD = 3;
+const FALLBACK_COMPLETED_RATIO = 0.5;
+
 export function calculateChapter4Metrics(data = {}) {
   const taskTrials = data.taskTrials || [];
   const susResponses = data.susResponses || [];
@@ -6,12 +9,18 @@ export function calculateChapter4Metrics(data = {}) {
   const debriefResponses = data.debriefResponses || [];
   const sessions = data.sessions || [];
   const measuredTrials = taskTrials.filter((trial) => trial.trialType === "measured");
-  const validMeasuredTrials = measuredTrials.filter((trial) => !trial.invalidTrial);
+  const trialValidations = buildTaskTrialValidation(data);
+  const validationByTrialKey = mapValidationsByTrialKey(trialValidations);
+  const validMeasuredTrials = measuredTrials.filter((trial) =>
+    !trial.invalidTrial && isValidForPrimaryMetrics(trial, validationByTrialKey.get(getTrialKey(trial)))
+  );
   const sessionLinkedLogs = interactionLogs.filter((log) => log.sessionId);
   const voiceLogs = sessionLinkedLogs.filter((log) => log.modality === "voice");
   const failedVoiceLogs = voiceLogs.filter((log) => log.commandSuccess === false);
   const fallbackLogs = sessionLinkedLogs.filter((log) => log.fallbackUsed);
   const technicalNotes = getTechnicalNotes(sessions);
+  const technicalNoteSummary = summarizeTechnicalNotes(technicalNotes);
+  const validationSummary = summarizeTaskTrialValidation(trialValidations);
   const analysisRows = buildAnalysisReadyRows(data);
 
   return {
@@ -36,7 +45,7 @@ export function calculateChapter4Metrics(data = {}) {
           recoveryEffort: summarizeRecoveryEffort(voiceLogs),
           failureReasons: countBy(failedVoiceLogs, "failureReason"),
           fallbackUse: {
-            voiceFallbackCount: voiceLogs.filter((log) => log.fallbackUsed).length,
+            voiceFallbackCount: voiceLogs.filter((log) => log.fallbackUsed).length + validationSummary.voiceFallbackTouchActionCount,
             totalFallbackCount: fallbackLogs.length,
           },
           noMatchCount: voiceLogs.filter((log) => log.eventType === "voice_no_match").length,
@@ -50,7 +59,10 @@ export function calculateChapter4Metrics(data = {}) {
           debriefThemes: summarizeDebriefThemes(debriefResponses),
           technicalIssues: {
             count: technicalNotes.length,
-            examples: technicalNotes.slice(0, 10).map((note) => note.note),
+            uniqueCount: technicalNoteSummary.length,
+            examples: technicalNoteSummary.slice(0, 10).map((note) =>
+              note.count > 1 ? `${note.note} (${note.count} times)` : note.note
+            ),
           },
           failedCommandExamples: failedVoiceLogs
             .filter((log) => log.rawTranscript || log.failureReason)
@@ -76,6 +88,14 @@ export function calculateChapter4Metrics(data = {}) {
       invalidTrialCount: measuredTrials.filter((trial) => trial.invalidTrial).length,
       missingSusCount: countMissingSusByCondition(sessions, susResponses),
       missingVoiceLogCount: countMissingVoiceLogs(sessions, voiceLogs),
+      voiceTechnicalIssueCount: validationSummary.voiceTechnicalIssueCount,
+      voiceFallbackCompletedCount: validationSummary.voiceFallbackCompletedCount,
+      voiceFallbackTouchActionCount: validationSummary.voiceFallbackTouchActionCount,
+      invalidVoiceTrialCount: validationSummary.invalidVoiceTrialCount,
+      requiredActionWarningCount: validationSummary.requiredActionWarningCount,
+      validationWarningCount: validationSummary.validationWarningCount,
+      invalidVoiceTrialWarnings: validationSummary.invalidVoiceTrialWarnings,
+      requiredActionWarnings: validationSummary.requiredActionWarnings,
     },
   };
 }
@@ -90,6 +110,9 @@ export function buildEvidenceChecklist(data = {}) {
   const measuredTrials = taskTrials.filter((trial) => trial.trialType === "measured");
   const voiceLogs = interactionLogs.filter((log) => log.sessionId && log.modality === "voice");
   const technicalNoteCount = sessions.reduce((count, session) => count + (session.technicalNotes || []).length, 0);
+  const validationSummary = summarizeTaskTrialValidation(buildTaskTrialValidation(data));
+  const firstRequiredActionWarning = validationSummary.requiredActionWarnings[0];
+  const firstVoiceWarning = validationSummary.invalidVoiceTrialWarnings[0];
 
   return [
     {
@@ -130,9 +153,70 @@ export function buildEvidenceChecklist(data = {}) {
         debriefResponses.length > 0 ||
         voiceLogs.some((log) => log.commandSuccess === false) ||
         technicalNoteCount > 0,
-      detail: "Uses observer notes, debrief responses, failed or repeated commands, fallback use, and technical notes.",
+      detail: "Uses observer notes, debrief responses, failed or repeated commands, fallback use, and technical notes. Observer notes are recommended evidence for RQ3.",
+    },
+    {
+      id: "Validation",
+      label: "Task action and voice trial validity",
+      complete: measuredTrials.length > 0 && validationSummary.validationWarningCount === 0,
+      detail: [
+        `${validationSummary.invalidVoiceTrialCount} voice trial validity warning(s) and ${validationSummary.requiredActionWarningCount} required-action warning(s).`,
+        firstVoiceWarning ? `First voice warning: ${firstVoiceWarning.taskId} ${firstVoiceWarning.voiceTrialValidity} (${firstVoiceWarning.exclusionReason}).` : "",
+        firstRequiredActionWarning ? `First missing action warning: ${firstRequiredActionWarning.taskId} missing ${firstRequiredActionWarning.missingRequiredActions.join(", ")}.` : "",
+        "Missing required actions are flagged for review, not blocked in the UI.",
+      ].filter(Boolean).join(" "),
     },
   ];
+}
+
+export function buildTaskTrialValidation(data = {}) {
+  const taskTrials = data.taskTrials || [];
+  const interactionLogs = data.interactionLogs || [];
+
+  return taskTrials.map((trial) => {
+    const trialLogs = getLogsForTrial(interactionLogs, trial);
+    const voiceLogs = trialLogs.filter((log) => log.modality === "voice");
+    const voiceCommandLogs = voiceLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined);
+    const fallbackTouchLogs = trialLogs.filter((log) => log.modality === "touch" && log.fallbackUsed);
+    const voiceCommandSuccessCount = voiceCommandLogs.filter((log) => log.commandSuccess === true).length;
+    const voiceRecognitionErrorCount = voiceLogs.filter((log) =>
+      log.eventType === "voice_recognition_error" || log.eventType === "voice_unsupported" || log.recognitionErrorCode
+    ).length;
+    const fallbackTouchActionCount = fallbackTouchLogs.length;
+    const requiredActions = getTrialRequiredActions(data, trial);
+    const metRequiredActions = requiredActions.filter((action) =>
+      trialLogs.some((log) => doesLogMatchRequiredAction(log, action))
+    );
+    const missingRequiredActions = requiredActions.filter((action) => !metRequiredActions.includes(action));
+    const requiredActionCompletionRate = requiredActions.length
+      ? ratio(metRequiredActions.length, requiredActions.length)
+      : null;
+    const voiceValidity = getVoiceTrialValidity({
+      trial,
+      voiceCommandSuccessCount,
+      voiceRecognitionErrorCount,
+      fallbackTouchActionCount,
+    });
+
+    return {
+      trialId: trial.id || "",
+      trialKey: getTrialKey(trial),
+      participantId: trial.participantId || "",
+      sessionId: trial.sessionId || "",
+      conditionId: trial.conditionId || "",
+      taskId: trial.taskId || "",
+      modality: trial.modality || "",
+      trialType: trial.trialType || "",
+      voiceCommandSuccessCount,
+      voiceRecognitionErrorCount,
+      fallbackTouchActionCount,
+      voiceTrialValidity: voiceValidity.voiceTrialValidity,
+      exclusionReason: voiceValidity.exclusionReason,
+      requiredActionsMet: missingRequiredActions.length === 0,
+      missingRequiredActions,
+      requiredActionCompletionRate,
+    };
+  });
 }
 
 export function buildAnalysisReadyRows(data = {}) {
@@ -140,21 +224,30 @@ export function buildAnalysisReadyRows(data = {}) {
   const susResponses = data.susResponses || [];
   const interactionLogs = data.interactionLogs || [];
   const sessions = getAnalysisSessions(data);
+  const validationByTrialKey = mapValidationsByTrialKey(buildTaskTrialValidation(data));
 
   return sessions.map((session) => {
     const sessionTrials = taskTrials.filter((trial) => trial.sessionId === session.id);
     const measuredTrials = sessionTrials.filter((trial) => trial.trialType === "measured");
     const touchTrial = findLatestByModality(measuredTrials, "touch");
     const voiceTrial = findLatestByModality(measuredTrials, "voice");
+    const touchValidation = touchTrial ? validationByTrialKey.get(getTrialKey(touchTrial)) : null;
+    const voiceValidation = voiceTrial ? validationByTrialKey.get(getTrialKey(voiceTrial)) : null;
     const touchSus = findLatestSusByModality(susResponses, session.id, "touch");
     const voiceSus = findLatestSusByModality(susResponses, session.id, "voice");
-    const voiceLogs = interactionLogs.filter((log) => log.sessionId === session.id && log.modality === "voice");
+    const voiceLogs = voiceTrial
+      ? getLogsForTrial(interactionLogs, voiceTrial).filter((log) => log.modality === "voice")
+      : interactionLogs.filter((log) => log.sessionId === session.id && log.modality === "voice");
     const voiceCommandLogs = voiceLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined);
+    const voiceFallbackTouchCount = voiceValidation?.fallbackTouchActionCount || 0;
     const invalidReasons = [
       !touchTrial ? "missing_touch_trial" : "",
       !voiceTrial ? "missing_voice_trial" : "",
       touchTrial?.invalidTrial ? `touch_invalid:${touchTrial.invalidTrialReason || "not specified"}` : "",
       voiceTrial?.invalidTrial ? `voice_invalid:${voiceTrial.invalidTrialReason || "not specified"}` : "",
+      voiceValidation && voiceValidation.voiceTrialValidity !== "valid" && voiceValidation.voiceTrialValidity !== "not_applicable"
+        ? `voice_${voiceValidation.voiceTrialValidity}:${voiceValidation.exclusionReason || "not specified"}`
+        : "",
       !touchSus ? "missing_touch_sus" : "",
       !voiceSus ? "missing_voice_sus" : "",
     ].filter(Boolean);
@@ -187,14 +280,215 @@ export function buildAnalysisReadyRows(data = {}) {
         log.fallbackUsed ||
         log.commandSuccess === false ||
         log.eventType === "voice_no_match"
-      ).length,
-      voice_fallback_count: voiceLogs.filter((log) => log.fallbackUsed).length,
+      ).length + voiceFallbackTouchCount,
+      voice_fallback_count: voiceLogs.filter((log) => log.fallbackUsed).length + voiceFallbackTouchCount,
       voice_no_match_count: voiceLogs.filter((log) => log.eventType === "voice_no_match").length,
       voice_command_failed_count: voiceCommandLogs.filter((log) => log.commandSuccess === false).length,
+      voice_trial_validity: voiceValidation?.voiceTrialValidity || "missing_voice_trial",
+      voice_trial_exclusion_reason: voiceValidation?.exclusionReason || "",
+      voiceCommandSuccessCount: voiceValidation?.voiceCommandSuccessCount ?? "",
+      voiceRecognitionErrorCount: voiceValidation?.voiceRecognitionErrorCount ?? "",
+      fallbackTouchActionCount: voiceValidation?.fallbackTouchActionCount ?? "",
+      touch_requiredActionsMet: touchValidation?.requiredActionsMet ?? "",
+      touch_missingRequiredActions: (touchValidation?.missingRequiredActions || []).join(" | "),
+      touch_requiredActionCompletionRate: touchValidation?.requiredActionCompletionRate ?? "",
+      voice_requiredActionsMet: voiceValidation?.requiredActionsMet ?? "",
+      voice_missingRequiredActions: (voiceValidation?.missingRequiredActions || []).join(" | "),
+      voice_requiredActionCompletionRate: voiceValidation?.requiredActionCompletionRate ?? "",
       invalid_pair: invalidReasons.length > 0,
       exclusion_reason: invalidReasons.join("; "),
     };
   });
+}
+
+function summarizeTaskTrialValidation(validations) {
+  const invalidVoiceValidations = validations.filter((validation) =>
+    validation.trialType === "measured" &&
+    validation.modality === "voice" &&
+    validation.voiceTrialValidity !== "valid"
+  );
+  const requiredActionWarnings = validations.filter((validation) =>
+    validation.trialType === "measured" &&
+    validation.requiredActionsMet === false
+  );
+
+  return {
+    voiceTechnicalIssueCount: invalidVoiceValidations.filter((validation) => validation.voiceTrialValidity === "technical_issue").length,
+    voiceFallbackCompletedCount: invalidVoiceValidations.filter((validation) => validation.voiceTrialValidity === "fallback_completed").length,
+    invalidVoiceTrialCount: invalidVoiceValidations.length,
+    voiceFallbackTouchActionCount: validations
+      .filter((validation) => validation.trialType === "measured" && validation.modality === "voice")
+      .reduce((total, validation) => total + validation.fallbackTouchActionCount, 0),
+    requiredActionWarningCount: requiredActionWarnings.length,
+    validationWarningCount: invalidVoiceValidations.length + requiredActionWarnings.length,
+    invalidVoiceTrialWarnings: invalidVoiceValidations.slice(0, 10).map((validation) => ({
+      participantId: validation.participantId,
+      sessionId: validation.sessionId,
+      conditionId: validation.conditionId,
+      taskId: validation.taskId,
+      voiceTrialValidity: validation.voiceTrialValidity,
+      exclusionReason: validation.exclusionReason,
+      voiceCommandSuccessCount: validation.voiceCommandSuccessCount,
+      voiceRecognitionErrorCount: validation.voiceRecognitionErrorCount,
+      fallbackTouchActionCount: validation.fallbackTouchActionCount,
+    })),
+    requiredActionWarnings: requiredActionWarnings.slice(0, 10).map((validation) => ({
+      participantId: validation.participantId,
+      sessionId: validation.sessionId,
+      conditionId: validation.conditionId,
+      taskId: validation.taskId,
+      modality: validation.modality,
+      missingRequiredActions: validation.missingRequiredActions,
+      requiredActionCompletionRate: validation.requiredActionCompletionRate,
+    })),
+  };
+}
+
+function mapValidationsByTrialKey(validations) {
+  return new Map(validations.map((validation) => [validation.trialKey, validation]));
+}
+
+function isValidForPrimaryMetrics(trial, validation) {
+  if (trial.modality !== "voice" || trial.trialType !== "measured") return true;
+  return validation?.voiceTrialValidity === "valid";
+}
+
+function getLogsForTrial(interactionLogs, trial) {
+  return interactionLogs.filter((log) => {
+    if (trial.id && log.metadata?.taskTrialId) return log.metadata.taskTrialId === trial.id;
+    if (trial.sessionId && log.sessionId !== trial.sessionId) return false;
+    if (trial.conditionId && log.conditionId && log.conditionId !== trial.conditionId) return false;
+    if (trial.taskId && log.taskId !== trial.taskId) return false;
+    if (trial.trialType && log.trialType && log.trialType !== trial.trialType) return false;
+    return true;
+  });
+}
+
+function getTrialRequiredActions(data, trial) {
+  if (Array.isArray(trial.requiredActions) && trial.requiredActions.length) return trial.requiredActions;
+  const session = (data.sessions || []).find((item) => item.id === trial.sessionId);
+  const task = (session?.conditions || [])
+    .flatMap((condition) => condition.tasks || [])
+    .find((item) => item.id === trial.taskId || item.taskId === trial.taskId);
+  return Array.isArray(task?.requiredActions) ? task.requiredActions : [];
+}
+
+function doesLogMatchRequiredAction(log, action) {
+  if (log.modality === "voice" && log.commandSuccess !== true) return false;
+
+  const eventType = normalizeLogValue(log.eventType);
+  const matchedIntent = normalizeLogValue(log.matchedIntent);
+  const metadataAction = normalizeLogValue(log.metadata?.action || log.metadata?.scrollAction);
+
+  switch (action) {
+    case "materials_open":
+      return includesAny(eventType, ["materials_open", "show_materials"]) ||
+        matchedIntent === "show_materials";
+    case "step_next":
+      return includesAny(eventType, ["step_next", "next_step"]) ||
+        matchedIntent === "next_step";
+    case "repeat_instruction":
+      return includesAny(eventType, ["repeat_instruction", "repeat"]) ||
+        matchedIntent === "repeat_instruction";
+    case "tutorial_search":
+      return includesAny(eventType, ["tutorial_search", "search"]) ||
+        matchedIntent === "search" ||
+        !!log.query;
+    case "step_jump":
+      return includesAny(eventType, ["step_jump", "overview_step_jump", "search_result_jump", "go_to_step"]) ||
+        matchedIntent === "go_to_step" ||
+        (log.stepNumber !== null && log.stepNumber !== undefined && Number.isFinite(Number(log.stepNumber)));
+    case "step_previous":
+      return includesAny(eventType, ["step_previous", "previous_step"]) ||
+        matchedIntent === "previous_step";
+    case "scroll_down":
+      return includesAny(eventType, ["scroll_down", "page_down"]) ||
+        includesAny(metadataAction, ["scroll_down", "page_down"]) ||
+        matchedIntent === "scroll_down" ||
+        matchedIntent === "page_down";
+    case "scroll_up":
+      return includesAny(eventType, ["scroll_up", "page_up"]) ||
+        includesAny(metadataAction, ["scroll_up", "page_up"]) ||
+        matchedIntent === "scroll_up" ||
+        matchedIntent === "page_up";
+    default:
+      return eventType === normalizeLogValue(action) || matchedIntent === normalizeLogValue(action);
+  }
+}
+
+function getVoiceTrialValidity({
+  trial,
+  voiceCommandSuccessCount,
+  voiceRecognitionErrorCount,
+  fallbackTouchActionCount,
+}) {
+  if (trial.modality !== "voice" || trial.trialType !== "measured") {
+    return {
+      voiceTrialValidity: "not_applicable",
+      exclusionReason: "",
+    };
+  }
+
+  const effectiveActionCount = voiceCommandSuccessCount + fallbackTouchActionCount;
+  const fallbackRatio = effectiveActionCount ? fallbackTouchActionCount / effectiveActionCount : 0;
+
+  if (voiceRecognitionErrorCount >= VOICE_RECOGNITION_ERROR_THRESHOLD) {
+    return {
+      voiceTrialValidity: "technical_issue",
+      exclusionReason: "repeated_voice_recognition_errors",
+    };
+  }
+
+  if (fallbackTouchActionCount > 0 && (voiceCommandSuccessCount === 0 || fallbackRatio >= FALLBACK_COMPLETED_RATIO)) {
+    return {
+      voiceTrialValidity: "fallback_completed",
+      exclusionReason: "completed_mostly_with_touch_fallback",
+    };
+  }
+
+  if (voiceCommandSuccessCount === 0) {
+    return {
+      voiceTrialValidity: "technical_issue",
+      exclusionReason: "zero_successful_voice_commands",
+    };
+  }
+
+  return {
+    voiceTrialValidity: "valid",
+    exclusionReason: "",
+  };
+}
+
+function summarizeTechnicalNotes(technicalNotes) {
+  const grouped = technicalNotes.reduce((groups, note) => {
+    const key = note.note || "";
+    if (!key) return groups;
+    groups[key] = groups[key] || { note: key, count: 0 };
+    groups[key].count += 1;
+    return groups;
+  }, {});
+
+  return Object.values(grouped).sort((a, b) => b.count - a.count || a.note.localeCompare(b.note));
+}
+
+function getTrialKey(trial) {
+  if (trial.id) return `id:${trial.id}`;
+  return [
+    "trial",
+    trial.sessionId || "",
+    trial.conditionId || "",
+    trial.taskId || "",
+    trial.trialType || "",
+    trial.startedAt || "",
+  ].join(":");
+}
+
+function includesAny(value, candidates) {
+  return candidates.some((candidate) => value.includes(candidate));
+}
+
+function normalizeLogValue(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 function getAnalysisSessions(data) {

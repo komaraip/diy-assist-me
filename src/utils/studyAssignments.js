@@ -1,4 +1,4 @@
-import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage, translateTargetKeyword } from "../i18n/studyCopy.js";
+import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 export const SEQUENCE_ASSIGNMENTS = [
   {
@@ -35,9 +35,11 @@ const TASK_TARGETS = {
   },
   rotation_b: {
     practice: { preferredKeywords: ["rice", "sweetener", "bowl"], targetStep: 2 },
-    measured: { preferredKeywords: ["microwave", "egg", "cheese"], targetStep: 3 },
+    measured: { preferredKeywords: ["microwave", "egg", "cheese"], targetStep: 4 },
   },
 };
+
+const PLACEHOLDER_KEYWORDS = new Set(["lorem", "ipsum", "dolor", "amet"]);
 
 export function buildStudyPlan({
   sequenceAssignment = "AB",
@@ -119,7 +121,7 @@ function buildTask({ conditionId, conditionOrder, modality, trialType, tutorial,
   const copy = getStudyCopy(language).tasks;
   const tutorialId = tutorial?.id || "";
   const target = getTaskTarget({ tutorial, rotationValue, trialType });
-  const targetKeyword = translateTargetKeyword(target.targetKeyword || copy.targetKeywordFallback, language);
+  const targetKeyword = target.targetKeyword || copy.targetKeywordFallback;
   const isPractice = trialType === "practice";
 
   return {
@@ -174,15 +176,24 @@ function findPreferredKeyword(tutorial, preferredKeywords) {
 }
 
 function findFallbackKeyword(tutorial) {
-  const materialKeyword = (tutorial?.materials || [])
-    .map((material) => material.name || material)
-    .find(Boolean);
-  if (materialKeyword) return String(materialKeyword).split(/\s+/)[0].toLowerCase();
-
   const stepKeyword = (tutorial?.steps || [])
     .flatMap((step) => step.keywords || [])
+    .map((keyword) => normalizeKeywordCandidate(keyword))
     .find(Boolean);
-  return stepKeyword || "materials";
+  if (stepKeyword) return stepKeyword;
+
+  const materialKeyword = (tutorial?.materials || [])
+    .map((material) => normalizeKeywordCandidate(material.name || material))
+    .find(Boolean);
+  return materialKeyword || "materials";
+}
+
+function normalizeKeywordCandidate(value) {
+  return String(value || "")
+    .toLowerCase()
+    .split(/\s+/)
+    .map((token) => token.replace(/[^a-z0-9-]/g, ""))
+    .find((token) => token.length > 2 && !PLACEHOLDER_KEYWORDS.has(token)) || "";
 }
 
 function clampStep(stepNumber, stepCount) {

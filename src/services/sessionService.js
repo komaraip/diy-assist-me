@@ -171,12 +171,44 @@ function getBrowserInfo() {
       userAgent: "",
       language: "",
       platform: "",
+      detectedBrowserName: "unknown",
+      detectedBrowserVersion: "",
+      speechRecognitionSupported: false,
+      isSecureContext: false,
     };
   }
+
+  const detected = detectBrowserFromUserAgent(navigator.userAgent || "");
 
   return {
     userAgent: navigator.userAgent,
     language: navigator.language,
     platform: navigator.platform,
+    detectedBrowserName: detected.name,
+    detectedBrowserVersion: detected.version,
+    speechRecognitionSupported: isSpeechRecognitionSupported(),
+    isSecureContext: typeof window !== "undefined" ? window.isSecureContext === true : false,
+  };
+}
+
+function isSpeechRecognitionSupported() {
+  if (typeof window === "undefined") return false;
+  return "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
+}
+
+function detectBrowserFromUserAgent(userAgent) {
+  const browserPatterns = [
+    { name: "Microsoft Edge", pattern: /Edg\/([\d.]+)/ },
+    { name: "Chrome", pattern: /Chrome\/([\d.]+)/ },
+    { name: "Firefox", pattern: /Firefox\/([\d.]+)/ },
+    { name: "Safari", pattern: /Version\/([\d.]+).*Safari/ },
+  ];
+  const match = browserPatterns
+    .map((browser) => ({ ...browser, match: userAgent.match(browser.pattern) }))
+    .find((browser) => browser.match);
+
+  return {
+    name: match?.name || "unknown",
+    version: match?.match?.[1] || "",
   };
 }

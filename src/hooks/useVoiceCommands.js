@@ -8,6 +8,9 @@ import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
 import { useSpeechRecognition } from "./useSpeechRecognition.js";
 import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
+const RECOGNITION_ERROR_NOTE_THRESHOLD = 3;
+const RECOGNITION_ERROR_NOTE_INTERVAL = 10;
+
 export function useVoiceCommands({
   tutorialId,
   participantId = null,
@@ -32,6 +35,7 @@ export function useVoiceCommands({
   const getStepIndexRef = useRef(getStepIndex);
   const unsupportedLoggedRef = useRef(false);
   const stopListeningRef = useRef(null);
+  const recognitionErrorStatsRef = useRef({});
 
   useEffect(() => {
     onCommandRef.current = onCommand;
@@ -41,13 +45,24 @@ export function useVoiceCommands({
     getStepIndexRef.current = getStepIndex;
   }, [getStepIndex]);
 
+  useEffect(() => {
+    recognitionErrorStatsRef.current = {};
+  }, [sessionId, taskId, trialType]);
+
   const handleRecognitionError = useCallback(
     async ({ recognitionErrorCode, message }) => {
       if (!enabled) return;
 
       setVoiceFeedback(message);
       if (sessionId) {
-        await appendTechnicalNote(sessionId, `Voice recognition error (${recognitionErrorCode}): ${message}`);
+        const technicalNote = getRecognitionErrorTechnicalNote({
+          recognitionErrorStats: recognitionErrorStatsRef.current,
+          recognitionErrorCode,
+          message,
+        });
+        if (technicalNote) {
+          await appendTechnicalNote(sessionId, technicalNote);
+        }
       }
       await logVoiceInteraction({
         participantId,
@@ -215,4 +230,27 @@ export function useVoiceCommands({
     setShowCommandHints,
     commandHints: getCommandHints(normalizedLanguage),
   };
+}
+
+function getRecognitionErrorTechnicalNote({ recognitionErrorStats, recognitionErrorCode, message }) {
+  const errorCode = recognitionErrorCode || "unknown";
+  const errorMessage = message || "Voice recognition error.";
+  const key = `${errorCode}:${errorMessage}`;
+  const stats = recognitionErrorStats[key] || { count: 0 };
+  stats.count += 1;
+  recognitionErrorStats[key] = stats;
+
+  if (stats.count === 1) {
+    return `Voice recognition error (${errorCode}): ${errorMessage}`;
+  }
+
+  if (stats.count === RECOGNITION_ERROR_NOTE_THRESHOLD) {
+    return `Repeated voice recognition error (${errorCode}) occurred ${stats.count} times. Recommend marking the voice trial as technical_issue if this affects the measured task. Last message: ${errorMessage}`;
+  }
+
+  if (stats.count % RECOGNITION_ERROR_NOTE_INTERVAL === 0) {
+    return `Repeated voice recognition error (${errorCode}) occurred ${stats.count} times. Latest message: ${errorMessage}`;
+  }
+
+  return "";
 }

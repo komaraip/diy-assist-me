@@ -6,6 +6,7 @@ export function MetricsSummary({ adminData }) {
   const rq1 = metrics.researchQuestions.RQ1.metrics;
   const rq2 = metrics.researchQuestions.RQ2.metrics;
   const rq3 = metrics.researchQuestions.RQ3.metrics;
+  const dataQuality = metrics.dataQuality;
 
   return (
     <section className="admin-panel" aria-labelledby="metrics-summary-heading">
@@ -38,6 +39,11 @@ export function MetricsSummary({ adminData }) {
           value={rq3.observerNoteCategories.count + rq3.debriefThemes.responseCount}
           detail={`${rq3.failedCommandExamples.length} failed command examples, ${rq3.fallbackUseCount} fallbacks`}
         />
+        <MetricCard
+          label="Data validity warnings"
+          value={dataQuality.validationWarningCount}
+          detail={formatValidationDetail(dataQuality)}
+        />
       </div>
     </section>
   );
@@ -62,4 +68,20 @@ function formatSusDetail(byModality) {
   const entries = Object.entries(byModality || {});
   if (!entries.length) return "No SUS scores yet";
   return entries.map(([modality, summary]) => `${modality}: ${summary.averageSusScore ?? "n/a"}`).join(", ");
+}
+
+function formatValidationDetail(dataQuality) {
+  const firstMissingAction = dataQuality.requiredActionWarnings?.[0];
+  const firstVoiceWarning = dataQuality.invalidVoiceTrialWarnings?.[0];
+  const baseDetail = `${dataQuality.invalidVoiceTrialCount} voice validity, ${dataQuality.requiredActionWarningCount} required-action coverage`;
+
+  if (firstMissingAction) {
+    return `${baseDetail}; missing ${firstMissingAction.missingRequiredActions.join(", ")} in ${firstMissingAction.taskId}`;
+  }
+
+  if (firstVoiceWarning) {
+    return `${baseDetail}; ${firstVoiceWarning.taskId} is ${firstVoiceWarning.voiceTrialValidity}`;
+  }
+
+  return baseDetail;
 }

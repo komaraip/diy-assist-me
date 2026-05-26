@@ -12,6 +12,7 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const copy = getStudyCopy(normalizeStudyLanguage(language)).observerNotes;
+  const recommendedTags = copy.recommendedTags || [];
 
   async function handleSaveObserverNote(event) {
     event.preventDefault();
@@ -50,6 +51,7 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
     <details className="study-panel facilitator-notes-panel">
       <summary>{copy.summary}</summary>
       <p className="study-context-line">{copy.description}</p>
+      <p className="status-note">{copy.rq3Reminder}</p>
 
       <div className="two-column-grid">
         <form className="note-form" onSubmit={handleSaveObserverNote}>
@@ -76,10 +78,17 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
             {copy.tagsLabel}
             <input
               type="text"
+              list="observer-note-tag-options"
               value={tags}
               onChange={(event) => setTags(event.target.value)}
               placeholder={copy.tagsPlaceholder}
             />
+            <datalist id="observer-note-tag-options">
+              {recommendedTags.map((tag) => (
+                <option key={tag} value={tag} />
+              ))}
+            </datalist>
+            <span className="field-hint">{copy.tagHint}</span>
           </label>
           <button type="submit" className="button secondary-action" disabled={isSaving || !observerNote.trim()}>
             {copy.saveNote}
