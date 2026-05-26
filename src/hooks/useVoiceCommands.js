@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { logVoiceInteraction } from "../services/logService.js";
 import { appendTechnicalNote } from "../services/sessionService.js";
-import { COMMAND_HINTS } from "../utils/commandDictionary.js";
+import { getCommandHints } from "../utils/commandDictionary.js";
 import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
 import { parseVoiceCommand } from "../utils/parseVoiceCommand.js";
 import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
 import { useSpeechRecognition } from "./useSpeechRecognition.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 export function useVoiceCommands({
   tutorialId,
@@ -18,9 +19,12 @@ export function useVoiceCommands({
   trialType = null,
   taskStartedAt = null,
   enabled = true,
+  language = "en",
   getStepIndex,
   onCommand,
 }) {
+  const normalizedLanguage = normalizeStudyLanguage(language);
+  const copy = getStudyCopy(normalizedLanguage).voice;
   const [voiceFeedback, setVoiceFeedback] = useState("");
   const [lastParse, setLastParse] = useState(null);
   const [showCommandHints, setShowCommandHints] = useState(false);
@@ -77,14 +81,12 @@ export function useVoiceCommands({
         return { success: false };
       }
 
-      const parsed = parseVoiceCommand(rawTranscript);
+      const parsed = parseVoiceCommand(rawTranscript, normalizedLanguage);
       const stepIndexBefore = getStepIndexRef.current?.() ?? null;
       setLastParse(parsed);
 
       if (parsed.intent === VOICE_INTENTS.UNKNOWN) {
-        const message =
-          `I heard "${rawTranscript}", but that is not a supported command. ` +
-          "Try next step, back, repeat, show materials, overview, or search for a keyword.";
+        const message = copy.unknownCommand(rawTranscript);
         setVoiceFeedback(message);
         await logVoiceInteraction({
           participantId,
@@ -116,7 +118,7 @@ export function useVoiceCommands({
 
       const dispatchResult = await onCommandRef.current?.(parsed);
       const success = !!dispatchResult?.success;
-      const message = dispatchResult?.message || "Voice command completed.";
+      const message = dispatchResult?.message || copy.commandCompleted;
       setVoiceFeedback(message);
 
       if (dispatchResult?.showHelp) {
@@ -161,28 +163,29 @@ export function useVoiceCommands({
 
       if (parsed.intent === VOICE_INTENTS.STOP_LISTENING) {
         stopListeningRef.current?.();
-        setVoiceFeedback("Voice commands are off.");
+        setVoiceFeedback(copy.commandsOff);
       }
 
       return { success, stopListening: parsed.intent === VOICE_INTENTS.STOP_LISTENING };
     },
-    [conditionId, conditionOrder, enabled, participantCode, participantId, sessionId, taskId, taskStartedAt, trialType, tutorialId]
+    [conditionId, conditionOrder, copy.commandCompleted, copy.commandsOff, copy.unknownCommand, enabled, normalizedLanguage, participantCode, participantId, sessionId, taskId, taskStartedAt, trialType, tutorialId]
   );
 
   const speech = useSpeechRecognition({
     onFinalResult: handleFinalResult,
     onRecognitionError: handleRecognitionError,
+    language: normalizedLanguage,
   });
 
   const startVoiceCommands = useCallback(() => {
-    setVoiceFeedback("Voice commands are on. Say a command anytime.");
+    setVoiceFeedback(copy.commandsOn);
     speech.startListening();
-  }, [speech.startListening]);
+  }, [copy.commandsOn, speech.startListening]);
 
   const stopVoiceCommands = useCallback(() => {
-    setVoiceFeedback("Voice commands are off.");
+    setVoiceFeedback(copy.commandsOff);
     speech.stopListening();
-  }, [speech.stopListening]);
+  }, [copy.commandsOff, speech.stopListening]);
 
   useEffect(() => {
     stopListeningRef.current = stopVoiceCommands;
@@ -198,9 +201,9 @@ export function useVoiceCommands({
     unsupportedLoggedRef.current = true;
     void handleRecognitionError({
       recognitionErrorCode: "unsupported-browser",
-      message: "Voice commands are not available in this browser. You can still use the buttons.",
+      message: copy.unavailableLong,
     });
-  }, [enabled, handleRecognitionError, speech.voiceState]);
+  }, [copy.unavailableLong, enabled, handleRecognitionError, speech.voiceState]);
 
   return {
     ...speech,
@@ -210,6 +213,6 @@ export function useVoiceCommands({
     lastParse,
     showCommandHints,
     setShowCommandHints,
-    commandHints: COMMAND_HINTS,
+    commandHints: getCommandHints(normalizedLanguage),
   };
 }

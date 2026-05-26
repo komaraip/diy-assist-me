@@ -2,6 +2,7 @@ import { addDoc, arrayUnion, collection, doc, getDoc, updateDoc } from "firebase
 import { db, isFirebaseEnabled } from "./firebase.js";
 import { createLocalRecord, getLocalRecord, updateLocalRecord } from "./localStore.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
+import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 const LOCAL_CONFIG_WARNING = "Session was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Session was saved on this device.";
@@ -16,12 +17,14 @@ export async function createSession({
   environment = {},
   sequenceAssignment = "",
   tutorialRotation = "",
+  language = DEFAULT_STUDY_LANGUAGE,
   conditions = [],
 }) {
   const source = isFirebaseEnabled && db ? "firebase" : "local";
+  const normalizedLanguage = normalizeStudyLanguage(language);
 
   if (!consentConfirmed) {
-    return serviceFailure("Please confirm consent before creating a guided session.", source);
+    return serviceFailure(getStudyCopy(normalizedLanguage).setupPage.consentError, source);
   }
 
   const sessionData = {
@@ -36,6 +39,7 @@ export async function createSession({
     environment: normalizeEnvironment(environment),
     sequenceAssignment,
     tutorialRotation,
+    language: normalizedLanguage,
     conditions,
     technicalNotes: [],
   };

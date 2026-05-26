@@ -1,7 +1,9 @@
 import { ImageWithFallback } from "../common/ImageWithFallback.jsx";
 
-export function StepCard({ step, isCurrent }) {
-  const title = step.title && step.title !== `Step ${step.stepNumber}` ? step.title : "Instruction";
+export function StepCard({ step, isCurrent, instructionLabel = "Instruction" }) {
+  const title = step.title && !/^Step \d+$/i.test(step.title) && !/^Langkah \d+$/i.test(step.title)
+    ? step.title
+    : instructionLabel;
 
   return (
     <article className="step-card" aria-current={isCurrent ? "step" : undefined}>

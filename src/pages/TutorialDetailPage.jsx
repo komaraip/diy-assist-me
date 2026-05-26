@@ -9,6 +9,8 @@ import { logTouchInteraction } from "../services/logService.js";
 import { getTutorialById } from "../services/tutorialService.js";
 import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
 import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { localizeTutorial } from "../i18n/tutorialTranslations.js";
 
 const SCROLL_AMOUNT_RATIO = 0.6;
 const PAGE_AMOUNT_RATIO = 0.9;
@@ -20,9 +22,13 @@ export function TutorialDetailPage({
   backLink = "/tutorials",
   backLabel = "Back to tutorials",
   embedded = false,
+  language = "en",
 }) {
   const { tutorialId: routeTutorialId } = useParams();
   const tutorialId = tutorialIdOverride || routeTutorialId;
+  const normalizedLanguage = normalizeStudyLanguage(language);
+  const pageCopy = getStudyCopy(normalizedLanguage);
+  const copy = pageCopy.tutorial;
   const [tutorial, setTutorial] = useState(null);
   const [resultMeta, setResultMeta] = useState({ source: "local", warning: null, error: null });
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +53,7 @@ export function TutorialDetailPage({
       setIsLoading(true);
       const result = await getTutorialById(tutorialId);
       if (!isMounted) return;
-      setTutorial(result.data);
+      setTutorial(localizeTutorial(result.data, normalizedLanguage));
       setResultMeta({ source: result.source, warning: result.warning, error: result.error });
       setIsLoading(false);
     }
@@ -57,7 +63,7 @@ export function TutorialDetailPage({
     return () => {
       isMounted = false;
     };
-  }, [tutorialId]);
+  }, [normalizedLanguage, tutorialId]);
 
   const steps = tutorial?.steps || [];
   const currentStep = steps[activeStepIndex] || null;
@@ -95,14 +101,14 @@ export function TutorialDetailPage({
         success: false,
         stepIndexBefore: activeStepIndex,
         stepIndexAfter: activeStepIndex,
-        message: "No steps are available.",
+        message: copy.noStepsMessage,
       };
     }
     const clampedIndex = Math.max(0, Math.min(nextIndex, steps.length - 1));
     const previousIndex = activeStepIndex;
     setActiveStepIndex(clampedIndex);
     setIsCompleted(false);
-    setFeedbackMessage(options.message || `Moved to step ${clampedIndex + 1} of ${steps.length}.`);
+    setFeedbackMessage(options.message || copy.movedToStep(clampedIndex + 1, steps.length));
     if (options.logTouch !== false) {
       logTutorialTouch(eventType, {
         stepIndexBefore: previousIndex,
@@ -115,7 +121,7 @@ export function TutorialDetailPage({
       success: true,
       stepIndexBefore: previousIndex,
       stepIndexAfter: clampedIndex,
-      message: options.message || `Moved to step ${clampedIndex + 1} of ${steps.length}.`,
+      message: options.message || copy.movedToStep(clampedIndex + 1, steps.length),
     };
   }
 
@@ -129,7 +135,7 @@ export function TutorialDetailPage({
 
   function handleRepeat() {
     if (!currentStep) return;
-    const message = `Repeat step ${currentStep.stepNumber}: ${currentStep.instruction}`;
+    const message = copy.repeatStep(currentStep.stepNumber, currentStep.instruction);
     setFeedbackMessage(message);
     logTutorialTouch("repeat_instruction", {
       metadata: { instruction: currentStep.instruction },
@@ -139,7 +145,7 @@ export function TutorialDetailPage({
   function setMaterialsVisibility(nextValue, { logTouch = true } = {}) {
     if (isMaterialsOpen === nextValue) return;
     setIsMaterialsOpen(nextValue);
-    setFeedbackMessage(nextValue ? "Materials shown." : "Materials hidden.");
+    setFeedbackMessage(nextValue ? copy.materialsShown : copy.materialsHidden);
     if (logTouch) {
       logTutorialTouch(nextValue ? "materials_open" : "materials_close");
     }
@@ -152,7 +158,7 @@ export function TutorialDetailPage({
   function handleToggleOverview() {
     const nextValue = !isOverviewOpen;
     setIsOverviewOpen(nextValue);
-    setFeedbackMessage(nextValue ? "Tutorial overview shown." : "Tutorial overview hidden.");
+    setFeedbackMessage(nextValue ? copy.overviewShown : copy.overviewHidden);
     logTutorialTouch(nextValue ? "overview_open" : "overview_close");
   }
 
@@ -173,7 +179,7 @@ export function TutorialDetailPage({
 
   function handleComplete() {
     setIsCompleted(true);
-    setFeedbackMessage(`Tutorial complete. You reviewed ${steps.length} steps.`);
+    setFeedbackMessage(copy.completeMessage(steps.length));
     logTutorialTouch("tutorial_complete", {
       stepIndexBefore: activeStepIndex,
       stepIndexAfter: activeStepIndex,
@@ -261,7 +267,7 @@ export function TutorialDetailPage({
 
     if (intent === VOICE_INTENTS.SCROLL_TOP) {
       const scrollTarget = scrollToPosition("top");
-      const message = "Moved to the top.";
+      const message = copy.topMessage;
       setFeedbackMessage(message);
       return {
         message,
@@ -273,7 +279,7 @@ export function TutorialDetailPage({
 
     if (intent === VOICE_INTENTS.SCROLL_BOTTOM) {
       const scrollTarget = scrollToPosition("bottom");
-      const message = "Moved to the bottom.";
+      const message = copy.bottomMessage;
       setFeedbackMessage(message);
       return {
         message,
@@ -285,7 +291,7 @@ export function TutorialDetailPage({
 
     const amount = getScrollAmount(pageSized ? PAGE_AMOUNT_RATIO : SCROLL_AMOUNT_RATIO);
     const scrollTarget = scrollByAmount(downward ? amount : -amount);
-    const message = downward ? "Scrolled down." : "Scrolled up.";
+    const message = downward ? copy.scrolledDown : copy.scrolledUp;
     setFeedbackMessage(message);
     return {
       message,
@@ -301,27 +307,27 @@ export function TutorialDetailPage({
     switch (parsed.intent) {
       case VOICE_INTENTS.NEXT_STEP: {
         if (isLastStep || isCompleted) {
-          return voiceFailure("You are already at the last available step.", "last_step_reached", stepIndexBefore);
+          return voiceFailure(copy.lastStepError, "last_step_reached", stepIndexBefore);
         }
         const moveResult = goToStep(activeStepIndex + 1, "voice_step_next", {}, {
           logTouch: false,
-          message: `Moved to step ${activeStepIndex + 2}.`,
+          message: copy.movedToStepShort(activeStepIndex + 2),
         });
         return voiceSuccess("voice_command", moveResult.message, moveResult);
       }
       case VOICE_INTENTS.PREVIOUS_STEP: {
         if (isFirstStep) {
-          return voiceFailure("You are already at the first step.", "first_step_reached", stepIndexBefore);
+          return voiceFailure(copy.firstStepError, "first_step_reached", stepIndexBefore);
         }
         const moveResult = goToStep(activeStepIndex - 1, "voice_step_previous", {}, {
           logTouch: false,
-          message: `Moved to step ${activeStepIndex}.`,
+          message: copy.movedToStepShort(activeStepIndex),
         });
         return voiceSuccess("voice_command", moveResult.message, moveResult);
       }
       case VOICE_INTENTS.REPEAT_INSTRUCTION: {
-        if (!currentStep) return voiceFailure("No current instruction is available.", "missing_current_step", stepIndexBefore);
-        const message = `Repeat step ${currentStep.stepNumber}: ${currentStep.instruction}`;
+        if (!currentStep) return voiceFailure(copy.missingInstructionError, "missing_current_step", stepIndexBefore);
+        const message = copy.repeatStep(currentStep.stepNumber, currentStep.instruction);
         setFeedbackMessage(message);
         return voiceSuccess("voice_command", message, {
           stepIndexBefore,
@@ -332,8 +338,8 @@ export function TutorialDetailPage({
       case VOICE_INTENTS.SHOW_MATERIALS: {
         setMaterialsVisibility(true, { logTouch: false });
         openMobilePanelIfCompact("materials");
-        setFeedbackMessage("Materials shown.");
-        return voiceSuccess("voice_command", "Materials panel opened.", {
+        setFeedbackMessage(copy.materialsShown);
+        return voiceSuccess("voice_command", copy.materialsOpened, {
           stepIndexBefore,
           stepIndexAfter: stepIndexBefore,
         });
@@ -343,32 +349,32 @@ export function TutorialDetailPage({
         if (activeMobilePanel === "materials") {
           setActiveMobilePanel(null);
         }
-        setFeedbackMessage("Materials hidden.");
-        return voiceSuccess("voice_command", "Materials panel closed.", {
+        setFeedbackMessage(copy.materialsHidden);
+        return voiceSuccess("voice_command", copy.materialsClosed, {
           stepIndexBefore,
           stepIndexAfter: stepIndexBefore,
         });
       }
       case VOICE_INTENTS.SHOW_OVERVIEW: {
         setIsOverviewOpen(true);
-        setFeedbackMessage("Tutorial overview shown.");
-        return voiceSuccess("voice_command", "Tutorial overview shown.", {
+        setFeedbackMessage(copy.overviewShown);
+        return voiceSuccess("voice_command", copy.overviewShown, {
           stepIndexBefore,
           stepIndexAfter: stepIndexBefore,
         });
       }
       case VOICE_INTENTS.SEARCH: {
-        if (!parsed.query) return voiceFailure("Please include a search term.", "missing_search_query", stepIndexBefore);
+        if (!parsed.query) return voiceFailure(copy.missingSearchError, "missing_search_query", stepIndexBefore);
         setTutorialSearchQuery(parsed.query);
-        setFeedbackMessage(`Searching this tutorial for "${parsed.query}".`);
-        return voiceSuccess("voice_command", `Searching for "${parsed.query}".`, {
+        setFeedbackMessage(copy.searchingTutorial(parsed.query));
+        return voiceSuccess("voice_command", copy.searchingFor(parsed.query), {
           stepIndexBefore,
           stepIndexAfter: stepIndexBefore,
           metadata: { query: parsed.query },
         });
       }
       case VOICE_INTENTS.HELP: {
-        const message = "Showing voice command examples.";
+        const message = copy.showingCommands;
         setActivePanelTrigger(null);
         setActiveMobilePanel("commands");
         setFeedbackMessage(message);
@@ -379,7 +385,7 @@ export function TutorialDetailPage({
         });
       }
       case VOICE_INTENTS.STOP_LISTENING: {
-        const message = "Voice listening stopped. You can still use the buttons.";
+        const message = copy.listeningStopped;
         setFeedbackMessage(message);
         return voiceSuccess("voice_stop_listening", message, {
           stepIndexBefore,
@@ -390,14 +396,14 @@ export function TutorialDetailPage({
         const targetIndex = parsed.stepNumber - 1;
         if (!Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= steps.length) {
           return voiceFailure(
-            `That step does not exist. Try a number between 1 and ${steps.length}.`,
+            copy.stepOutOfRange(steps.length),
             "step_out_of_range",
             stepIndexBefore
           );
         }
         const moveResult = goToStep(targetIndex, "voice_go_to_step", { stepNumber: parsed.stepNumber }, {
           logTouch: false,
-          message: `Moved to step ${parsed.stepNumber}.`,
+          message: copy.movedToStepShort(parsed.stepNumber),
         });
         return voiceSuccess("voice_command", moveResult.message, moveResult);
       }
@@ -411,7 +417,7 @@ export function TutorialDetailPage({
         return voiceSuccess("voice_command", scrollResult.message, scrollResult);
       }
       default:
-        return voiceFailure("I do not recognize that command yet.", "unsupported_intent", stepIndexBefore);
+        return voiceFailure(copy.unsupportedCommand, "unsupported_intent", stepIndexBefore);
     }
   }
 
@@ -451,6 +457,7 @@ export function TutorialDetailPage({
     trialType: studyContext?.trialType || null,
     taskStartedAt: studyContext?.startedAt || null,
     enabled: voiceControlsEnabled,
+    language: normalizedLanguage,
     getStepIndex: () => activeStepIndex,
     onCommand: executeVoiceCommand,
   });
@@ -491,14 +498,14 @@ export function TutorialDetailPage({
       <div className="detail-shell tutorial-detail-shell tutorial-runner" ref={tutorialShellRef}>
         {isLoading ? (
           <section className="tutorial-content-card tutorial-loading-card">
-            <p className="status-note">Loading tutorial...</p>
+            <p className="status-note">{copy.loading}</p>
           </section>
         ) : null}
 
         {!isLoading && resultMeta.error ? (
           <section className="tutorial-content-card tutorial-loading-card">
-            <TutorialHeading>Tutorial unavailable</TutorialHeading>
-            <p>We could not load this tutorial. Please try another one.</p>
+            <TutorialHeading>{copy.unavailableTitle}</TutorialHeading>
+            <p>{copy.unavailableDescription}</p>
           </section>
         ) : null}
 
@@ -507,17 +514,17 @@ export function TutorialDetailPage({
             <div className="tutorial-task-layout">
               <section
                 className="tutorial-main-column tutorial-content-card"
-                aria-label="Current tutorial step"
+                aria-label={copy.currentStepLabel}
                 ref={tutorialMainRef}
               >
                 <div className="tutorial-runner-header">
                   <div className="tutorial-header-topline">
-                    <p className="eyebrow">Tutorial</p>
+                    <p className="eyebrow">{copy.sectionLabel}</p>
 
                     <div className="tutorial-meta-row">
                       <span>{tutorial.category}</span>
-                      {tutorial.estimatedMinutes ? <span>{tutorial.estimatedMinutes} min</span> : null}
-                      <span>{steps.length} steps</span>
+                      {tutorial.estimatedMinutes ? <span>{tutorial.estimatedMinutes} {pageCopy.shared.minutesSuffix}</span> : null}
+                      <span>{pageCopy.shared.stepsSuffix(steps.length)}</span>
                     </div>
                   </div>
 
@@ -528,11 +535,11 @@ export function TutorialDetailPage({
 
                 <div className="tutorial-progress-block">
                   <span className="tutorial-progress-label">
-                    Step {activeStepIndex + 1} of {steps.length}
+                    {copy.stepProgress(activeStepIndex + 1, steps.length)}
                   </span>
                   <div
                     className="progress-shell"
-                    aria-label={`Step ${activeStepIndex + 1} of ${steps.length}`}
+                    aria-label={copy.stepProgress(activeStepIndex + 1, steps.length)}
                     role="progressbar"
                     aria-valuemin={1}
                     aria-valuemax={steps.length}
@@ -542,10 +549,13 @@ export function TutorialDetailPage({
                   </div>
                 </div>
 
-                <StepCard step={currentStep} isCurrent />
+                <StepCard step={currentStep} isCurrent instructionLabel={copy.instructionTitle} />
               </section>
 
               <TutorialToolsSheet
+                copy={copy}
+                sharedCopy={pageCopy.shared}
+                voiceCopy={pageCopy.voice}
                 commandPopoverId={commandPopoverId}
                 materialsPopoverId={materialsPopoverId}
                 activeMobilePanel={activeMobilePanel}
@@ -581,6 +591,7 @@ export function TutorialDetailPage({
             </div>
 
             <TutorialBottomBar
+              copy={copy}
               showVoiceControl={voiceControlsEnabled}
               isVoiceOn={isVoiceOn}
               browserSupported={voiceCommands.browserSupported}
@@ -605,7 +616,7 @@ export function TutorialDetailPage({
 
             <div className="tutorial-mobile-safe-space" aria-hidden="true" />
             <div className="sr-only" aria-live="polite" aria-atomic="true">
-              {feedbackMessage || `Current step ${activeStepIndex + 1} of ${steps.length}.`}
+              {feedbackMessage || copy.currentStepLive(activeStepIndex + 1, steps.length)}
             </div>
           </>
         ) : null}

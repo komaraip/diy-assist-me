@@ -2,14 +2,16 @@ import { ClipboardPenLine, Wrench } from "lucide-react";
 import { useState } from "react";
 import { createObserverNote } from "../../services/observerNoteService.js";
 import { appendTechnicalNote } from "../../services/sessionService.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
 
-export function ObserverNotesPanel({ session, task, taskTrial }) {
+export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }) {
   const [observerNote, setObserverNote] = useState("");
   const [severity, setSeverity] = useState("note");
   const [tags, setTags] = useState("");
   const [technicalNote, setTechnicalNote] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const copy = getStudyCopy(normalizeStudyLanguage(language)).observerNotes;
 
   async function handleSaveObserverNote(event) {
     event.preventDefault();
@@ -25,7 +27,7 @@ export function ObserverNotesPanel({ session, task, taskTrial }) {
       severity,
       tags,
     });
-    setStatusMessage(result.error || "Facilitator note saved.");
+    setStatusMessage(result.error || copy.noteSaved);
     if (!result.error) {
       setObserverNote("");
       setTags("");
@@ -37,7 +39,7 @@ export function ObserverNotesPanel({ session, task, taskTrial }) {
     event.preventDefault();
     setIsSaving(true);
     const result = await appendTechnicalNote(session.id, technicalNote);
-    setStatusMessage(result.error || "Setup note saved.");
+    setStatusMessage(result.error || copy.setupSaved);
     if (!result.error) {
       setTechnicalNote("");
     }
@@ -46,16 +48,14 @@ export function ObserverNotesPanel({ session, task, taskTrial }) {
 
   return (
     <details className="study-panel facilitator-notes-panel">
-      <summary>Facilitator notes</summary>
-      <p className="study-context-line">
-        Optional facilitator-only notes for issues, setup details, or anything that affected this task.
-      </p>
+      <summary>{copy.summary}</summary>
+      <p className="study-context-line">{copy.description}</p>
 
       <div className="two-column-grid">
         <form className="note-form" onSubmit={handleSaveObserverNote}>
           <ClipboardPenLine aria-hidden="true" />
           <label className="field-label">
-            Facilitator note
+            {copy.noteLabel}
             <textarea
               value={observerNote}
               onChange={(event) => setObserverNote(event.target.value)}
@@ -64,32 +64,32 @@ export function ObserverNotesPanel({ session, task, taskTrial }) {
             />
           </label>
           <label className="field-label">
-            Severity
+            {copy.severityLabel}
             <select value={severity} onChange={(event) => setSeverity(event.target.value)}>
-              <option value="note">Note</option>
-              <option value="minor">Minor issue</option>
-              <option value="major">Major issue</option>
-              <option value="critical">Critical issue</option>
+              <option value="note">{copy.severities.note}</option>
+              <option value="minor">{copy.severities.minor}</option>
+              <option value="major">{copy.severities.major}</option>
+              <option value="critical">{copy.severities.critical}</option>
             </select>
           </label>
           <label className="field-label">
-            Tags
+            {copy.tagsLabel}
             <input
               type="text"
               value={tags}
               onChange={(event) => setTags(event.target.value)}
-              placeholder="voice error, fallback, hesitation"
+              placeholder={copy.tagsPlaceholder}
             />
           </label>
           <button type="submit" className="button secondary-action" disabled={isSaving || !observerNote.trim()}>
-            Save facilitator note
+            {copy.saveNote}
           </button>
         </form>
 
         <form className="note-form" onSubmit={handleSaveTechnicalNote}>
           <Wrench aria-hidden="true" />
           <label className="field-label">
-            Setup or browser note
+            {copy.setupLabel}
             <textarea
               value={technicalNote}
               onChange={(event) => setTechnicalNote(event.target.value)}
@@ -98,7 +98,7 @@ export function ObserverNotesPanel({ session, task, taskTrial }) {
             />
           </label>
           <button type="submit" className="button secondary-action" disabled={isSaving || !technicalNote.trim()}>
-            Save setup note
+            {copy.saveSetup}
           </button>
         </form>
       </div>

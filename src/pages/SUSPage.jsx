@@ -6,6 +6,7 @@ import { SUSForm } from "../components/study/SUSForm.jsx";
 import { getStudySession } from "../services/studyService.js";
 import { submitSusResponse } from "../services/susService.js";
 import { findStudyCondition } from "../utils/studyAssignments.js";
+import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 export function SUSPage() {
   const { sessionId, conditionId } = useParams();
@@ -14,6 +15,8 @@ export function SUSPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const language = normalizeStudyLanguage(session?.language);
+  const copy = getStudyCopy(language);
 
   useEffect(() => {
     let isMounted = true;
@@ -47,12 +50,12 @@ export function SUSPage() {
       modality: condition.modality,
       responses,
     });
-    setStatusMessage(result.error || "Thanks, your answers were saved.");
+    setStatusMessage(result.error || copy.susPage.savedStatus);
     setIsSubmitting(false);
   }
 
   if (isLoading) {
-    return <p className="page-section status-note">Loading questionnaire...</p>;
+    return <p className="page-section status-note">{copy.susPage.loading}</p>;
   }
 
   if (resultMeta.error || !session || !condition) {
@@ -60,11 +63,11 @@ export function SUSPage() {
       <section className="page-section narrow-page">
         <Link className="inline-link" to={`/study/session/${sessionId}`}>
           <ArrowLeft aria-hidden="true" />
-          Back to guided session
+          {copy.susPage.back}
         </Link>
         <div className="detail-shell">
-          <h1>Questionnaire unavailable</h1>
-          <p>{resultMeta.error || "Mode not found in this session."}</p>
+          <h1>{copy.susPage.unavailableTitle}</h1>
+          <p>{resultMeta.error || copy.susPage.unavailableFallback}</p>
         </div>
       </section>
     );
@@ -74,33 +77,31 @@ export function SUSPage() {
     <section className="page-section narrow-page">
       <Link className="inline-link" to={`/study/session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
-        Back to guided session
+        {copy.susPage.back}
       </Link>
       <div className="page-header">
-        <p className="eyebrow">Questionnaire</p>
-        <h1>Quick usability questionnaire</h1>
-        <p>
-          Answer these questions based only on the {formatMode(condition)} you just used.
-          After saving, return to the guided session for the next step.
-        </p>
+        <p className="eyebrow">{copy.susPage.eyebrow}</p>
+        <h1>{copy.susPage.title}</h1>
+        <p>{copy.susPage.description(formatMode(condition, language))}</p>
       </div>
       <GuidedProgress
         steps={[
-          { id: "mode", label: `${formatModeTitle(condition)} task`, status: "Complete this mode first" },
-          { id: "questionnaire", label: "Questionnaire", status: "Answer all 10 items" },
-          { id: "continue", label: "Continue", status: "Return to the guided session" },
+          { id: "mode", label: copy.susPage.progress.modeTask(formatModeTitle(condition, language)), status: copy.susPage.progress.modeStatus },
+          { id: "questionnaire", label: copy.susPage.progress.questionnaireLabel, status: copy.susPage.progress.questionnaireStatus },
+          { id: "continue", label: copy.susPage.progress.continueLabel, status: copy.susPage.progress.continueStatus },
         ]}
         currentStepId="questionnaire"
-        title="Questionnaire progress"
+        title={copy.susPage.progressTitle}
+        eyebrow={copy.shared.progressEyebrow}
       />
-      <SUSForm condition={condition} isSubmitting={isSubmitting} onSubmit={handleSubmit} />
+      <SUSForm condition={condition} isSubmitting={isSubmitting} onSubmit={handleSubmit} language={language} />
       {statusMessage ? (
-        <div className={statusMessage.includes("saved") ? "result-panel" : "result-panel error"} role="status">
-          <h2>{statusMessage.includes("saved") ? "Questionnaire saved" : "Questionnaire not saved"}</h2>
+        <div className={statusMessage === copy.susPage.savedStatus ? "result-panel" : "result-panel error"} role="status">
+          <h2>{statusMessage === copy.susPage.savedStatus ? copy.susPage.savedTitle : copy.susPage.notSavedTitle}</h2>
           <p>{statusMessage}</p>
-          {statusMessage.includes("saved") ? (
+          {statusMessage === copy.susPage.savedStatus ? (
             <Link className="button primary-button result-action" to={`/study/session/${session.id}`}>
-              Back to guided session
+              {copy.susPage.backButton}
             </Link>
           ) : null}
         </div>
@@ -109,14 +110,11 @@ export function SUSPage() {
   );
 }
 
-function formatMode(condition) {
-  if (condition.modality === "voice") return "voice mode";
-  if (condition.modality === "touch") return "touch mode";
-  return "this mode";
+function formatMode(condition, language) {
+  if (!condition?.modality) return getStudyCopy(language).modes.thisMode;
+  return formatStudyMode(condition.modality, language, "lower");
 }
 
-function formatModeTitle(condition) {
-  if (condition.modality === "voice") return "Voice mode";
-  if (condition.modality === "touch") return "Touch mode";
-  return "Tutorial mode";
+function formatModeTitle(condition, language) {
+  return formatStudyMode(condition?.modality, language);
 }

@@ -9,9 +9,11 @@ export function VoiceControlPanel({
   transcript,
   errorMessage,
   voiceFeedback,
+  copy,
 }) {
   const liveMessage = getLiveMessage({
     browserSupported,
+    copy,
     errorMessage,
     isRestarting,
     isVoiceEnabled,
@@ -27,17 +29,17 @@ export function VoiceControlPanel({
   });
 
   return (
-    <section className={`voice-panel ${voiceState}`} aria-label="Voice feedback">
+    <section className={`voice-panel ${voiceState}`} aria-label={copy.feedbackAria}>
       {!browserSupported ? (
         <div className="voice-warning" role="status">
           <AlertTriangle aria-hidden="true" />
-          <p>Voice is unavailable in this browser.</p>
+          <p>{copy.unavailableBrowser}</p>
         </div>
       ) : null}
 
       {transcript ? (
         <p className="voice-heard-line">
-          <span>Heard:</span> {transcript}
+          <span>{copy.heard}</span> {transcript}
         </p>
       ) : null}
 
@@ -52,15 +54,15 @@ export function VoiceControlPanel({
   );
 }
 
-function getLiveMessage({ browserSupported, errorMessage, isRestarting, isVoiceEnabled, voiceFeedback, voiceState }) {
-  if (!browserSupported) return "Voice commands are not available in this browser. You can still use the buttons.";
-  if (isRestarting) return "Listening again...";
+function getLiveMessage({ browserSupported, copy, errorMessage, isRestarting, isVoiceEnabled, voiceFeedback, voiceState }) {
+  if (!browserSupported) return copy.unavailableLong;
+  if (isRestarting) return copy.listeningAgain;
   if (errorMessage) return errorMessage;
   if (voiceFeedback) return voiceFeedback;
-  if (voiceState === VOICE_STATES.LISTENING) return "Listening.";
-  if (voiceState === VOICE_STATES.PROCESSING) return "Processing voice command.";
-  if (isVoiceEnabled) return "Voice is on.";
-  return "Voice is off.";
+  if (voiceState === VOICE_STATES.LISTENING) return copy.listening;
+  if (voiceState === VOICE_STATES.PROCESSING) return copy.processing;
+  if (isVoiceEnabled) return copy.voiceOn;
+  return copy.voiceOff;
 }
 
 function shouldRenderLiveMessage({ browserSupported, errorMessage, isRestarting, voiceFeedback, voiceState }) {

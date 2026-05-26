@@ -2,6 +2,7 @@ import { CheckCircle2, ChevronLeft, ChevronRight, ClipboardList, HelpCircle, Mic
 import { TutorialIconButton } from "./TutorialIconButton.jsx";
 
 export function TutorialBottomBar({
+  copy,
   showVoiceControl,
   isVoiceOn,
   browserSupported,
@@ -23,12 +24,12 @@ export function TutorialBottomBar({
   commandsButtonRef,
   materialsButtonRef,
 }) {
-  const voiceLabel = getVoiceLabel({ browserSupported, isVoiceOn });
-  const commandsLabel = showVoiceControl ? "Show voice commands" : "Voice commands unavailable for this task";
+  const voiceLabel = getVoiceLabel({ browserSupported, isVoiceOn, copy });
+  const commandsLabel = showVoiceControl ? copy.commandButton : copy.commandUnavailable;
   const handleNextAction = isLastStep ? onComplete : onNext;
 
   return (
-    <nav className="tutorial-bottom-bar" aria-label="Primary tutorial controls">
+    <nav className="tutorial-bottom-bar" aria-label={copy.primaryControls}>
       <div className="tutorial-bottom-bar-inner">
         {showVoiceControl ? (
           <TutorialIconButton
@@ -46,8 +47,8 @@ export function TutorialBottomBar({
         ) : null}
 
         <TutorialIconButton
-          label="Go to previous step"
-          title="Go to previous step"
+          label={copy.previousStep}
+          title={copy.previousStep}
           className="tutorial-bar-button direction-previous"
           onClick={onPrevious}
           disabled={isFirstStep}
@@ -56,8 +57,8 @@ export function TutorialBottomBar({
         </TutorialIconButton>
 
         <TutorialIconButton
-          label="Repeat current instruction"
-          title="Repeat current instruction"
+          label={copy.repeatInstruction}
+          title={copy.repeatInstruction}
           className="tutorial-bar-button repeat-button"
           onClick={onRepeat}
         >
@@ -65,8 +66,8 @@ export function TutorialBottomBar({
         </TutorialIconButton>
 
         <TutorialIconButton
-          label={isLastStep ? "Finish tutorial" : "Go to next step"}
-          title={isLastStep ? "Finish tutorial" : "Go to next step"}
+          label={isLastStep ? copy.finishTutorial : copy.nextStep}
+          title={isLastStep ? copy.finishTutorial : copy.nextStep}
           className="tutorial-bar-button direction-next"
           onClick={handleNextAction}
           disabled={isLastStep ? isCompleted : false}
@@ -88,8 +89,8 @@ export function TutorialBottomBar({
         </TutorialIconButton>
 
         <TutorialIconButton
-          label="Show materials"
-          title="Show materials"
+          label={copy.showMaterials}
+          title={copy.showMaterials}
           className="tutorial-bar-button"
           onClick={onOpenMaterials}
           aria-expanded={isMaterialsOpen}
@@ -103,7 +104,7 @@ export function TutorialBottomBar({
   );
 }
 
-function getVoiceLabel({ browserSupported, isVoiceOn }) {
-  if (!browserSupported) return "Voice navigation unavailable";
-  return isVoiceOn ? "Stop voice navigation" : "Start voice navigation";
+function getVoiceLabel({ browserSupported, isVoiceOn, copy }) {
+  if (!browserSupported) return copy.voiceUnavailable;
+  return isVoiceOn ? copy.voiceButtonOn : copy.voiceButtonOff;
 }

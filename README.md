@@ -1,6 +1,6 @@
 # DIY Assist Me
 
-Research prototype for "Mitigating Situational Impairments in DIY Instructional Tasks: An Empirical Evaluation of Web-Native Voice-Driven Navigation." It compares conventional touch navigation with a constrained set of English voice commands in structured DIY tutorial tasks. The app is a Vite React JavaScript application with Firebase Firestore support and localStorage fallback.
+Research prototype for "Mitigating Situational Impairments in DIY Instructional Tasks: An Empirical Evaluation of Web-Native Voice-Driven Navigation." It compares conventional touch navigation with a constrained set of English and Indonesian voice commands in structured DIY tutorial tasks. The app is a Vite React JavaScript application with Firebase Firestore support and localStorage fallback.
 
 ## Setup
 
@@ -128,22 +128,23 @@ Materials can be strings or objects with `name`, `quantity`, `unit`, and `notes`
 
 Primary voice testing browser: Google Chrome desktop.
 
-The Web Speech API is browser-dependent and may require network support. If voice recognition is unavailable, the app shows an unsupported-browser warning and touch controls remain available as fallback. Microphone and browser errors are logged as technical notes during study sessions when a session context exists.
+The Web Speech API is browser-dependent and may require network support. Guided sessions use `en-US` speech recognition for English sessions and `id-ID` for Indonesian sessions. If voice recognition is unavailable, the app shows an unsupported-browser warning and touch controls remain available as fallback. Microphone and browser errors are logged as technical notes during study sessions when a session context exists.
 
 ## Study Flow
 
 1. Open `/study`.
-2. Confirm participant consent.
-3. Select AB or BA condition sequence.
-4. Select tutorial rotation.
-5. Create an anonymous participant/session.
-6. Run practice and measured task trials separately.
-7. Complete each task trial with completion coding.
-8. Submit SUS after each condition.
-9. Submit final debrief responses.
-10. Add observer or technical notes as needed.
+2. Select the guided study language. English is the default; Bahasa Indonesia localizes the guided setup, task flow, tutorial runner, SUS, debrief, and voice command hints.
+3. Confirm participant consent.
+4. Select AB or BA condition sequence.
+5. Select tutorial rotation.
+6. Create an anonymous participant/session.
+7. Run practice and measured task trials separately.
+8. Complete each task trial with completion coding.
+9. Submit SUS after each condition.
+10. Submit final debrief responses.
+11. Add observer or technical notes as needed.
 
-Condition IDs are `condition_1` and `condition_2`; modality is stored separately as `touch` or `voice`. Practice trials are stored with `trialType: "practice"` and measured trials with `trialType: "measured"`.
+Condition IDs are `condition_1` and `condition_2`; modality is stored separately as `touch` or `voice`. Practice trials are stored with `trialType: "practice"` and measured trials with `trialType: "measured"`. Guided sessions and participants store `language` as `en` or `id`; old sessions without this field render in English.
 
 Measured task records include `taskScript`, `requiredActions`, `targetKeyword`, `targetStep`, and `successCriteria` so Chapter 4 can describe the exact navigation actions participants performed.
 

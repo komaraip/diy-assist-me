@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
 import { createStudySession } from "../services/studyService.js";
 import { SEQUENCE_ASSIGNMENTS, TUTORIAL_ROTATIONS } from "../utils/studyAssignments.js";
+import { DEFAULT_STUDY_LANGUAGE, STUDY_LANGUAGE_OPTIONS, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 const initialEnvironment = {
   deviceType: "",
@@ -15,70 +16,8 @@ const initialEnvironment = {
   researcherObservationNote: "",
 };
 
-const setupProgressSteps = [
-  { id: "setup", label: "Set up your session", status: "Add consent and choose the session options." },
-  { id: "tutorials", label: "Follow the guided tasks", status: "Try touch mode and voice mode." },
-  { id: "feedback", label: "Share feedback", status: "Answer quick questions at the end." },
-];
-
-const environmentFields = [
-  {
-    field: "deviceType",
-    label: "Device type",
-    placeholder: "Select device type",
-    options: ["Laptop", "Desktop computer", "Tablet", "Smartphone"],
-  },
-  {
-    field: "browserName",
-    label: "Browser name",
-    placeholder: "Select browser",
-    options: ["Google Chrome desktop", "Microsoft Edge desktop", "Safari", "Firefox", "Other browser"],
-  },
-  {
-    field: "microphonePermissionStatus",
-    label: "Microphone permission status",
-    placeholder: "Select microphone status",
-    options: ["Allowed", "Blocked", "Prompt not shown yet", "Not checked"],
-  },
-  {
-    field: "roomNoiseLevelNote",
-    label: "Room noise level",
-    placeholder: "Select room noise level",
-    options: ["Quiet room", "Low background noise", "Moderate background noise", "Noisy room"],
-  },
-  {
-    field: "internetConnectionNote",
-    label: "Internet connection",
-    placeholder: "Select internet condition",
-    options: ["Stable connection", "Slow but usable", "Unstable connection", "Disconnected"],
-  },
-  {
-    field: "taskEnvironmentNote",
-    label: "Task environment",
-    placeholder: "Select task environment",
-    options: [
-      "Desk-based hands-busy simulation",
-      "Kitchen-like controlled setup",
-      "Workshop-like controlled setup",
-      "Other controlled setup",
-    ],
-  },
-  {
-    field: "researcherObservationNote",
-    label: "Extra setup note",
-    placeholder: "Select extra setup note",
-    fullWidth: true,
-    options: [
-      "No extra setup issue observed",
-      "Participant needed setup clarification",
-      "Microphone or browser issue observed",
-      "Internet or environment issue observed",
-      "Facilitator intervention needed",
-    ],
-  },
-];
-
 export function StudyPage() {
+  const [language, setLanguage] = useState(DEFAULT_STUDY_LANGUAGE);
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [environment, setEnvironment] = useState(initialEnvironment);
   const [sequenceAssignment, setSequenceAssignment] = useState("AB");
@@ -86,7 +25,10 @@ export function StudyPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [sessionResult, setSessionResult] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const speechSupportStatus = getSpeechSupportStatus();
+  const normalizedLanguage = normalizeStudyLanguage(language);
+  const copy = getStudyCopy(normalizedLanguage);
+  const speechSupportStatus = getSpeechSupportStatus(copy);
+  const environmentFields = copy.environmentFields;
 
   async function handleCreateSession(event) {
     event.preventDefault();
@@ -94,15 +36,15 @@ export function StudyPage() {
     setStatusMessage("");
 
     if (!consentConfirmed) {
-      setSessionResult({ data: null, source: "local", warning: null, error: "Please confirm consent before creating a guided session." });
-      setStatusMessage("Please confirm consent before creating a guided session.");
+      setSessionResult({ data: null, source: "local", warning: null, error: copy.setupPage.consentError });
+      setStatusMessage(copy.setupPage.consentError);
       setIsSubmitting(false);
       return;
     }
 
-    if (!hasCompleteEnvironment(environment)) {
-      setSessionResult({ data: null, source: "local", warning: null, error: "Please complete all setup notes before creating a guided session." });
-      setStatusMessage("Please complete all setup notes before creating a guided session.");
+    if (!hasCompleteEnvironment(environment, environmentFields)) {
+      setSessionResult({ data: null, source: "local", warning: null, error: copy.setupPage.setupError });
+      setStatusMessage(copy.setupPage.setupError);
       setIsSubmitting(false);
       return;
     }
@@ -112,12 +54,13 @@ export function StudyPage() {
       environment,
       sequenceAssignment,
       tutorialRotation,
+      language: normalizedLanguage,
     });
     setSessionResult(result);
     setStatusMessage(
       result.error
         ? result.error
-        : "Session ready."
+        : copy.setupPage.sessionReady
     );
     setIsSubmitting(false);
   }
@@ -130,27 +73,52 @@ export function StudyPage() {
   }
 
   return (
-    <section className="page-section">
+    <section className="page-section study-setup-page">
       <div className="page-header">
-        <p className="eyebrow">Guided mode</p>
-        <h1>Start a guided session</h1>
-        <p>
-          You will try a short tutorial flow with touch controls and voice commands. Start here,
-          then follow each page for the next step.
-        </p>
+        <p className="eyebrow">{copy.setupPage.eyebrow}</p>
+        <h1>{copy.setupPage.title}</h1>
+        <p>{copy.setupPage.description}</p>
       </div>
 
-      <GuidedProgress steps={setupProgressSteps} currentStepId="setup" title="What happens next" />
+      <div className="study-setup-row">
+        <GuidedProgress
+          steps={copy.setupProgress}
+          currentStepId="setup"
+          title={copy.setupPage.progressTitle}
+          eyebrow={copy.shared.progressEyebrow}
+        />
+
+        <section className="language-section" aria-labelledby="language-heading">
+          <div className="guided-progress-heading">
+            <p className="eyebrow">{copy.languageSelector.eyebrow}</p>
+            <h2 id="language-heading">{copy.languageSelector.heading}</h2>
+          </div>
+          <div className="language-option-list" role="radiogroup" aria-label={copy.languageSelector.label}>
+            {STUDY_LANGUAGE_OPTIONS.map((option) => {
+              const isSelected = option.value === normalizedLanguage;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={isSelected ? "language-option current" : "language-option"}
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setLanguage(normalizeStudyLanguage(option.value))}
+                >
+                  <strong>{option.label}</strong>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
 
       <form className="study-form" onSubmit={handleCreateSession}>
-        <section className="form-section" aria-labelledby="consent-heading">
+        <section className="form-section study-consent-card" aria-labelledby="consent-heading">
           <ShieldCheck aria-hidden="true" />
           <div>
-            <h2 id="consent-heading">Consent</h2>
-            <p>
-              Confirm that anonymous interaction details may be saved for this guided session. Use an
-              anonymous participant code only. No real name or raw microphone audio is collected.
-            </p>
+            <h2 id="consent-heading">{copy.setupPage.consentHeading}</h2>
+            <p>{copy.setupPage.consentDescription}</p>
             <label className="checkbox-row">
               <input
                 type="checkbox"
@@ -158,22 +126,19 @@ export function StudyPage() {
                 onChange={(event) => setConsentConfirmed(event.target.checked)}
                 required
               />
-              <span>I confirm consent before creating a guided session.</span>
+              <span>{copy.setupPage.consentLabel}</span>
             </label>
           </div>
         </section>
 
-        <section className="form-section" aria-labelledby="assignment-heading">
+        <section className="form-section study-choice-card" aria-labelledby="assignment-heading">
           <GitBranch aria-hidden="true" />
           <div>
-            <h2 id="assignment-heading">Session choices</h2>
-            <p>
-              Choose whether touch mode or voice mode comes first, then pick the tutorial set.
-              Use 12 AB and 12 BA sessions for the planned balanced sample.
-            </p>
+            <h2 id="assignment-heading">{copy.setupPage.choicesHeading}</h2>
+            <p>{copy.setupPage.choicesDescription}</p>
             <div className="form-grid">
               <label className="field-label">
-                Mode order
+                {copy.setupPage.modeOrderLabel}
                 <select
                   value={sequenceAssignment}
                   onChange={(event) => setSequenceAssignment(event.target.value)}
@@ -181,13 +146,13 @@ export function StudyPage() {
                 >
                   {SEQUENCE_ASSIGNMENTS.map((assignment) => (
                     <option key={assignment.value} value={assignment.value}>
-                      {assignment.label}
+                      {copy.sequenceAssignments[assignment.value] || assignment.label}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="field-label">
-                Tutorial set
+                {copy.setupPage.tutorialSetLabel}
                 <select
                   value={tutorialRotation}
                   onChange={(event) => setTutorialRotation(event.target.value)}
@@ -195,7 +160,7 @@ export function StudyPage() {
                 >
                   {TUTORIAL_ROTATIONS.map((rotation) => (
                     <option key={rotation.value} value={rotation.value}>
-                      {rotation.label}
+                      {copy.tutorialRotations[rotation.value] || rotation.label}
                     </option>
                   ))}
                 </select>
@@ -204,14 +169,11 @@ export function StudyPage() {
           </div>
         </section>
 
-        <section className="form-section" aria-labelledby="environment-heading">
+        <section className="form-section study-setup-notes-card" aria-labelledby="environment-heading">
           <MonitorCheck aria-hidden="true" />
           <div>
-            <h2 id="environment-heading">Setup notes</h2>
-            <p>
-              Record Chrome desktop, microphone permission, internet condition, and room noise before
-              testing. Select one option for each setup field. Current browser voice support: {speechSupportStatus}.
-            </p>
+            <h2 id="environment-heading">{copy.setupPage.setupHeading}</h2>
+            <p>{copy.setupPage.setupDescription(speechSupportStatus)}</p>
             <div className="form-grid">
               {environmentFields.filter((field) => !field.fullWidth).map((field) => (
                 <SelectInput
@@ -239,18 +201,18 @@ export function StudyPage() {
         </section>
 
         <button className="button primary-button form-action" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Starting..." : "Start guided session"}
+          {isSubmitting ? copy.setupPage.startingButton : copy.setupPage.startButton}
         </button>
       </form>
 
       {statusMessage && (
         <div className={sessionResult?.error ? "result-panel error" : "result-panel"} role="status">
-          <h2>{sessionResult?.error ? "Session could not start" : "Session ready"}</h2>
+          <h2>{sessionResult?.error ? copy.setupPage.sessionErrorTitle : copy.setupPage.sessionReadyTitle}</h2>
           <p>{statusMessage}</p>
-          {sessionResult?.data?.participantCode && <p>Session code: {sessionResult.data.participantCode}</p>}
+          {sessionResult?.data?.participantCode && <p>{copy.shared.sessionCode}: {sessionResult.data.participantCode}</p>}
           {sessionResult?.data?.id && (
             <Link className="button primary-button result-action" to={`/study/session/${sessionResult.data.id}`}>
-              Continue to guided session
+              {copy.setupPage.continueButton}
             </Link>
           )}
         </div>
@@ -266,20 +228,20 @@ function SelectInput({ label, value, onChange, placeholder, options, fullWidth =
       <select value={value} onChange={(event) => onChange(event.target.value)} required>
         <option value="" disabled>{placeholder}</option>
         {options.map((option) => (
-          <option key={option} value={option}>{option}</option>
+          <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
     </label>
   );
 }
 
-function hasCompleteEnvironment(environment) {
+function hasCompleteEnvironment(environment, environmentFields) {
   return environmentFields.every((field) => String(environment[field.field] || "").trim());
 }
 
-function getSpeechSupportStatus() {
-  if (typeof window === "undefined") return "not checked";
+function getSpeechSupportStatus(copy) {
+  if (typeof window === "undefined") return copy.shared.notChecked;
   return "SpeechRecognition" in window || "webkitSpeechRecognition" in window
-    ? "available"
-    : "not available";
+    ? copy.shared.available
+    : copy.shared.notAvailable;
 }

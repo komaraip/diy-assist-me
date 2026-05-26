@@ -1,5 +1,6 @@
 import { Clock, Flag, PlayCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
 
 export function TaskTrialControls({
   task,
@@ -8,12 +9,15 @@ export function TaskTrialControls({
   isCompleting,
   onStart,
   onComplete,
+  language = "en",
 }) {
   const [completionStatus, setCompletionStatus] = useState("successful");
   const [invalidTrial, setInvalidTrial] = useState(false);
   const [invalidTrialReason, setInvalidTrialReason] = useState("");
   const [researcherNote, setResearcherNote] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const normalizedLanguage = normalizeStudyLanguage(language);
+  const copy = getStudyCopy(normalizedLanguage);
 
   useEffect(() => {
     if (!taskTrial) return;
@@ -54,29 +58,28 @@ export function TaskTrialControls({
     <section className="study-panel" aria-labelledby="trial-controls-heading">
       <div className="study-panel-heading">
         <div>
-          <p className="eyebrow">{formatTaskType(task.trialType)}</p>
+          <p className="eyebrow">{formatTaskType(task.trialType, copy)}</p>
           <h2 id="trial-controls-heading">{task.label}</h2>
         </div>
         <div className="timer-pill" aria-live="polite">
           <Clock aria-hidden="true" />
-          {taskTrial?.endedAt ? `${taskTrial.durationSeconds ?? 0}s recorded` : `${elapsedSeconds}s`}
+          {taskTrial?.endedAt ? copy.taskTrial.recorded(taskTrial.durationSeconds) : copy.taskTrial.elapsed(elapsedSeconds)}
         </div>
       </div>
 
       <p className="study-context-line">
-        {formatMode(task.modality)} for tutorial {task.tutorialId}
+        {copy.taskTrial.modeLine(formatMode(task.modality, normalizedLanguage), task.tutorialId)}
       </p>
 
       {!taskTrial ? (
         <button type="button" className="button primary-button" onClick={onStart} disabled={isStarting}>
           <PlayCircle aria-hidden="true" />
-          {isStarting ? "Starting task..." : "Start task"}
+          {isStarting ? copy.taskTrial.starting : copy.taskTrial.start}
         </button>
       ) : (
         <form className="trial-completion-form" onSubmit={handleComplete}>
           <p className="status-note">
-            Started at {formatTime(taskTrial.startedAt)}
-            {isCompleted ? ` and finished at ${formatTime(taskTrial.endedAt)}.` : ". Finish this task when the tutorial work is done."}
+            {copy.taskTrial.startedAt(formatTime(taskTrial.startedAt, copy), formatTime(taskTrial.endedAt, copy), isCompleted)}
           </p>
 
           <button
@@ -85,25 +88,23 @@ export function TaskTrialControls({
             disabled={!canComplete || isCompleting || isCompleted}
           >
             <Flag aria-hidden="true" />
-            {isCompleting ? "Finishing..." : isCompleted ? "Task finished" : "Finish task"}
+            {isCompleting ? copy.taskTrial.finishing : isCompleted ? copy.taskTrial.finished : copy.taskTrial.finish}
           </button>
 
           <details className="facilitator-details">
-            <summary>Facilitator task details</summary>
-            <p className="study-context-line">
-              Use this section only when task outcome or facilitator notes need to be recorded.
-            </p>
+            <summary>{copy.taskTrial.facilitatorSummary}</summary>
+            <p className="study-context-line">{copy.taskTrial.facilitatorDescription}</p>
 
             <label className="field-label">
-              Task outcome
+              {copy.taskTrial.outcomeLabel}
               <select
                 value={completionStatus}
                 onChange={(event) => setCompletionStatus(event.target.value)}
                 disabled={isCompleted}
               >
-                <option value="successful">Successful</option>
-                <option value="partially_successful">Partially successful</option>
-                <option value="unsuccessful">Unsuccessful</option>
+                <option value="successful">{copy.taskTrial.outcomes.successful}</option>
+                <option value="partially_successful">{copy.taskTrial.outcomes.partially_successful}</option>
+                <option value="unsuccessful">{copy.taskTrial.outcomes.unsuccessful}</option>
               </select>
             </label>
 
@@ -114,12 +115,12 @@ export function TaskTrialControls({
                 onChange={(event) => setInvalidTrial(event.target.checked)}
                 disabled={isCompleted}
               />
-              <span>Mark this task as invalid.</span>
+              <span>{copy.taskTrial.invalidLabel}</span>
             </label>
 
             {invalidTrial ? (
               <label className="field-label">
-                Invalid task reason
+                {copy.taskTrial.invalidReason}
                 <textarea
                   value={invalidTrialReason}
                   onChange={(event) => setInvalidTrialReason(event.target.value)}
@@ -131,7 +132,7 @@ export function TaskTrialControls({
             ) : null}
 
             <label className="field-label">
-              Task note
+              {copy.taskTrial.taskNote}
               <textarea
                 value={researcherNote}
                 onChange={(event) => setResearcherNote(event.target.value)}
@@ -146,17 +147,15 @@ export function TaskTrialControls({
   );
 }
 
-function formatTime(value) {
-  if (!value) return "not recorded";
+function formatTime(value, copy) {
+  if (!value) return copy.taskTrial.notRecorded;
   return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-function formatTaskType(trialType) {
-  return trialType === "practice" ? "Practice task" : "Task";
+function formatTaskType(trialType, copy) {
+  return trialType === "practice" ? copy.taskTrial.practiceEyebrow : copy.taskTrial.measuredEyebrow;
 }
 
-function formatMode(modality) {
-  if (modality === "voice") return "Voice mode";
-  if (modality === "touch") return "Touch mode";
-  return "Tutorial mode";
+function formatMode(modality, language) {
+  return formatStudyMode(modality, language);
 }

@@ -3,31 +3,38 @@ import { createSession, getSessionById } from "./sessionService.js";
 import { listTutorials } from "./tutorialService.js";
 import { buildStudyPlan } from "../utils/studyAssignments.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
+import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 export async function createStudySession({
   consentConfirmed,
   environment = {},
   sequenceAssignment = "AB",
   tutorialRotation = "rotation_a",
+  language = DEFAULT_STUDY_LANGUAGE,
 } = {}) {
+  const normalizedLanguage = normalizeStudyLanguage(language);
+  const copy = getStudyCopy(normalizedLanguage).setupPage;
+
   if (!consentConfirmed) {
-    return serviceFailure("Please confirm consent before creating a guided session.", "local");
+    return serviceFailure(copy.consentError, "local");
   }
 
   const tutorialResult = await listTutorials();
   if (tutorialResult.error || !tutorialResult.data?.length) {
-    return serviceFailure(tutorialResult.error || "At least one tutorial is needed before starting a guided session.", tutorialResult.source);
+    return serviceFailure(tutorialResult.error || copy.missingTutorialsError, tutorialResult.source);
   }
 
   const conditions = buildStudyPlan({
     sequenceAssignment,
     tutorialRotation,
     tutorials: tutorialResult.data,
+    language: normalizedLanguage,
   });
 
   const participantResult = await createParticipant({
     sequenceAssignment,
     tutorialRotation,
+    language: normalizedLanguage,
   });
 
   if (participantResult.error) {
@@ -42,6 +49,7 @@ export async function createStudySession({
     environment,
     sequenceAssignment,
     tutorialRotation,
+    language: normalizedLanguage,
     conditions,
   });
 

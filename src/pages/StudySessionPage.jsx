@@ -5,6 +5,7 @@ import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
 import { listTaskTrialsBySession } from "../services/taskTrialService.js";
 import { getStudySession } from "../services/studyService.js";
 import { getAllStudyTasks } from "../utils/studyAssignments.js";
+import { getStudyCopy, normalizeStudyLanguage, formatStudyMode } from "../i18n/studyCopy.js";
 
 export function StudySessionPage() {
   const { sessionId } = useParams();
@@ -12,6 +13,8 @@ export function StudySessionPage() {
   const [taskTrials, setTaskTrials] = useState([]);
   const [resultMeta, setResultMeta] = useState({ source: "local", warning: null, error: null });
   const [isLoading, setIsLoading] = useState(true);
+  const language = normalizeStudyLanguage(session?.language);
+  const copy = getStudyCopy(language);
 
   useEffect(() => {
     let isMounted = true;
@@ -43,7 +46,7 @@ export function StudySessionPage() {
   const tasks = useMemo(() => getAllStudyTasks(session), [session]);
 
   if (isLoading) {
-    return <p className="page-section status-note">Loading guided session...</p>;
+    return <p className="page-section status-note">{copy.sessionPage.loading}</p>;
   }
 
   if (resultMeta.error || !session) {
@@ -51,11 +54,11 @@ export function StudySessionPage() {
       <section className="page-section narrow-page">
         <Link className="inline-link" to="/study">
           <ArrowLeft aria-hidden="true" />
-          Back to guided setup
+          {copy.sessionPage.back}
         </Link>
         <div className="detail-shell">
-          <h1>Guided session unavailable</h1>
-          <p>{resultMeta.error || "Session not found."}</p>
+          <h1>{copy.sessionPage.unavailableTitle}</h1>
+          <p>{resultMeta.error || copy.sessionPage.unavailableFallback}</p>
         </div>
       </section>
     );
@@ -65,30 +68,32 @@ export function StudySessionPage() {
     <section className="page-section">
       <Link className="inline-link" to="/study">
         <ArrowLeft aria-hidden="true" />
-        Back to guided setup
+        {copy.sessionPage.back}
       </Link>
 
       <div className="page-header">
-        <p className="eyebrow">Guided session</p>
-        <h1>Your guided session</h1>
-        <p>
-          Follow the cards below in order. You will try touch mode, voice mode, quick
-          questionnaires, and final feedback.
-        </p>
-        <p className="session-code">Session code: {session.participantCode || "Not recorded"}</p>
-        {resultMeta.error ? <p className="data-source-note error">We could not load this guided session.</p> : null}
+        <p className="eyebrow">{copy.sessionPage.eyebrow}</p>
+        <h1>{copy.sessionPage.title}</h1>
+        <p>{copy.sessionPage.description}</p>
+        <p className="session-code">{copy.shared.sessionCode}: {session.participantCode || copy.shared.notRecorded}</p>
+        {resultMeta.error ? <p className="data-source-note error">{copy.sessionPage.loadError}</p> : null}
       </div>
 
-      <GuidedProgress steps={buildSessionProgress(session, taskTrials)} currentStepId="tasks" title="Guided session steps" />
+      <GuidedProgress
+        steps={buildSessionProgress(session, taskTrials, copy)}
+        currentStepId="tasks"
+        title={copy.sessionPage.progressTitle}
+        eyebrow={copy.shared.progressEyebrow}
+      />
 
       <div className="condition-grid">
         {(session.conditions || []).length ? (session.conditions || []).map((condition) => (
           <section className="study-panel mode-card" key={condition.id} aria-labelledby={`${condition.id}-heading`}>
             <div className="study-panel-heading">
               <div>
-                <p className="eyebrow">Mode {condition.conditionOrder}</p>
-                <h2 id={`${condition.id}-heading`}>{formatModality(condition.modality)}</h2>
-                <p className="study-context-line">{getModeHelper(condition.modality)}</p>
+                <p className="eyebrow">{copy.sessionPage.modeLabel(condition.conditionOrder)}</p>
+                <h2 id={`${condition.id}-heading`}>{formatModality(condition.modality, language)}</h2>
+                <p className="study-context-line">{getModeHelper(condition.modality, copy)}</p>
               </div>
               <ClipboardList aria-hidden="true" />
             </div>
@@ -100,11 +105,11 @@ export function StudySessionPage() {
                   <li key={task.id}>
                     <div>
                       <strong>{task.label}</strong>
-                      <span>{formatTaskType(task.trialType)} for {task.tutorialId}</span>
-                      <small>{formatTaskStatus(latestTrial)}</small>
+                      <span>{copy.sessionPage.taskMeta(task.trialType, task.tutorialId)}</span>
+                      <small>{formatTaskStatus(latestTrial, copy)}</small>
                     </div>
                     <Link className="button secondary-action" to={`/study/session/${session.id}/task/${task.id}`}>
-                      {getTaskActionLabel(task, latestTrial)}
+                      {getTaskActionLabel(task, latestTrial, copy)}
                     </Link>
                   </li>
                 );
@@ -113,13 +118,13 @@ export function StudySessionPage() {
 
             <Link className="button primary-button" to={`/study/session/${session.id}/sus/${condition.id}`}>
               <FileText aria-hidden="true" />
-              Answer questionnaire
+              {copy.sessionPage.questionnaireButton}
             </Link>
           </section>
         )) : (
           <section className="study-panel">
-            <h2>No tasks are available for this session yet.</h2>
-            <p className="study-context-line">Go back and start a new guided session if this one looks incomplete.</p>
+            <h2>{copy.sessionPage.noTasksTitle}</h2>
+            <p className="study-context-line">{copy.sessionPage.noTasksDescription}</p>
           </section>
         )}
       </div>
@@ -127,62 +132,53 @@ export function StudySessionPage() {
       <div className="workflow-actions">
         <Link className="button complete-button" to={`/study/session/${session.id}/debrief`}>
           <MessageSquareText aria-hidden="true" />
-          Finish with final feedback
+          {copy.sessionPage.finalFeedbackButton}
         </Link>
       </div>
 
       <section className="study-panel">
-        <h2>What happens next?</h2>
-        <p className="study-context-line">
-          Complete the tasks in each mode, answer the questionnaire for that mode, then finish with final feedback.
-          This session includes {tasks.length} tasks.
-        </p>
+        <h2>{copy.sessionPage.whatNextTitle}</h2>
+        <p className="study-context-line">{copy.sessionPage.whatNextDescription(tasks.length)}</p>
       </section>
     </section>
   );
 }
 
-function formatModality(modality) {
-  if (modality === "voice") return "Voice mode";
-  if (modality === "touch") return "Touch mode";
-  return "Tutorial mode";
+function formatModality(modality, language) {
+  return formatStudyMode(modality, language);
 }
 
-function formatTaskType(trialType) {
-  return trialType === "practice" ? "Practice" : "Task";
+function getModeHelper(modality, copy) {
+  if (modality === "voice") return copy.sessionPage.voiceHelper;
+  if (modality === "touch") return copy.sessionPage.touchHelper;
+  return copy.sessionPage.tutorialHelper;
 }
 
-function getModeHelper(modality) {
-  if (modality === "voice") return "Use voice commands when you can. The buttons stay available if you need them.";
-  if (modality === "touch") return "Use the on-screen buttons to move through the tutorial steps.";
-  return "Follow the tutorial instructions at your own pace.";
+function getTaskActionLabel(task, latestTask, copy) {
+  if (!latestTask) return task.trialType === "practice" ? copy.sessionPage.startPractice : copy.sessionPage.startTask;
+  if (latestTask.endedAt) return copy.sessionPage.reviewTask;
+  return copy.sessionPage.continueTask;
 }
 
-function getTaskActionLabel(task, latestTask) {
-  if (!latestTask) return task.trialType === "practice" ? "Start practice" : "Start task";
-  if (latestTask.endedAt) return "Review completed task";
-  return "Continue task";
+function formatTaskStatus(latestTask, copy) {
+  if (!latestTask) return copy.sessionPage.notStarted;
+  if (latestTask.endedAt) return copy.sessionPage.completedIn(latestTask.durationSeconds);
+  return copy.sessionPage.inProgress;
 }
 
-function formatTaskStatus(latestTask) {
-  if (!latestTask) return "Not started";
-  if (latestTask.endedAt) return `Completed${latestTask.durationSeconds ? ` in ${latestTask.durationSeconds}s` : ""}`;
-  return "In progress";
-}
-
-function buildSessionProgress(session, taskTrials) {
+function buildSessionProgress(session, taskTrials, copy) {
   const conditions = session?.conditions || [];
   return [
-    { id: "setup", label: "Setup", status: "Complete" },
+    { id: "setup", label: copy.sessionPage.progress.setupLabel, status: copy.sessionPage.progress.setupStatus },
     {
       id: "tasks",
-      label: "Try each mode",
+      label: copy.sessionPage.progress.tasksLabel,
       status: conditions.length
-        ? `${countCompletedTasks(conditions, taskTrials)} of ${countTasks(conditions)} tasks complete`
-        : "No tasks available",
+        ? copy.sessionPage.progress.tasksStatus(countCompletedTasks(conditions, taskTrials), countTasks(conditions))
+        : copy.sessionPage.progress.noTasks,
     },
-    { id: "questionnaires", label: "Quick questionnaires", status: "Answer one after each mode" },
-    { id: "feedback", label: "Final feedback", status: "Finish after both modes" },
+    { id: "questionnaires", label: copy.sessionPage.progress.questionnairesLabel, status: copy.sessionPage.progress.questionnairesStatus },
+    { id: "feedback", label: copy.sessionPage.progress.feedbackLabel, status: copy.sessionPage.progress.feedbackStatus },
   ];
 }
 

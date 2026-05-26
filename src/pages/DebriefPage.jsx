@@ -5,6 +5,7 @@ import { DebriefForm } from "../components/study/DebriefForm.jsx";
 import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
 import { submitDebriefResponse } from "../services/debriefService.js";
 import { getStudySession } from "../services/studyService.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 export function DebriefPage() {
   const { sessionId } = useParams();
@@ -13,6 +14,8 @@ export function DebriefPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const language = normalizeStudyLanguage(session?.language);
+  const copy = getStudyCopy(language);
 
   useEffect(() => {
     let isMounted = true;
@@ -41,12 +44,12 @@ export function DebriefPage() {
       sessionId: session.id,
       responses,
     });
-    setStatusMessage(result.error || "Session complete. Thanks for your feedback.");
+    setStatusMessage(result.error || copy.debriefPage.completeStatus);
     setIsSubmitting(false);
   }
 
   if (isLoading) {
-    return <p className="page-section status-note">Loading debrief form...</p>;
+    return <p className="page-section status-note">{copy.debriefPage.loading}</p>;
   }
 
   if (resultMeta.error || !session) {
@@ -54,11 +57,11 @@ export function DebriefPage() {
       <section className="page-section narrow-page">
         <Link className="inline-link" to={`/study/session/${sessionId}`}>
           <ArrowLeft aria-hidden="true" />
-          Back to guided session
+          {copy.debriefPage.back}
         </Link>
         <div className="detail-shell">
-          <h1>Feedback form unavailable</h1>
-          <p>{resultMeta.error || "Session not found."}</p>
+          <h1>{copy.debriefPage.unavailableTitle}</h1>
+          <p>{resultMeta.error || copy.debriefPage.unavailableFallback}</p>
         </div>
       </section>
     );
@@ -68,30 +71,27 @@ export function DebriefPage() {
     <section className="page-section narrow-page">
       <Link className="inline-link" to={`/study/session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
-        Back to guided session
+        {copy.debriefPage.back}
       </Link>
       <div className="page-header">
-        <p className="eyebrow">Final feedback</p>
-        <h1>Final feedback</h1>
-        <p>Almost done. Tell us what worked well and what could be better.</p>
+        <p className="eyebrow">{copy.debriefPage.eyebrow}</p>
+        <h1>{copy.debriefPage.title}</h1>
+        <p>{copy.debriefPage.description}</p>
       </div>
       <GuidedProgress
-        steps={[
-          { id: "tasks", label: "Guided tasks", status: "Complete the tutorial modes" },
-          { id: "questionnaires", label: "Questionnaires", status: "Answer after each mode" },
-          { id: "feedback", label: "Final feedback", status: "Submit this form to finish" },
-        ]}
+        steps={copy.debriefPage.progress}
         currentStepId="feedback"
-        title="Final step"
+        title={copy.debriefPage.progressTitle}
+        eyebrow={copy.shared.progressEyebrow}
       />
-      <DebriefForm isSubmitting={isSubmitting} onSubmit={handleSubmit} />
+      <DebriefForm isSubmitting={isSubmitting} onSubmit={handleSubmit} language={language} />
       {statusMessage ? (
-        <div className={statusMessage.includes("complete") ? "result-panel" : "result-panel error"} role="status">
-          <h2>{statusMessage.includes("complete") ? "Session complete" : "Feedback not saved"}</h2>
+        <div className={statusMessage === copy.debriefPage.completeStatus ? "result-panel" : "result-panel error"} role="status">
+          <h2>{statusMessage === copy.debriefPage.completeStatus ? copy.debriefPage.completeTitle : copy.debriefPage.notSavedTitle}</h2>
           <p>{statusMessage}</p>
-          {statusMessage.includes("complete") ? (
+          {statusMessage === copy.debriefPage.completeStatus ? (
             <Link className="button secondary-action result-action" to="/">
-              Back to home
+              {copy.debriefPage.homeButton}
             </Link>
           ) : null}
         </div>

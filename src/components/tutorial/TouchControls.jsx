@@ -10,16 +10,27 @@ export function TouchControls({
   onRepeat,
   onToggleOverview,
   onComplete,
+  copy,
 }) {
+  const touchCopy = copy?.touchControls || {
+    aria: "Touch tutorial controls",
+    previous: "Previous",
+    repeat: "Repeat",
+    overview: "Overview",
+    hideOverview: "Hide overview",
+    next: "Next",
+    complete: "Complete",
+  };
+
   return (
-    <div className="touch-controls" aria-label="Touch tutorial controls">
+    <div className="touch-controls" aria-label={touchCopy.aria}>
       <button type="button" className="button secondary-action" onClick={onPrevious} disabled={isFirstStep}>
         <ChevronLeft aria-hidden="true" />
-        Previous
+        {touchCopy.previous}
       </button>
       <button type="button" className="button secondary-action" onClick={onRepeat}>
         <RotateCcw aria-hidden="true" />
-        Repeat
+        {touchCopy.repeat}
       </button>
       <button
         type="button"
@@ -28,15 +39,15 @@ export function TouchControls({
         aria-expanded={isOverviewOpen}
       >
         <Eye aria-hidden="true" />
-        {isOverviewOpen ? "Hide overview" : "Overview"}
+        {isOverviewOpen ? touchCopy.hideOverview : touchCopy.overview}
       </button>
       <button type="button" className="button primary-button" onClick={onNext} disabled={isLastStep || isCompleted}>
-        Next
+        {touchCopy.next}
         <ChevronRight aria-hidden="true" />
       </button>
       <button type="button" className="button complete-button" onClick={onComplete} disabled={isCompleted}>
         <CheckCircle2 aria-hidden="true" />
-        Complete
+        {touchCopy.complete}
       </button>
     </div>
   );

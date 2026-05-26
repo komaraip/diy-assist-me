@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
 
 const initialResponses = {
   preferredModality: "",
@@ -13,8 +14,9 @@ const initialResponses = {
   suggestions: "",
 };
 
-export function DebriefForm({ isSubmitting, onSubmit }) {
+export function DebriefForm({ isSubmitting, onSubmit, language = "en" }) {
   const [responses, setResponses] = useState(initialResponses);
+  const copy = getStudyCopy(normalizeStudyLanguage(language)).debriefForm;
 
   function updateResponse(field, value) {
     setResponses((current) => ({
@@ -31,39 +33,37 @@ export function DebriefForm({ isSubmitting, onSubmit }) {
   return (
     <form className="study-form" onSubmit={handleSubmit}>
       <section className="study-panel">
-        <p className="eyebrow">Final feedback</p>
-        <h2>Tell us about your experience</h2>
-        <p className="study-context-line">
-          Short answers are fine. Share anything that made the tutorial easier or harder to follow.
-        </p>
+        <p className="eyebrow">{copy.eyebrow}</p>
+        <h2>{copy.title}</h2>
+        <p className="study-context-line">{copy.description}</p>
       </section>
 
       <label className="field-label">
-        Preferred mode
+        {copy.preferredMode}
         <select
           value={responses.preferredModality}
           onChange={(event) => updateResponse("preferredModality", event.target.value)}
           required
         >
-          <option value="">Select one</option>
-          <option value="touch">Touch</option>
-          <option value="voice">Voice</option>
-          <option value="no_preference">No preference</option>
+          <option value="">{copy.selectOne}</option>
+          <option value="touch">{copy.touch}</option>
+          <option value="voice">{copy.voice}</option>
+          <option value="no_preference">{copy.noPreference}</option>
         </select>
       </label>
 
-      <Textarea label="What was easiest?" value={responses.easiestPart} onChange={(value) => updateResponse("easiestPart", value)} />
-      <Textarea label="What was hardest?" value={responses.hardestPart} onChange={(value) => updateResponse("hardestPart", value)} />
-      <Textarea label="What usability problems appeared in voice mode?" value={responses.voiceProblems} onChange={(value) => updateResponse("voiceProblems", value)} />
-      <Textarea label="What usability problems appeared in touch mode?" value={responses.touchProblems} onChange={(value) => updateResponse("touchProblems", value)} />
-      <Textarea label="Were the voice commands clear?" value={responses.commandClarity} onChange={(value) => updateResponse("commandClarity", value)} />
-      <Textarea label="How much effort was needed to recover from voice errors?" value={responses.recoveryEffort} onChange={(value) => updateResponse("recoveryEffort", value)} />
-      <Textarea label="How did the fallback buttons work for you?" value={responses.fallbackComments} onChange={(value) => updateResponse("fallbackComments", value)} />
-      <Textarea label="What design implications should be considered?" value={responses.designImplications} onChange={(value) => updateResponse("designImplications", value)} />
-      <Textarea label="What would make this better?" value={responses.suggestions} onChange={(value) => updateResponse("suggestions", value)} />
+      <Textarea label={copy.fields.easiestPart} value={responses.easiestPart} onChange={(value) => updateResponse("easiestPart", value)} />
+      <Textarea label={copy.fields.hardestPart} value={responses.hardestPart} onChange={(value) => updateResponse("hardestPart", value)} />
+      <Textarea label={copy.fields.voiceProblems} value={responses.voiceProblems} onChange={(value) => updateResponse("voiceProblems", value)} />
+      <Textarea label={copy.fields.touchProblems} value={responses.touchProblems} onChange={(value) => updateResponse("touchProblems", value)} />
+      <Textarea label={copy.fields.commandClarity} value={responses.commandClarity} onChange={(value) => updateResponse("commandClarity", value)} />
+      <Textarea label={copy.fields.recoveryEffort} value={responses.recoveryEffort} onChange={(value) => updateResponse("recoveryEffort", value)} />
+      <Textarea label={copy.fields.fallbackComments} value={responses.fallbackComments} onChange={(value) => updateResponse("fallbackComments", value)} />
+      <Textarea label={copy.fields.designImplications} value={responses.designImplications} onChange={(value) => updateResponse("designImplications", value)} />
+      <Textarea label={copy.fields.suggestions} value={responses.suggestions} onChange={(value) => updateResponse("suggestions", value)} />
 
       <button type="submit" className="button primary-button form-action" disabled={isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Submit feedback"}
+        {isSubmitting ? copy.submitting : copy.submit}
       </button>
     </form>
   );

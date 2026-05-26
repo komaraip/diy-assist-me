@@ -16,6 +16,9 @@ import { VoiceControlPanel } from "./VoiceControlPanel.jsx";
 import { VOICE_STATES } from "../../utils/voiceIntents.js";
 
 export function TutorialToolsSheet({
+  copy,
+  sharedCopy,
+  voiceCopy,
   commandPopoverId,
   materialsPopoverId,
   activeMobilePanel,
@@ -44,20 +47,21 @@ export function TutorialToolsSheet({
   const voiceButtonLabel = getVoiceButtonLabel({
     browserSupported: voicePanelProps.browserSupported,
     isVoiceOn,
+    copy,
   });
   const isListening = voicePanelProps.voiceState === VOICE_STATES.LISTENING;
-  const commandExamples = getCommandExamples(commandHints);
-  const commandButtonLabel = voiceControlsEnabled ? "Show voice commands" : "Voice commands unavailable for this task";
+  const commandExamples = getCommandExamples(commandHints, voiceCopy);
+  const commandButtonLabel = voiceControlsEnabled ? copy.commandButton : copy.commandUnavailable;
 
   return (
     <>
-      <aside className="tutorial-tools-column" aria-label="Tutorial actions">
+      <aside className="tutorial-tools-column" aria-label={copy.toolsAria}>
         <section className="tutorial-tool-card tutorial-navigation-card" aria-labelledby="tutorial-navigation-heading">
           <div className="tutorial-card-heading">
-            <h2 id="tutorial-navigation-heading">Tools</h2>
+            <h2 id="tutorial-navigation-heading">{copy.toolsTitle}</h2>
           </div>
 
-          <nav className="tutorial-navigation-actions" aria-label="Tutorial navigation controls">
+          <nav className="tutorial-navigation-actions" aria-label={copy.navAria}>
             {voiceControlsEnabled ? (
               <TutorialIconButton
                 label={voiceButtonLabel}
@@ -87,8 +91,8 @@ export function TutorialToolsSheet({
             </TutorialIconButton>
 
             <TutorialIconButton
-              label="Go to previous step"
-              title="Go to previous step"
+              label={copy.previousStep}
+              title={copy.previousStep}
               onClick={onPrevious}
               disabled={isFirstStep}
               className="direction-previous"
@@ -97,8 +101,8 @@ export function TutorialToolsSheet({
             </TutorialIconButton>
 
             <TutorialIconButton
-              label="Repeat current instruction"
-              title="Repeat current instruction"
+              label={copy.repeatInstruction}
+              title={copy.repeatInstruction}
               onClick={onRepeat}
               className="repeat-button"
             >
@@ -106,8 +110,8 @@ export function TutorialToolsSheet({
             </TutorialIconButton>
 
             <TutorialIconButton
-              label={isLastStep ? "Finish tutorial" : "Go to next step"}
-              title={isLastStep ? "Finish tutorial" : "Go to next step"}
+              label={isLastStep ? copy.finishTutorial : copy.nextStep}
+              title={isLastStep ? copy.finishTutorial : copy.nextStep}
               onClick={handleNextAction}
               disabled={isLastStep ? isCompleted : false}
               className="direction-next"
@@ -116,15 +120,15 @@ export function TutorialToolsSheet({
             </TutorialIconButton>
           </nav>
 
-          <VoiceControlPanel {...voicePanelProps} />
+          <VoiceControlPanel {...voicePanelProps} copy={voiceCopy} />
         </section>
 
         <section className="tutorial-tool-card tutorial-materials-card" aria-labelledby="tutorial-materials-heading">
           <div className="tutorial-card-heading">
-            <h2 id="tutorial-materials-heading">Materials</h2>
+            <h2 id="tutorial-materials-heading">{copy.materialsTitle}</h2>
             <TutorialIconButton
-              label={isMaterialsOpen ? "Hide materials" : "Show materials"}
-              title={isMaterialsOpen ? "Hide materials" : "Show materials"}
+              label={isMaterialsOpen ? copy.hideMaterials : copy.showMaterials}
+              title={isMaterialsOpen ? copy.hideMaterials : copy.showMaterials}
               onClick={onToggleMaterials}
               aria-expanded={isMaterialsOpen}
               aria-controls="desktop-materials-panel"
@@ -135,10 +139,10 @@ export function TutorialToolsSheet({
           </div>
 
           {isMaterialsOpen ? (
-            <MaterialsPanel materials={materials} variant="content" panelId="desktop-materials-panel" />
+            <MaterialsPanel materials={materials} variant="content" panelId="desktop-materials-panel" copy={copy} />
           ) : (
             <p className="tool-section-note">
-              {materials.length ? `${materials.length} item${materials.length === 1 ? "" : "s"} listed.` : "No materials listed."}
+              {materials.length ? sharedCopy.itemSuffix(materials.length) : copy.noMaterials}
             </p>
           )}
         </section>
@@ -146,10 +150,11 @@ export function TutorialToolsSheet({
 
       <TutorialPopover
         id={commandPopoverId}
-        title="Voice commands"
+        title={copy.voiceCommandsTitle}
         isOpen={activeMobilePanel === "commands"}
         onClose={onCloseMobilePanel}
         triggerRef={commandTriggerRef}
+        closeLabel={copy.closePanel(copy.voiceCommandsTitle)}
       >
         <ul className="tutorial-command-list">
           {commandExamples.map((hint) => (
@@ -160,31 +165,25 @@ export function TutorialToolsSheet({
 
       <TutorialPopover
         id={materialsPopoverId}
-        title="Materials"
+        title={copy.materialsTitle}
         isOpen={activeMobilePanel === "materials"}
         onClose={onCloseMobilePanel}
         triggerRef={materialsTriggerRef}
+        closeLabel={copy.closePanel(copy.materialsTitle)}
       >
-        <MaterialsPanel materials={materials} variant="content" panelId="mobile-materials-panel" />
+        <MaterialsPanel materials={materials} variant="content" panelId="mobile-materials-panel" copy={copy} />
       </TutorialPopover>
     </>
   );
 }
 
-function getVoiceButtonLabel({ browserSupported, isVoiceOn }) {
-  if (!browserSupported) return "Voice navigation unavailable";
-  return isVoiceOn ? "Stop voice navigation" : "Start voice navigation";
+function getVoiceButtonLabel({ browserSupported, isVoiceOn, copy }) {
+  if (!browserSupported) return copy.voiceUnavailable;
+  return isVoiceOn ? copy.voiceButtonOn : copy.voiceButtonOff;
 }
 
-function getCommandExamples(commandHints) {
-  const preferred = [
-    "next step",
-    "repeat",
-    "show materials",
-    "go to step 3",
-    "scroll down",
-    "stop listening",
-  ];
+function getCommandExamples(commandHints, voiceCopy) {
+  const preferred = voiceCopy.preferredHints;
   const available = preferred.filter((hint) => commandHints.includes(hint));
   return available.length ? available : preferred;
 }

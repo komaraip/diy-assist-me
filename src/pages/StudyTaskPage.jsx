@@ -9,6 +9,7 @@ import { getStudySession } from "../services/studyService.js";
 import { completeTaskTrial, listTaskTrialsBySession, startTaskTrial } from "../services/taskTrialService.js";
 import { findStudyTask } from "../utils/studyAssignments.js";
 import { buildStudyLogContext } from "../utils/studyContext.js";
+import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 export function StudyTaskPage() {
   const { sessionId, taskId } = useParams();
@@ -19,6 +20,8 @@ export function StudyTaskPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const language = normalizeStudyLanguage(session?.language);
+  const copy = getStudyCopy(language);
 
   useEffect(() => {
     let isMounted = true;
@@ -77,7 +80,7 @@ export function StudyTaskPage() {
       targetStep: task.targetStep,
       successCriteria: task.successCriteria,
     });
-    setStatusMessage(result.error || "Task started. Follow the tutorial below.");
+    setStatusMessage(result.error || copy.taskPage.startedStatus);
     if (!result.error) {
       setTaskTrials((current) => [...current, result.data]);
     }
@@ -89,7 +92,7 @@ export function StudyTaskPage() {
     setIsCompleting(true);
     setStatusMessage("");
     const result = await completeTaskTrial(activeTrial, payload);
-    setStatusMessage(result.error || "Task finished. You can return to the guided session.");
+    setStatusMessage(result.error || copy.taskPage.finishedStatus);
     if (!result.error) {
       setTaskTrials((current) => current.map((trial) => (trial.id === result.data.id ? result.data : trial)));
     }
@@ -97,7 +100,7 @@ export function StudyTaskPage() {
   }
 
   if (isLoading) {
-    return <p className="page-section status-note">Loading task...</p>;
+    return <p className="page-section status-note">{copy.taskPage.loading}</p>;
   }
 
   if (resultMeta.error || !session || !task) {
@@ -105,11 +108,11 @@ export function StudyTaskPage() {
       <section className="page-section narrow-page">
         <Link className="inline-link" to={`/study/session/${sessionId}`}>
           <ArrowLeft aria-hidden="true" />
-          Back to guided session
+          {copy.taskPage.back}
         </Link>
         <div className="detail-shell">
-          <h1>Task unavailable</h1>
-          <p>{resultMeta.error || "Task not found in this session."}</p>
+          <h1>{copy.taskPage.unavailableTitle}</h1>
+          <p>{resultMeta.error || copy.taskPage.unavailableFallback}</p>
         </div>
       </section>
     );
@@ -121,33 +124,34 @@ export function StudyTaskPage() {
     <section className="page-section">
       <Link className="inline-link" to={`/study/session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
-        Back to guided session
+        {copy.taskPage.back}
       </Link>
 
       <div className="page-header">
-        <p className="eyebrow">{formatTaskType(task.trialType)}</p>
-        <h1>Follow this tutorial task</h1>
-        <p>
-          This task uses {formatModality(task.modality)}. Start when you are ready, follow the tutorial,
-          then finish the task before returning to the guided session.
-        </p>
-        {resultMeta.error ? <p className="data-source-note error">We could not load this task.</p> : null}
+        <p className="eyebrow">{formatTaskType(task.trialType, copy)}</p>
+        <h1>{copy.taskPage.title}</h1>
+        <p>{copy.taskPage.description(formatModality(task.modality, language))}</p>
+        {resultMeta.error ? <p className="data-source-note error">{copy.taskPage.loadError}</p> : null}
       </div>
 
-      <GuidedProgress steps={buildTaskProgress(activeTrial)} currentStepId="task" title="Task progress" />
+      <GuidedProgress
+        steps={buildTaskProgress(activeTrial, copy)}
+        currentStepId="task"
+        title={copy.taskPage.progressTitle}
+        eyebrow={copy.shared.progressEyebrow}
+      />
 
       <section className="study-panel what-next-panel" aria-labelledby="what-next-heading">
-        <h2 id="what-next-heading">What to do next</h2>
+        <h2 id="what-next-heading">{copy.taskPage.whatNextTitle}</h2>
         <ol className="plain-list">
-          <li>Start the task when you are ready.</li>
-          <li>{getModeHelper(task.modality)}</li>
-          <li>Finish the task when the tutorial work is done.</li>
-          <li>Return to the guided session for the next step.</li>
+          {copy.taskPage.whatNextItems(getModeHelper(task.modality, copy)).map((item) => (
+            <li key={item}>{item}</li>
+          ))}
         </ol>
       </section>
 
       <section className="study-panel" aria-labelledby="task-script-heading">
-        <h2 id="task-script-heading">{task.trialType === "measured" ? "Measured task script" : "Practice task script"}</h2>
+        <h2 id="task-script-heading">{task.trialType === "measured" ? copy.taskPage.measuredScriptHeading : copy.taskPage.practiceScriptHeading}</h2>
         <p className="study-context-line">{task.taskGoal}</p>
         <ol className="plain-list">
           {(task.taskScript || []).map((scriptItem) => (
@@ -156,8 +160,11 @@ export function StudyTaskPage() {
         </ol>
         {task.trialType === "measured" ? (
           <p className="status-note">
-            Target keyword: {task.targetKeyword || "not set"}. Target step: {task.targetStep || "not set"}.
-            Success criteria: {task.successCriteria}
+            {copy.taskPage.measuredMeta({
+              targetKeyword: task.targetKeyword,
+              targetStep: task.targetStep,
+              successCriteria: task.successCriteria,
+            })}
           </p>
         ) : null}
       </section>
@@ -169,6 +176,7 @@ export function StudyTaskPage() {
         isCompleting={isCompleting}
         onStart={handleStartTrial}
         onComplete={handleCompleteTrial}
+        language={language}
       />
 
       {statusMessage ? <p className="status-note" role="status">{statusMessage}</p> : null}
@@ -179,52 +187,49 @@ export function StudyTaskPage() {
           studyContext={studyContext}
           allowedModality={task.modality}
           backLink={`/study/session/${session.id}`}
-          backLabel="Back to guided session"
+          backLabel={copy.taskPage.embeddedBackLabel}
+          language={language}
           embedded
         />
       ) : (
         <section className="study-panel">
-          <h2>{activeTrial?.endedAt ? "Task completed" : "Start the task to open the tutorial"}</h2>
-          <p className="study-context-line">
-            The tutorial will appear here after the task starts.
-          </p>
+          <h2>{activeTrial?.endedAt ? copy.taskPage.completedTitle : copy.taskPage.startTutorialTitle}</h2>
+          <p className="study-context-line">{copy.taskPage.startTutorialDescription}</p>
         </section>
       )}
 
-      <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} />
+      <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
     </section>
   );
 }
 
-function formatModality(modality) {
-  if (modality === "voice") return "voice mode";
-  if (modality === "touch") return "touch mode";
-  return "tutorial mode";
+function formatModality(modality, language) {
+  return formatStudyMode(modality, language, "lower");
 }
 
-function formatTaskType(trialType) {
-  return trialType === "practice" ? "Practice" : "Task";
+function formatTaskType(trialType, copy) {
+  return copy.sessionPage.taskType(trialType);
 }
 
-function getModeHelper(modality) {
+function getModeHelper(modality, copy) {
   if (modality === "voice") {
-    return "Try voice commands such as next step, repeat, and show materials. Buttons are always available.";
+    return copy.taskPage.voiceHelper;
   }
   if (modality === "touch") {
-    return "Use the on-screen buttons to move through the steps.";
+    return copy.taskPage.touchHelper;
   }
-  return "Use the tutorial controls to move through the steps.";
+  return copy.taskPage.tutorialHelper;
 }
 
-function buildTaskProgress(taskTrial) {
+function buildTaskProgress(taskTrial, copy) {
   return [
-    { id: "start", label: "Start", status: taskTrial ? "Complete" : "Start this task first" },
+    { id: "start", label: copy.taskPage.progress.startLabel, status: taskTrial ? copy.taskPage.progress.complete : copy.taskPage.progress.startPending },
     {
       id: "task",
-      label: "Follow the tutorial",
-      status: taskTrial?.endedAt ? "Complete" : taskTrial ? "In progress" : "Waiting to start",
+      label: copy.taskPage.progress.taskLabel,
+      status: taskTrial?.endedAt ? copy.taskPage.progress.complete : taskTrial ? copy.taskPage.progress.inProgress : copy.taskPage.progress.waiting,
     },
-    { id: "finish", label: "Finish", status: taskTrial?.endedAt ? "Complete" : "Finish after the tutorial work" },
+    { id: "finish", label: copy.taskPage.progress.finishLabel, status: taskTrial?.endedAt ? copy.taskPage.progress.complete : copy.taskPage.progress.finishStatus },
   ];
 }
 

@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { SUS_ITEMS, hasCompleteSusResponses } from "../../utils/susScoring.js";
+import { hasCompleteSusResponses } from "../../utils/susScoring.js";
+import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
 
-const SCALE_LABELS = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
-
-export function SUSForm({ condition, isSubmitting, onSubmit }) {
+export function SUSForm({ condition, isSubmitting, onSubmit, language = "en" }) {
   const [responses, setResponses] = useState(() => buildInitialResponses());
+  const normalizedLanguage = normalizeStudyLanguage(language);
+  const copy = getStudyCopy(normalizedLanguage);
+  const items = copy.susForm.items;
   const isComplete = hasCompleteSusResponses(responses);
 
   function updateResponse(itemNumber, value) {
@@ -22,20 +24,18 @@ export function SUSForm({ condition, isSubmitting, onSubmit }) {
   return (
     <form className="study-form" onSubmit={handleSubmit}>
       <section className="study-panel">
-        <p className="eyebrow">Quick questionnaire</p>
-        <h2>{formatMode(condition.modality)}</h2>
-        <p className="study-context-line">
-          Choose one answer for each item based only on this condition. The 0-100 SUS score supports the RQ1 perceived usability comparison.
-        </p>
+        <p className="eyebrow">{copy.susForm.eyebrow}</p>
+        <h2>{formatMode(condition.modality, normalizedLanguage)}</h2>
+        <p className="study-context-line">{copy.susForm.description}</p>
       </section>
 
-      {SUS_ITEMS.map((item, index) => {
+      {items.map((item, index) => {
         const itemNumber = index + 1;
         return (
           <fieldset className="sus-item" key={item}>
             <legend>{itemNumber}. {item}</legend>
             <div className="sus-scale">
-              {SCALE_LABELS.map((label, scaleIndex) => {
+              {copy.susForm.scaleLabels.map((label, scaleIndex) => {
                 const value = scaleIndex + 1;
                 const id = `sus-${itemNumber}-${value}`;
                 return (
@@ -59,21 +59,19 @@ export function SUSForm({ condition, isSubmitting, onSubmit }) {
       })}
 
       <button type="submit" className="button primary-button form-action" disabled={!isComplete || isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Submit questionnaire"}
+        {isSubmitting ? copy.susForm.submitting : copy.susForm.submit}
       </button>
-      {!isComplete ? <p className="status-note" role="status">Answer all items to submit.</p> : null}
+      {!isComplete ? <p className="status-note" role="status">{copy.susForm.incomplete}</p> : null}
     </form>
   );
 }
 
-function formatMode(modality) {
-  if (modality === "voice") return "Voice mode";
-  if (modality === "touch") return "Touch mode";
-  return "Tutorial mode";
+function formatMode(modality, language) {
+  return formatStudyMode(modality, language);
 }
 
 function buildInitialResponses() {
-  return SUS_ITEMS.reduce((responses, _, index) => {
+  return Array.from({ length: 10 }).reduce((responses, _, index) => {
     responses[`item${index + 1}`] = "";
     return responses;
   }, {});

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getSpeechRecognitionLocale, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 import { VOICE_STATES } from "../utils/voiceIntents.js";
 
 const RESTART_DELAY_MS = 350;
@@ -16,7 +17,9 @@ function getSpeechRecognitionClass() {
   return window.SpeechRecognition || window.webkitSpeechRecognition || null;
 }
 
-export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {}) {
+export function useSpeechRecognition({ onFinalResult, onRecognitionError, language = "en" } = {}) {
+  const normalizedLanguage = normalizeStudyLanguage(language);
+  const copy = getStudyCopy(normalizedLanguage).voice;
   const hasSupport = !!getSpeechRecognitionClass();
   const [voiceState, setVoiceState] = useState(hasSupport ? VOICE_STATES.IDLE : VOICE_STATES.UNSUPPORTED);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
@@ -124,7 +127,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
     if (recognitionErrorCode === "no-speech") {
       consecutiveNoSpeechErrorsRef.current += 1;
       if (consecutiveNoSpeechErrorsRef.current > MAX_CONSECUTIVE_NO_SPEECH_ERRORS) {
-        nextMessage = "No speech was detected. Voice commands are paused. Press Start voice when you are ready.";
+        nextMessage = copy.noSpeechPaused;
         setKeepListening(false);
         clearRestartTimer();
         setIsRestarting(false);
@@ -143,13 +146,13 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
     setErrorMessage(nextMessage);
     setVoiceState(recognitionErrorCode === "unsupported-browser" ? VOICE_STATES.UNSUPPORTED : VOICE_STATES.ERROR);
     onRecognitionErrorRef.current?.({ recognitionErrorCode, message: nextMessage });
-  }, [clearRestartTimer, setKeepListening]);
+  }, [clearRestartTimer, copy.noSpeechPaused, setKeepListening]);
 
   const startRecognition = useCallback(() => {
     const SpeechRecognitionClass = getSpeechRecognitionClass();
 
     if (!SpeechRecognitionClass) {
-      reportError("unsupported-browser", "Voice commands are not available in this browser.");
+      reportError("unsupported-browser", copy.unavailableLong);
       setVoiceState(VOICE_STATES.UNSUPPORTED);
       return;
     }
@@ -163,7 +166,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
     hadErrorThisCycleRef.current = false;
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = getSpeechRecognitionLocale(normalizedLanguage);
 
     recognition.onstart = () => {
       isStartingRef.current = false;
@@ -203,7 +206,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
             setVoiceState(result?.success ? VOICE_STATES.SUCCESS : VOICE_STATES.ERROR);
           })
           .catch((error) => {
-            reportError("dispatch-error", error?.message || "That voice command could not be completed.");
+            reportError("dispatch-error", error?.message || copy.dispatchError);
           })
           .finally(() => {
             isProcessingFinalResultRef.current = false;
@@ -222,7 +225,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
       if (intentionalStopRef.current && recognitionErrorCode === "aborted") {
         return;
       }
-      const message = getRecognitionErrorMessage(recognitionErrorCode);
+      const message = getRecognitionErrorMessage(recognitionErrorCode, copy);
       reportError(recognitionErrorCode, message);
     };
 
@@ -264,9 +267,9 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
       if (recognitionRef.current === recognition) {
         recognitionRef.current = null;
       }
-      reportError("start-failed", error?.message || "Voice recognition could not start.");
+      reportError("start-failed", error?.message || copy.recognitionStartError);
     }
-  }, [clearRestartTimer, hasSupport, reportError, scheduleRestart]);
+  }, [clearRestartTimer, copy.dispatchError, copy.recognitionStartError, copy.unavailableLong, hasSupport, normalizedLanguage, reportError, scheduleRestart]);
 
   useEffect(() => {
     startRecognitionRef.current = startRecognition;
@@ -276,7 +279,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
     const SpeechRecognitionClass = getSpeechRecognitionClass();
 
     if (!SpeechRecognitionClass) {
-      reportError("unsupported-browser", "Voice commands are not available in this browser.");
+      reportError("unsupported-browser", copy.unavailableLong);
       setVoiceState(VOICE_STATES.UNSUPPORTED);
       return;
     }
@@ -295,7 +298,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
     setTranscript("");
     setErrorMessage("");
     startRecognition();
-  }, [clearRestartTimer, reportError, setKeepListening, startRecognition]);
+  }, [clearRestartTimer, copy.unavailableLong, reportError, setKeepListening, startRecognition]);
 
   useEffect(() => {
     return () => {
@@ -331,20 +334,20 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError } = {})
   };
 }
 
-function getRecognitionErrorMessage(errorCode) {
+function getRecognitionErrorMessage(errorCode, copy) {
   switch (errorCode) {
     case "not-allowed":
     case "service-not-allowed":
-      return "Microphone access was blocked. Allow microphone access to use voice commands.";
+      return copy.microphoneBlocked;
     case "audio-capture":
-      return "No microphone was detected. Check the microphone and try again.";
+      return copy.noMicrophone;
     case "network":
-      return "Voice commands had a network issue. You can still use the buttons.";
+      return copy.networkError;
     case "no-speech":
-      return "No speech was detected. Try again or use the buttons.";
+      return copy.noSpeech;
     case "unsupported-browser":
-      return "Voice commands are not available in this browser. Google Chrome desktop works best.";
+      return copy.unsupportedBrowserBest;
     default:
-      return "Voice commands ran into a problem. You can still use the buttons.";
+      return copy.genericError;
   }
 }

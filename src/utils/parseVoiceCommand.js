@@ -1,15 +1,18 @@
-import { COMMAND_DICTIONARY, SEARCH_PATTERNS, STEP_PATTERNS } from "./commandDictionary.js";
+import { getCommandDictionary, getSearchPatterns, getStepPatterns } from "./commandDictionary.js";
 import { normalizeTranscript } from "./normalizeTranscript.js";
 import { VOICE_INTENTS } from "./voiceIntents.js";
 
-export function parseVoiceCommand(transcript = "") {
+export function parseVoiceCommand(transcript = "", language = "en") {
   const normalizedTranscript = normalizeTranscript(transcript);
+  const commandDictionary = getCommandDictionary(language);
+  const searchPatterns = getSearchPatterns(language);
+  const stepPatterns = getStepPatterns(language);
 
   if (!normalizedTranscript) {
     return unknownResult(normalizedTranscript);
   }
 
-  for (const group of COMMAND_DICTIONARY) {
+  for (const group of commandDictionary) {
     const exactMatch = group.exact.find((phrase) => normalizedTranscript === normalizeTranscript(phrase));
     if (exactMatch) {
       return {
@@ -23,7 +26,7 @@ export function parseVoiceCommand(transcript = "") {
     }
   }
 
-  for (const pattern of SEARCH_PATTERNS) {
+  for (const pattern of searchPatterns) {
     const match = normalizedTranscript.match(pattern);
     if (match?.[1]) {
       return {
@@ -37,7 +40,7 @@ export function parseVoiceCommand(transcript = "") {
     }
   }
 
-  for (const pattern of STEP_PATTERNS) {
+  for (const pattern of stepPatterns) {
     const match = normalizedTranscript.match(pattern);
     if (match?.[1]) {
       return {
@@ -51,7 +54,7 @@ export function parseVoiceCommand(transcript = "") {
     }
   }
 
-  for (const group of COMMAND_DICTIONARY) {
+  for (const group of commandDictionary) {
     const synonymMatch = group.exact.find((phrase) => {
       const normalizedPhrase = normalizeTranscript(phrase);
       return normalizedPhrase && normalizedTranscript.includes(normalizedPhrase);

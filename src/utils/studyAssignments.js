@@ -1,3 +1,5 @@
+import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage, translateTargetKeyword } from "../i18n/studyCopy.js";
+
 export const SEQUENCE_ASSIGNMENTS = [
   {
     value: "AB",
@@ -41,10 +43,12 @@ export function buildStudyPlan({
   sequenceAssignment = "AB",
   tutorialRotation = "rotation_a",
   tutorials = [],
+  language = DEFAULT_STUDY_LANGUAGE,
 } = {}) {
   const sequence = getSequenceAssignment(sequenceAssignment);
   const rotation = getTutorialRotation(tutorialRotation);
   const availableTutorials = tutorials.filter((tutorial) => tutorial?.id);
+  const normalizedLanguage = normalizeStudyLanguage(language);
 
   if (!availableTutorials.length) {
     return [];
@@ -64,6 +68,7 @@ export function buildStudyPlan({
       tutorial: practiceTutorial,
       rotationValue: rotation.value,
       taskIndex: 0,
+      language: normalizedLanguage,
     });
     const measuredTask = buildTask({
       conditionId,
@@ -73,6 +78,7 @@ export function buildStudyPlan({
       tutorial: measuredTutorial,
       rotationValue: rotation.value,
       taskIndex: 1,
+      language: normalizedLanguage,
     });
 
     return {
@@ -109,9 +115,11 @@ export function findStudyCondition(session, conditionId) {
   return (session?.conditions || []).find((condition) => condition.id === conditionId) || null;
 }
 
-function buildTask({ conditionId, conditionOrder, modality, trialType, tutorial, rotationValue, taskIndex }) {
+function buildTask({ conditionId, conditionOrder, modality, trialType, tutorial, rotationValue, taskIndex, language }) {
+  const copy = getStudyCopy(language).tasks;
   const tutorialId = tutorial?.id || "";
   const target = getTaskTarget({ tutorial, rotationValue, trialType });
+  const targetKeyword = translateTargetKeyword(target.targetKeyword || copy.targetKeywordFallback, language);
   const isPractice = trialType === "practice";
 
   return {
@@ -122,44 +130,18 @@ function buildTask({ conditionId, conditionOrder, modality, trialType, tutorial,
     trialType,
     tutorialId,
     taskId: `${conditionId}_${trialType}_${taskIndex + 1}`,
-    taskGoal: isPractice
-      ? "Practice the selected navigation mode before the measured task."
-      : "Complete the assigned hands-busy tutorial navigation script using the selected mode.",
-    label: isPractice ? "Practice task" : "Measured tutorial task",
+    taskGoal: isPractice ? copy.practiceGoal : copy.measuredGoal,
+    label: isPractice ? copy.practiceLabel : copy.measuredLabel,
     taskScript: isPractice
-      ? buildPracticeScript()
-      : buildMeasuredScript(target),
+      ? copy.practiceScript
+      : copy.measuredScript({ targetKeyword, targetStep: target.targetStep }),
     requiredActions: isPractice
       ? ["materials_open", "step_next", "repeat_instruction"]
       : ["materials_open", "step_next", "repeat_instruction", "tutorial_search", "step_jump", "step_previous"],
-    targetKeyword: target.targetKeyword,
+    targetKeyword,
     targetStep: target.targetStep,
-    successCriteria: isPractice
-      ? "Participant understands the available controls before the measured condition."
-      : "Participant reaches the target instruction and completes the task without facilitator intervention.",
+    successCriteria: isPractice ? copy.practiceSuccess : copy.measuredSuccess,
   };
-}
-
-function buildPracticeScript() {
-  return [
-    "Open the material list.",
-    "Move to the next step.",
-    "Repeat the current instruction.",
-    "Return to the guided session when you are familiar with the controls.",
-  ];
-}
-
-function buildMeasuredScript({ targetKeyword, targetStep }) {
-  return [
-    "Open the material list.",
-    "Move to step 2.",
-    "Repeat the current instruction.",
-    `Search for "${targetKeyword}".`,
-    `Go to step ${targetStep}.`,
-    "Move backward once.",
-    `Return to step ${targetStep}.`,
-    "Finish the task.",
-  ];
 }
 
 function getTaskTarget({ tutorial, rotationValue, trialType }) {

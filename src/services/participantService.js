@@ -2,6 +2,7 @@ import { addDoc, collection, getDocs } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
 import { createLocalRecord, listLocalRecords } from "./localStore.js";
 import { serviceSuccess } from "../utils/serviceResult.js";
+import { DEFAULT_STUDY_LANGUAGE, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 const LOCAL_CONFIG_WARNING = "User record was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "User record was saved on this device.";
@@ -10,12 +11,14 @@ const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 export async function createParticipant({
   sequenceAssignment = "",
   tutorialRotation = "",
+  language = DEFAULT_STUDY_LANGUAGE,
   notes = "",
 } = {}) {
   const createdAt = new Date().toISOString();
+  const normalizedLanguage = normalizeStudyLanguage(language);
 
   if (!isFirebaseEnabled || !db) {
-    const participant = createLocalParticipant({ sequenceAssignment, tutorialRotation, notes, createdAt });
+    const participant = createLocalParticipant({ sequenceAssignment, tutorialRotation, language: normalizedLanguage, notes, createdAt });
     if (participant.error) return participant;
     return serviceSuccess(participant.data, "local", LOCAL_CONFIG_WARNING);
   }
@@ -27,25 +30,27 @@ export async function createParticipant({
       schemaVersion: SCHEMA_VERSION,
       sequenceAssignment,
       tutorialRotation,
+      language: normalizedLanguage,
       notes,
       createdAt,
     };
     const docRef = await addDoc(collection(db, "participants"), participantData);
     return serviceSuccess({ id: docRef.id, ...participantData }, "firebase");
   } catch {
-    const participant = createLocalParticipant({ sequenceAssignment, tutorialRotation, notes, createdAt });
+    const participant = createLocalParticipant({ sequenceAssignment, tutorialRotation, language: normalizedLanguage, notes, createdAt });
     if (participant.error) return participant;
     return serviceSuccess(participant.data, "local", FIREBASE_FALLBACK_WARNING);
   }
 }
 
-function createLocalParticipant({ sequenceAssignment, tutorialRotation, notes, createdAt }) {
+function createLocalParticipant({ sequenceAssignment, tutorialRotation, language, notes, createdAt }) {
   const participantCode = getNextLocalParticipantCode();
   return createLocalRecord("participants", {
     participantCode,
     schemaVersion: SCHEMA_VERSION,
     sequenceAssignment,
     tutorialRotation,
+    language,
     notes,
     createdAt,
   });

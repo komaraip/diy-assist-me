@@ -1,10 +1,18 @@
 import { ListChecks } from "lucide-react";
 
-export function StepOverview({ steps, activeStepIndex, onJumpToStep, isOpen, onToggle }) {
+export function StepOverview({ steps, activeStepIndex, onJumpToStep, isOpen, onToggle, copy }) {
   const panelId = "step-overview-panel";
+  const overviewCopy = copy?.overview || {
+    aria: "Tutorial step overview",
+    show: "Show overview",
+    hide: "Hide overview",
+    heading: "Overview",
+    note: "Open the overview to jump between steps.",
+    stepLabel: (step) => `Step ${step}`,
+  };
 
   return (
-    <section className="step-overview-shell" aria-label="Tutorial step overview">
+    <section className="step-overview-shell" aria-label={overviewCopy.aria}>
       <button
         type="button"
         className="button secondary-action tool-toggle-button"
@@ -13,12 +21,12 @@ export function StepOverview({ steps, activeStepIndex, onJumpToStep, isOpen, onT
         aria-controls={panelId}
       >
         <ListChecks aria-hidden="true" />
-        {isOpen ? "Hide overview" : "Show overview"}
+        {isOpen ? overviewCopy.hide : overviewCopy.show}
       </button>
 
       {isOpen ? (
         <div id={panelId} className="step-overview compact-panel-scroll">
-          <h2>Overview</h2>
+          <h2>{overviewCopy.heading}</h2>
           <ol>
             {steps.map((step, index) => (
               <li key={step.stepNumber}>
@@ -28,7 +36,7 @@ export function StepOverview({ steps, activeStepIndex, onJumpToStep, isOpen, onT
                   aria-current={activeStepIndex === index ? "step" : undefined}
                   onClick={() => onJumpToStep(index)}
                 >
-                  <span>Step {step.stepNumber}</span>
+                  <span>{overviewCopy.stepLabel(step.stepNumber)}</span>
                   <span>{step.instruction}</span>
                 </button>
               </li>
@@ -36,7 +44,7 @@ export function StepOverview({ steps, activeStepIndex, onJumpToStep, isOpen, onT
           </ol>
         </div>
       ) : (
-        <p className="tool-section-note">Open the overview to jump between steps.</p>
+        <p className="tool-section-note">{overviewCopy.note}</p>
       )}
     </section>
   );

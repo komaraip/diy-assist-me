@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { TutorialIconButton } from "./TutorialIconButton.jsx";
 
-export function TutorialPopover({ id, isOpen, title, onClose, triggerRef, children, className = "" }) {
+export function TutorialPopover({ id, isOpen, title, onClose, triggerRef, children, className = "", closeLabel = `Close ${title}` }) {
   const closeButtonRef = useRef(null);
   const titleId = `${id}-title`;
   const onCloseRef = useRef(onClose);
@@ -40,7 +40,7 @@ export function TutorialPopover({ id, isOpen, title, onClose, triggerRef, childr
         type="button"
         className={isOpen ? "tutorial-popover-backdrop is-open" : "tutorial-popover-backdrop"}
         onClick={onClose}
-        aria-label={`Close ${title}`}
+        aria-label={closeLabel}
         tabIndex={isOpen ? 0 : -1}
       />
 
@@ -55,7 +55,7 @@ export function TutorialPopover({ id, isOpen, title, onClose, triggerRef, childr
         <div className="tutorial-sheet-handle" aria-hidden="true" />
         <div className="tutorial-popover-heading">
           <h2 id={titleId}>{title}</h2>
-          <TutorialIconButton label={`Close ${title}`} ref={closeButtonRef} onClick={onClose}>
+          <TutorialIconButton label={closeLabel} ref={closeButtonRef} onClick={onClose}>
             <X aria-hidden="true" />
           </TutorialIconButton>
         </div>
