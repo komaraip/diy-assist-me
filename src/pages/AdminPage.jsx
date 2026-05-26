@@ -12,9 +12,10 @@ export function AdminPage() {
     <section className="admin-page">
       <div className="admin-page-header">
         <p className="eyebrow">Researcher admin</p>
-        <h1>Researcher Dashboard</h1>
+        <h1>Dashboard</h1>
         <p>
-          Review guided sessions, task activity, questionnaire responses, and interaction logs.
+          Review guided sessions, task activity, SUS responses, voice and touch logs, observer notes,
+          and export readiness for RQ1, RQ2, and RQ3.
         </p>
       </div>
 

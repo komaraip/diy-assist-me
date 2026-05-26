@@ -5,6 +5,7 @@ import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 
 const LOCAL_CONFIG_WARNING = "Observer note was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Observer note was saved on this device.";
+const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 
 export async function createObserverNote({
   participantId,
@@ -27,6 +28,7 @@ export async function createObserverNote({
   const record = {
     participantId,
     participantCode: participantCode || "",
+    schemaVersion: SCHEMA_VERSION,
     sessionId,
     conditionId,
     taskId,

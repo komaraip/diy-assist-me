@@ -5,6 +5,7 @@ import { serviceSuccess } from "../utils/serviceResult.js";
 
 const LOCAL_CONFIG_WARNING = "User record was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "User record was saved on this device.";
+const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 
 export async function createParticipant({
   sequenceAssignment = "",
@@ -23,6 +24,7 @@ export async function createParticipant({
     const participantCode = await getNextFirebaseParticipantCode();
     const participantData = {
       participantCode,
+      schemaVersion: SCHEMA_VERSION,
       sequenceAssignment,
       tutorialRotation,
       notes,
@@ -41,6 +43,7 @@ function createLocalParticipant({ sequenceAssignment, tutorialRotation, notes, c
   const participantCode = getNextLocalParticipantCode();
   return createLocalRecord("participants", {
     participantCode,
+    schemaVersion: SCHEMA_VERSION,
     sequenceAssignment,
     tutorialRotation,
     notes,

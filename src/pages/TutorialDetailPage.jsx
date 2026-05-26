@@ -69,8 +69,10 @@ export function TutorialDetailPage({
   function logTutorialTouch(eventType, details = {}) {
     void logTouchInteraction({
       participantId: studyContext?.participantId || null,
+      participantCode: studyContext?.participantCode || "",
       sessionId: studyContext?.sessionId || null,
       conditionId: studyContext?.conditionId || null,
+      conditionOrder: studyContext?.conditionOrder ?? null,
       taskId: studyContext?.taskId || null,
       trialType: studyContext?.trialType || null,
       tutorialId: tutorial?.id || tutorialId,
@@ -134,11 +136,13 @@ export function TutorialDetailPage({
     });
   }
 
-  function setMaterialsVisibility(nextValue) {
+  function setMaterialsVisibility(nextValue, { logTouch = true } = {}) {
     if (isMaterialsOpen === nextValue) return;
     setIsMaterialsOpen(nextValue);
     setFeedbackMessage(nextValue ? "Materials shown." : "Materials hidden.");
-    logTutorialTouch(nextValue ? "materials_open" : "materials_close");
+    if (logTouch) {
+      logTutorialTouch(nextValue ? "materials_open" : "materials_close");
+    }
   }
 
   function handleToggleMaterials() {
@@ -326,7 +330,7 @@ export function TutorialDetailPage({
         });
       }
       case VOICE_INTENTS.SHOW_MATERIALS: {
-        setMaterialsVisibility(true);
+        setMaterialsVisibility(true, { logTouch: false });
         openMobilePanelIfCompact("materials");
         setFeedbackMessage("Materials shown.");
         return voiceSuccess("voice_command", "Materials panel opened.", {
@@ -335,7 +339,7 @@ export function TutorialDetailPage({
         });
       }
       case VOICE_INTENTS.CLOSE_MATERIALS: {
-        setMaterialsVisibility(false);
+        setMaterialsVisibility(false, { logTouch: false });
         if (activeMobilePanel === "materials") {
           setActiveMobilePanel(null);
         }
@@ -439,10 +443,13 @@ export function TutorialDetailPage({
   const voiceCommands = useVoiceCommands({
     tutorialId: tutorial?.id || tutorialId,
     participantId: studyContext?.participantId || null,
+    participantCode: studyContext?.participantCode || "",
     sessionId: studyContext?.sessionId || null,
     conditionId: studyContext?.conditionId || null,
+    conditionOrder: studyContext?.conditionOrder ?? null,
     taskId: studyContext?.taskId || null,
     trialType: studyContext?.trialType || null,
+    taskStartedAt: studyContext?.startedAt || null,
     enabled: voiceControlsEnabled,
     getStepIndex: () => activeStepIndex,
     onCommand: executeVoiceCommand,
@@ -505,7 +512,7 @@ export function TutorialDetailPage({
               >
                 <div className="tutorial-runner-header">
                   <div className="tutorial-header-topline">
-                    <h className="eyebrow">Tutorial</h>
+                    <p className="eyebrow">Tutorial</p>
 
                     <div className="tutorial-meta-row">
                       <span>{tutorial.category}</span>
@@ -597,6 +604,9 @@ export function TutorialDetailPage({
             />
 
             <div className="tutorial-mobile-safe-space" aria-hidden="true" />
+            <div className="sr-only" aria-live="polite" aria-atomic="true">
+              {feedbackMessage || `Current step ${activeStepIndex + 1} of ${steps.length}.`}
+            </div>
           </>
         ) : null}
       </div>

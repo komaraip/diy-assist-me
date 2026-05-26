@@ -68,6 +68,14 @@ export function StudyTaskPage() {
       tutorialId: task.tutorialId,
       modality: task.modality,
       trialType: task.trialType,
+      conditionOrder: task.conditionOrder,
+      sequenceAssignment: session.sequenceAssignment,
+      tutorialRotation: session.tutorialRotation,
+      taskScript: task.taskScript,
+      requiredActions: task.requiredActions,
+      targetKeyword: task.targetKeyword,
+      targetStep: task.targetStep,
+      successCriteria: task.successCriteria,
     });
     setStatusMessage(result.error || "Task started. Follow the tutorial below.");
     if (!result.error) {
@@ -136,6 +144,22 @@ export function StudyTaskPage() {
           <li>Finish the task when the tutorial work is done.</li>
           <li>Return to the guided session for the next step.</li>
         </ol>
+      </section>
+
+      <section className="study-panel" aria-labelledby="task-script-heading">
+        <h2 id="task-script-heading">{task.trialType === "measured" ? "Measured task script" : "Practice task script"}</h2>
+        <p className="study-context-line">{task.taskGoal}</p>
+        <ol className="plain-list">
+          {(task.taskScript || []).map((scriptItem) => (
+            <li key={scriptItem}>{scriptItem}</li>
+          ))}
+        </ol>
+        {task.trialType === "measured" ? (
+          <p className="status-note">
+            Target keyword: {task.targetKeyword || "not set"}. Target step: {task.targetStep || "not set"}.
+            Success criteria: {task.successCriteria}
+          </p>
+        ) : null}
       </section>
 
       <TaskTrialControls

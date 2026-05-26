@@ -10,38 +10,38 @@ const workshopImage =
 const featureItems = [
   {
     icon: ListChecks,
-    title: "Step-by-step tutorials",
-    text: "Clear instructions help you move through each project one step at a time.",
+    title: "Structured tutorial website",
+    text: "Shared step cards, materials, search, and overview controls keep both study conditions comparable.",
   },
   {
     icon: Mic,
-    title: "Hands-free voice commands",
-    text: "Say simple commands like next step, repeat, or show materials when your hands are busy.",
+    title: "Fixed English voice commands",
+    text: "A constrained command set triggers the same tutorial actions as touch controls in Chrome desktop.",
   },
   {
     icon: ClipboardList,
-    title: "Materials checklist",
-    text: "See what you need before you start, then reopen the list whenever you need it.",
+    title: "Chapter 4 study flow",
+    text: "AB/BA sessions collect task timing, task success, SUS, voice reliability, and debrief evidence.",
   },
   {
     icon: Hand,
-    title: "Accessible touch controls",
-    text: "Use large buttons, keyboard-friendly controls, and readable step layouts at your own pace.",
+    title: "Touch fallback",
+    text: "Buttons remain available during voice mode and fallback use is logged for analysis.",
   },
 ];
 
 const howItWorksItems = [
   {
-    title: "Choose a tutorial",
-    text: "Browse practical projects and pick the one that fits what you want to make or fix.",
+    title: "Create a study session",
+    text: "Confirm consent, assign AB or BA order, choose tutorial rotation, and record setup notes.",
   },
   {
-    title: "Follow each step",
-    text: "Prepare your materials, read the instruction, and move forward when you are ready.",
+    title: "Run matched tasks",
+    text: "Participants complete practice and measured task scripts in touch and voice mode.",
   },
   {
-    title: "Use buttons or voice commands when needed",
-    text: "Tap the controls or say a quick command to continue, repeat, search, or show materials.",
+    title: "Export evidence",
+    text: "Task trials, SUS, logs, observer notes, and debrief responses support Chapter 4 analysis.",
   },
 ];
 
@@ -79,7 +79,7 @@ export function LandingPage() {
             <div className="hero-image-small">
               <ImageWithFallback src={workshopImage} alt="Hands working with wood in a workshop" />
             </div>
-            <div className="floating-status">Try saying: next step</div>
+            <div className="floating-status">Chrome desktop, low-noise room, no raw audio</div>
           </div>
         </div>
       </section>
@@ -155,7 +155,7 @@ export function LandingPage() {
             </p>
           </div>
           <Link className="button secondary-action" to="/study">
-            Try Guided Session
+            Start guided study session
           </Link>
         </div>
       </section>

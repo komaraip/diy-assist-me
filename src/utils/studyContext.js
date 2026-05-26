@@ -4,11 +4,16 @@ export function buildStudyLogContext({ session, task, taskTrial }) {
     participantCode: session?.participantCode || null,
     sessionId: session?.id || null,
     conditionId: task?.conditionId || null,
+    conditionOrder: task?.conditionOrder ?? null,
     taskId: task?.id || task?.taskId || null,
     trialType: task?.trialType || null,
     taskTrialId: taskTrial?.id || null,
     modality: task?.modality || null,
     startedAt: taskTrial?.startedAt || null,
+    sequenceAssignment: session?.sequenceAssignment || "",
+    tutorialRotation: session?.tutorialRotation || "",
+    targetKeyword: task?.targetKeyword || "",
+    targetStep: task?.targetStep ?? null,
   };
 }
 

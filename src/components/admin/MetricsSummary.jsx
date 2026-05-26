@@ -3,6 +3,9 @@ import { calculateChapter4Metrics } from "../../utils/chapter4Metrics.js";
 
 export function MetricsSummary({ adminData }) {
   const metrics = calculateChapter4Metrics(adminData);
+  const rq1 = metrics.researchQuestions.RQ1.metrics;
+  const rq2 = metrics.researchQuestions.RQ2.metrics;
+  const rq3 = metrics.researchQuestions.RQ3.metrics;
 
   return (
     <section className="admin-panel" aria-labelledby="metrics-summary-heading">
@@ -16,24 +19,24 @@ export function MetricsSummary({ adminData }) {
 
       <div className="metrics-grid">
         <MetricCard
-          label="RQ1 valid measured trials"
-          value={metrics.rq1TaskCompletionTime.validMeasuredTrialCount}
-          detail={`${metrics.rq1TaskCompletionTime.invalidTrialCount} invalid trials`}
+          label="RQ1 valid paired rows"
+          value={rq1.pairedDifferences.validPairCount}
+          detail={`${rq1.pairedDifferences.invalidPairCount} invalid or incomplete pairs`}
         />
         <MetricCard
-          label="RQ2 SUS responses"
-          value={metrics.rq2SusUsability.responseCount}
-          detail={formatSusDetail(metrics.rq2SusUsability.byModality)}
+          label="RQ1 SUS responses"
+          value={Object.values(rq1.susByModality).reduce((total, summary) => total + summary.count, 0)}
+          detail={formatSusDetail(rq1.susByModality)}
         />
         <MetricCard
-          label="RQ3 voice logs"
-          value={metrics.rq3VoiceReliability.voiceLogCount}
-          detail={`Success rate: ${formatPercent(metrics.rq3VoiceReliability.successRate)}`}
+          label="RQ2 voice command logs"
+          value={rq2.commandSuccessRate.count}
+          detail={`Success rate: ${formatPercent(rq2.commandSuccessRate.rate)}`}
         />
         <MetricCard
-          label="RQ4 usability evidence"
-          value={metrics.rq4UsabilityProblems.observerNoteCount + metrics.rq4UsabilityProblems.debriefResponseCount}
-          detail={`${metrics.rq4UsabilityProblems.failedCommandCount} failed commands, ${metrics.rq4UsabilityProblems.fallbackUseCount} fallbacks`}
+          label="RQ3 usability evidence"
+          value={rq3.observerNoteCategories.count + rq3.debriefThemes.responseCount}
+          detail={`${rq3.failedCommandExamples.length} failed command examples, ${rq3.fallbackUseCount} fallbacks`}
         />
       </div>
     </section>

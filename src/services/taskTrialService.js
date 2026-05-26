@@ -7,6 +7,7 @@ const LOCAL_CONFIG_WARNING = "Task was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Task was saved on this device.";
 const LOCAL_READ_WARNING = "Tasks were loaded from this device.";
 const FIREBASE_READ_FALLBACK_WARNING = "Tasks were loaded from this device.";
+const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 
 export async function startTaskTrial({
   participantId,
@@ -17,6 +18,14 @@ export async function startTaskTrial({
   tutorialId,
   modality,
   trialType,
+  conditionOrder = null,
+  sequenceAssignment = "",
+  tutorialRotation = "",
+  taskScript = [],
+  requiredActions = [],
+  targetKeyword = "",
+  targetStep = null,
+  successCriteria = "",
 } = {}) {
   const source = isFirebaseEnabled && db ? "firebase" : "local";
 
@@ -28,12 +37,21 @@ export async function startTaskTrial({
   const taskTrial = {
     participantId,
     participantCode: participantCode || "",
+    schemaVersion: SCHEMA_VERSION,
     sessionId,
     conditionId,
+    conditionOrder,
+    sequenceAssignment,
+    tutorialRotation,
     taskId,
     tutorialId,
     modality,
     trialType,
+    taskScript: Array.isArray(taskScript) ? taskScript : [],
+    requiredActions: Array.isArray(requiredActions) ? requiredActions : [],
+    targetKeyword: targetKeyword || "",
+    targetStep: targetStep ?? null,
+    successCriteria: successCriteria || "",
     startedAt,
     endedAt: null,
     durationSeconds: null,

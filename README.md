@@ -1,6 +1,6 @@
 # DIY Assist Me
 
-Research prototype for comparing touch and voice navigation in DIY tutorial tasks. The app is a Vite React JavaScript application with Firebase Firestore support and localStorage fallback.
+Research prototype for "Mitigating Situational Impairments in DIY Instructional Tasks: An Empirical Evaluation of Web-Native Voice-Driven Navigation." It compares conventional touch navigation with a constrained set of English voice commands in structured DIY tutorial tasks. The app is a Vite React JavaScript application with Firebase Firestore support and localStorage fallback.
 
 ## Setup
 
@@ -145,6 +145,8 @@ The Web Speech API is browser-dependent and may require network support. If voic
 
 Condition IDs are `condition_1` and `condition_2`; modality is stored separately as `touch` or `voice`. Practice trials are stored with `trialType: "practice"` and measured trials with `trialType: "measured"`.
 
+Measured task records include `taskScript`, `requiredActions`, `targetKeyword`, `targetStep`, and `successCriteria` so Chapter 4 can describe the exact navigation actions participants performed.
+
 ## Privacy Rules
 
 - Do not store participant real names by default.
@@ -173,12 +175,17 @@ Open `/admin/export` or `/exports`, sign in as an admin, generate exports, and d
 - `task_trials_export.csv`
 - `sus_responses_export.csv`
 - `voice_logs_export.csv`
+- `touch_logs_export.csv`
+- `observer_notes_export.csv`
+- `debrief_responses_export.csv`
 - `full_sessions_export.json`
 - `chapter4_summary_metrics.json`
+- `chapter4_analysis_ready_dataset.csv`
 
 CSV exports safely escape quotes, commas, and newlines. JSON exports include metadata:
 
 - `exportedAt`
+- `source`
 - `exportSource`
 - `appVersion`
 
@@ -186,9 +193,8 @@ CSV exports safely escape quotes, commas, and newlines. JSON exports include met
 
 The evidence checklist maps data availability to research questions:
 
-- RQ1: measured task timing comparison by modality.
-- RQ2: SUS score comparison by modality.
-- RQ3: voice command reliability, failures, confidence type, recovery, and fallback use.
-- RQ4: usability problems from notes, failed/repeated commands, fallback use, debrief responses, and technical notes.
+- RQ1: touch vs voice task performance and perceived usability from measured task timing, task success, and SUS scores.
+- RQ2: browser-based voice reliability from recognition accuracy, command success rate, recovery effort, failures, and fallback use.
+- RQ3: usability problems and design implications from observer notes, debrief responses, failed/repeated commands, fallback use, and technical notes.
 
 Invalid measured trials remain exportable and are counted separately in summary metrics.

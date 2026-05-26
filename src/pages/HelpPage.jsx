@@ -17,26 +17,28 @@ export function HelpPage() {
     <section className="page-section">
       <div className="page-header">
         <p className="eyebrow">Help</p>
-        <h1>Voice and touch help</h1>
+        <h1>Study controls and voice command help</h1>
         <p>
-          Use voice commands or the on-screen buttons to move through a tutorial. If voice is not
-          available, you can still use touch, mouse, or keyboard controls.
+          This prototype compares conventional touch navigation with a fixed set of English voice
+          commands in structured DIY tutorial tasks. If voice is not available, touch, mouse, and
+          keyboard controls remain available.
         </p>
       </div>
       <div className="placeholder-panels">
         <article className="placeholder-panel">
           <MousePointer2 aria-hidden="true" />
-          <h2>Button controls</h2>
-          <p>Use the buttons to go forward, go back, repeat instructions, show materials, and open the overview.</p>
+          <h2>Touch mode controls</h2>
+          <p>Use buttons to go forward, go back, repeat instructions, show materials, open the overview, search, and finish the task.</p>
         </article>
         <article className="placeholder-panel">
           <HelpCircle aria-hidden="true" />
-          <h2>Browser note</h2>
-          <p>Voice commands work best in Google Chrome on desktop. Buttons work in any supported browser.</p>
+          <h2>Browser and privacy notes</h2>
+          <p>Voice mode requires Web Speech API support and is tested in Google Chrome desktop in a quiet or low-noise room. The app stores transcripts, command outcomes, timestamps, and metadata, but not raw microphone audio.</p>
         </article>
         <article className="placeholder-panel">
           <Mic aria-hidden="true" />
-          <h2>Voice commands</h2>
+          <h2>Supported voice commands</h2>
+          <p>Use these constrained commands. Open-ended conversation, multilingual commands, and noisy environments are outside the study scope.</p>
           <ul className="plain-list">
             {commandGroups.map((group) => (
               <li key={group}>{group}</li>

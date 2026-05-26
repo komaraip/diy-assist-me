@@ -12,7 +12,7 @@ export function ExportsPage() {
         <p className="eyebrow">Researcher exports</p>
         <h1>Data Exports</h1>
         <p>
-          Download session data for analysis and reporting.
+          Download task, SUS, voice, touch, observer, debrief, full-session, summary, and paired analysis files for RQ1, RQ2, and RQ3.
         </p>
       </div>
 

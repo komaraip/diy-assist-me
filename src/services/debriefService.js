@@ -5,6 +5,7 @@ import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 
 const LOCAL_CONFIG_WARNING = "Feedback was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Feedback was saved on this device.";
+const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 
 export async function submitDebriefResponse({
   participantId,
@@ -22,6 +23,7 @@ export async function submitDebriefResponse({
   const record = {
     participantId,
     participantCode: participantCode || "",
+    schemaVersion: SCHEMA_VERSION,
     sessionId,
     responses: normalizeDebriefResponses(responses),
     timestamp: submittedAt,
@@ -52,6 +54,9 @@ function normalizeDebriefResponses(responses) {
     voiceProblems: responses.voiceProblems || "",
     touchProblems: responses.touchProblems || "",
     fallbackComments: responses.fallbackComments || "",
+    commandClarity: responses.commandClarity || "",
+    recoveryEffort: responses.recoveryEffort || "",
+    designImplications: responses.designImplications || "",
     suggestions: responses.suggestions || "",
   };
 }

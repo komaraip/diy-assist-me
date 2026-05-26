@@ -13,7 +13,7 @@ export function createEmptyTutorialDraft() {
     optional_images: [],
     estimated_minutes: "",
     difficulty: "Beginner",
-    risk_level: "",
+    risk_level: "low",
     active: true,
   };
 }
@@ -56,7 +56,7 @@ export function prepareTutorialForSave(draft) {
     optional_images: normalizeOptionalImages(draft.optional_images).filter((image) => image.url || image.alt),
     estimated_minutes: draft.estimated_minutes === "" ? "" : Number(draft.estimated_minutes),
     difficulty: String(draft.difficulty || "").trim(),
-    risk_level: String(draft.risk_level || "").trim(),
+    risk_level: String(draft.risk_level || "low").trim(),
     active: draft.active !== false,
   };
 }
@@ -84,13 +84,28 @@ export function validateTutorialDraft(draft, { isCreate = false } = {}) {
     errors.source_url = "Enter a valid URL.";
   }
 
-  if (!steps.length || !steps.some((step) => String(step.step_text || "").trim())) {
-    errors.steps = "Add at least one step.";
+  const filledSteps = steps.filter((step) => String(step.step_text || "").trim());
+  const filledMaterials = materials.filter((material) => hasAnyMaterialValue(material));
+  const estimatedMinutes = Number(draft.estimated_minutes);
+
+  if (!Number.isFinite(estimatedMinutes) || estimatedMinutes < 1) {
+    errors.estimated_minutes = "Estimated minutes is required.";
+  }
+
+  if (!filledMaterials.length) {
+    errors.materials = "Add at least one material.";
+  }
+
+  if (filledSteps.length < 3) {
+    errors.steps = "Add at least three steps for a study-controlled tutorial.";
   }
 
   steps.forEach((step, index) => {
     if (!String(step.step_text || "").trim()) {
       errors[`steps.${index}.step_text`] = "Step instruction is required.";
+    }
+    if (String(step.imageUrl || "").trim() && !String(step.imageAlt || "").trim()) {
+      errors[`steps.${index}.imageAlt`] = "Image alt text is required when an image URL is provided.";
     }
   });
 

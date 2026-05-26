@@ -27,10 +27,16 @@ export function normalizeTutorial(rawTutorial, index = 0) {
       instruction,
       imageUrl: step.imageUrl || step.image || step.image_url || "",
       imageAlt: step.imageAlt || step.image_alt || `${title} step ${stepNumber}`,
-      keywords: buildKeywords([title, instruction, ...(rawTutorial.tags || [])]),
+      keywords: Array.from(new Set([
+        ...(Array.isArray(step.keywords) ? step.keywords : []),
+        ...buildKeywords([title, instruction, ...(rawTutorial.tags || [])]),
+      ])).slice(0, 12),
       estimatedSeconds: step.estimatedSeconds || 60,
     };
   });
+  const source = rawTutorial.source || "";
+  const sourceUrl = rawTutorial.source_url || rawTutorial.sourceUrl || "";
+  const verificationLevel = rawTutorial.verification_level || rawTutorial.verificationLevel || "";
 
   return {
     id: rawTutorial.id || `tutorial_${String(index + 1).padStart(3, "0")}`,
@@ -39,6 +45,7 @@ export function normalizeTutorial(rawTutorial, index = 0) {
     category,
     description: rawTutorial.summary || rawTutorial.description || "Structured DIY tutorial prepared for study use.",
     difficulty: rawTutorial.difficulty || "Beginner",
+    riskLevel: rawTutorial.risk_level || rawTutorial.riskLevel || "low",
     estimatedMinutes,
     thumbnailUrl: rawTutorial.thumbnailUrl || PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length],
     tags: rawTutorial.tags || [],
@@ -51,10 +58,13 @@ export function normalizeTutorial(rawTutorial, index = 0) {
       totalSteps: normalizedSteps.length,
     },
     sourceMetadata: {
-      source: rawTutorial.source || "",
-      sourceUrl: rawTutorial.source_url || rawTutorial.sourceUrl || "",
-      verificationLevel: rawTutorial.verification_level || rawTutorial.verificationLevel || "",
+      source,
+      sourceUrl,
+      verificationLevel,
     },
+    source,
+    sourceUrl,
+    verificationLevel,
     createdAt: rawTutorial.createdAt || null,
     updatedAt: rawTutorial.updatedAt || null,
   };

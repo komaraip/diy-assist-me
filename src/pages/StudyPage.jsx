@@ -29,6 +29,7 @@ export function StudyPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [sessionResult, setSessionResult] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const speechSupportStatus = getSpeechSupportStatus();
 
   async function handleCreateSession(event) {
     event.preventDefault();
@@ -83,8 +84,8 @@ export function StudyPage() {
           <div>
             <h2 id="consent-heading">Consent</h2>
             <p>
-              Confirm that anonymous interaction details may be saved for this guided session.
-              No real name or raw microphone audio is collected.
+              Confirm that anonymous interaction details may be saved for this guided session. Use an
+              anonymous participant code only. No real name or raw microphone audio is collected.
             </p>
             <label className="checkbox-row">
               <input
@@ -101,7 +102,10 @@ export function StudyPage() {
           <GitBranch aria-hidden="true" />
           <div>
             <h2 id="assignment-heading">Session choices</h2>
-            <p>Choose whether touch mode or voice mode comes first, then pick the tutorial set.</p>
+            <p>
+              Choose whether touch mode or voice mode comes first, then pick the tutorial set.
+              Use 12 AB and 12 BA sessions for the planned balanced sample.
+            </p>
             <div className="form-grid">
               <label className="field-label">
                 Mode order
@@ -137,7 +141,10 @@ export function StudyPage() {
           <MonitorCheck aria-hidden="true" />
           <div>
             <h2 id="environment-heading">Setup notes</h2>
-            <p>Optional notes about the device, browser, and room setup.</p>
+            <p>
+              Record Chrome desktop, microphone permission, internet condition, and room noise before
+              testing. Current browser voice support: {speechSupportStatus}.
+            </p>
             <div className="form-grid">
               <TextInput
                 label="Device type"
@@ -216,4 +223,11 @@ function TextInput({ label, value, onChange, placeholder = "" }) {
       <input type="text" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
     </label>
   );
+}
+
+function getSpeechSupportStatus() {
+  if (typeof window === "undefined") return "not checked";
+  return "SpeechRecognition" in window || "webkitSpeechRecognition" in window
+    ? "available"
+    : "not available";
 }

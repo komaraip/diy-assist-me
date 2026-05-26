@@ -7,6 +7,9 @@ const initialResponses = {
   voiceProblems: "",
   touchProblems: "",
   fallbackComments: "",
+  commandClarity: "",
+  recoveryEffort: "",
+  designImplications: "",
   suggestions: "",
 };
 
@@ -51,9 +54,12 @@ export function DebriefForm({ isSubmitting, onSubmit }) {
 
       <Textarea label="What was easiest?" value={responses.easiestPart} onChange={(value) => updateResponse("easiestPart", value)} />
       <Textarea label="What was hardest?" value={responses.hardestPart} onChange={(value) => updateResponse("hardestPart", value)} />
-      <Textarea label="What happened in voice mode?" value={responses.voiceProblems} onChange={(value) => updateResponse("voiceProblems", value)} />
-      <Textarea label="What happened in touch mode?" value={responses.touchProblems} onChange={(value) => updateResponse("touchProblems", value)} />
-      <Textarea label="How did the buttons work for you?" value={responses.fallbackComments} onChange={(value) => updateResponse("fallbackComments", value)} />
+      <Textarea label="What usability problems appeared in voice mode?" value={responses.voiceProblems} onChange={(value) => updateResponse("voiceProblems", value)} />
+      <Textarea label="What usability problems appeared in touch mode?" value={responses.touchProblems} onChange={(value) => updateResponse("touchProblems", value)} />
+      <Textarea label="Were the voice commands clear?" value={responses.commandClarity} onChange={(value) => updateResponse("commandClarity", value)} />
+      <Textarea label="How much effort was needed to recover from voice errors?" value={responses.recoveryEffort} onChange={(value) => updateResponse("recoveryEffort", value)} />
+      <Textarea label="How did the fallback buttons work for you?" value={responses.fallbackComments} onChange={(value) => updateResponse("fallbackComments", value)} />
+      <Textarea label="What design implications should be considered?" value={responses.designImplications} onChange={(value) => updateResponse("designImplications", value)} />
       <Textarea label="What would make this better?" value={responses.suggestions} onChange={(value) => updateResponse("suggestions", value)} />
 
       <button type="submit" className="button primary-button form-action" disabled={isSubmitting}>

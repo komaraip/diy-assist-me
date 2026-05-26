@@ -7,6 +7,7 @@ const LOCAL_CONFIG_WARNING = "Interaction was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Interaction was saved on this device.";
 const LOCAL_VOICE_WARNING = "Voice interaction was saved on this device.";
 const FIREBASE_VOICE_FALLBACK_WARNING = "Voice interaction was saved on this device.";
+const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 
 export async function logTouchInteraction(event = {}) {
   return writeInteractionLog(buildInteractionLogRecord({ ...event, modality: "touch" }), {
@@ -27,14 +28,18 @@ function buildInteractionLogRecord(event = {}) {
 
   return {
     participantId: event.participantId || null,
+    participantCode: event.participantCode || "",
+    schemaVersion: SCHEMA_VERSION,
     sessionId: event.sessionId || null,
     conditionId: event.conditionId || null,
+    conditionOrder: event.conditionOrder ?? null,
     taskId: event.taskId || null,
     trialType: event.trialType || null,
     tutorialId: event.tutorialId || null,
     modality: event.modality || "touch",
     eventType: event.eventType || "interaction",
     timestamp,
+    createdAt: timestamp,
     clientTimestamp: timestamp,
     elapsedMsFromTaskStart: event.elapsedMsFromTaskStart ?? null,
     stepIndexBefore: event.stepIndexBefore ?? null,
@@ -49,6 +54,10 @@ function buildInteractionLogRecord(event = {}) {
     failureReason: event.failureReason ?? null,
     recoveryType: event.recoveryType ?? null,
     fallbackUsed: event.fallbackUsed ?? false,
+    speechConfidence: event.speechConfidence ?? event.metadata?.speechConfidence ?? null,
+    matchedPhrase: event.matchedPhrase ?? event.metadata?.matchedPhrase ?? "",
+    query: event.query ?? event.metadata?.query ?? "",
+    stepNumber: event.stepNumber ?? event.metadata?.stepNumber ?? null,
     metadata: event.metadata || {},
   };
 }

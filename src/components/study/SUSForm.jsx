@@ -25,7 +25,7 @@ export function SUSForm({ condition, isSubmitting, onSubmit }) {
         <p className="eyebrow">Quick questionnaire</p>
         <h2>{formatMode(condition.modality)}</h2>
         <p className="study-context-line">
-          Choose one answer for each item. Answer all 10 items to submit.
+          Choose one answer for each item based only on this condition. The 0-100 SUS score supports the RQ1 perceived usability comparison.
         </p>
       </section>
 

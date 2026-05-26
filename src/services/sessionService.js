@@ -7,6 +7,7 @@ const LOCAL_CONFIG_WARNING = "Session was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Session was saved on this device.";
 const LOCAL_READ_WARNING = "Session was loaded from this device.";
 const FIREBASE_READ_FALLBACK_WARNING = "Session was loaded from this device.";
+const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 
 export async function createSession({
   participantId,
@@ -26,6 +27,7 @@ export async function createSession({
   const sessionData = {
     participantId,
     participantCode,
+    schemaVersion: SCHEMA_VERSION,
     consentConfirmed: true,
     status: "created",
     startedAt: new Date().toISOString(),

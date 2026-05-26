@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { logVoiceInteraction } from "../services/logService.js";
 import { appendTechnicalNote } from "../services/sessionService.js";
 import { COMMAND_HINTS } from "../utils/commandDictionary.js";
+import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
 import { parseVoiceCommand } from "../utils/parseVoiceCommand.js";
 import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
 import { useSpeechRecognition } from "./useSpeechRecognition.js";
@@ -9,10 +10,13 @@ import { useSpeechRecognition } from "./useSpeechRecognition.js";
 export function useVoiceCommands({
   tutorialId,
   participantId = null,
+  participantCode = "",
   sessionId = null,
   conditionId = null,
+  conditionOrder = null,
   taskId = null,
   trialType = null,
+  taskStartedAt = null,
   enabled = true,
   getStepIndex,
   onCommand,
@@ -43,8 +47,10 @@ export function useVoiceCommands({
       }
       await logVoiceInteraction({
         participantId,
+        participantCode,
         sessionId,
         conditionId,
+        conditionOrder,
         taskId,
         trialType,
         tutorialId,
@@ -57,11 +63,12 @@ export function useVoiceCommands({
         failureReason: message,
         recoveryType: "touch_fallback_available",
         fallbackUsed: false,
+        elapsedMsFromTaskStart: getElapsedMsFromStartedAt(taskStartedAt),
         stepIndexBefore: getStepIndexRef.current?.() ?? null,
         stepIndexAfter: getStepIndexRef.current?.() ?? null,
       });
     },
-    [conditionId, enabled, participantId, sessionId, taskId, trialType, tutorialId]
+    [conditionId, conditionOrder, enabled, participantCode, participantId, sessionId, taskId, taskStartedAt, trialType, tutorialId]
   );
 
   const handleFinalResult = useCallback(
@@ -81,8 +88,10 @@ export function useVoiceCommands({
         setVoiceFeedback(message);
         await logVoiceInteraction({
           participantId,
+          participantCode,
           sessionId,
           conditionId,
+          conditionOrder,
           taskId,
           trialType,
           tutorialId,
@@ -96,8 +105,10 @@ export function useVoiceCommands({
           failureReason: "no_matching_intent",
           recoveryType: "repeat_or_touch_fallback",
           fallbackUsed: false,
+          elapsedMsFromTaskStart: getElapsedMsFromStartedAt(taskStartedAt),
           stepIndexBefore,
           stepIndexAfter: getStepIndexRef.current?.() ?? stepIndexBefore,
+          speechConfidence: confidence,
           metadata: { speechConfidence: confidence },
         });
         return { success: false };
@@ -114,8 +125,10 @@ export function useVoiceCommands({
 
       await logVoiceInteraction({
         participantId,
+        participantCode,
         sessionId,
         conditionId,
+        conditionOrder,
         taskId,
         trialType,
         tutorialId,
@@ -130,8 +143,13 @@ export function useVoiceCommands({
         failureReason: dispatchResult?.failureReason || null,
         recoveryType: dispatchResult?.recoveryType || null,
         fallbackUsed: false,
+        elapsedMsFromTaskStart: getElapsedMsFromStartedAt(taskStartedAt),
         stepIndexBefore: dispatchResult?.stepIndexBefore ?? stepIndexBefore,
         stepIndexAfter: dispatchResult?.stepIndexAfter ?? getStepIndexRef.current?.() ?? stepIndexBefore,
+        speechConfidence: confidence,
+        matchedPhrase: parsed.matchedPhrase,
+        query: parsed.query,
+        stepNumber: parsed.stepNumber,
         metadata: {
           matchedPhrase: parsed.matchedPhrase,
           query: parsed.query,
@@ -148,7 +166,7 @@ export function useVoiceCommands({
 
       return { success, stopListening: parsed.intent === VOICE_INTENTS.STOP_LISTENING };
     },
-    [conditionId, enabled, participantId, sessionId, taskId, trialType, tutorialId]
+    [conditionId, conditionOrder, enabled, participantCode, participantId, sessionId, taskId, taskStartedAt, trialType, tutorialId]
   );
 
   const speech = useSpeechRecognition({

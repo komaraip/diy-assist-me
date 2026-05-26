@@ -6,19 +6,37 @@ const exportCards = [
   {
     fileName: EXPORT_FILENAMES.taskTrials,
     title: "Task trials CSV",
-    description: "Task timing, completion status, mode, validity notes, and task identifiers.",
+    description: "Task timing, completion status, script, target keyword, validity notes, and setup metadata.",
     icon: FileSpreadsheet,
   },
   {
     fileName: EXPORT_FILENAMES.susResponses,
     title: "SUS responses CSV",
-    description: "Questionnaire item responses, contribution totals, calculated SUS scores, and timestamps.",
+    description: "Condition-linked SUS item responses and 0-100 scores for the RQ1 usability comparison.",
     icon: FileSpreadsheet,
   },
   {
     fileName: EXPORT_FILENAMES.voiceLogs,
     title: "Voice logs CSV",
     description: "Transcripts, matched intents, command success, recovery, fallback, and recognition errors.",
+    icon: FileSpreadsheet,
+  },
+  {
+    fileName: EXPORT_FILENAMES.touchLogs,
+    title: "Touch logs CSV",
+    description: "Session-linked touch actions, fallback flags, step transitions, elapsed time, and metadata.",
+    icon: FileSpreadsheet,
+  },
+  {
+    fileName: EXPORT_FILENAMES.observerNotes,
+    title: "Observer notes CSV",
+    description: "Facilitator notes, severity, tags, task context, and timestamps for RQ3.",
+    icon: FileSpreadsheet,
+  },
+  {
+    fileName: EXPORT_FILENAMES.debriefResponses,
+    title: "Debrief responses CSV",
+    description: "Participant feedback about modality preference, problems, recovery, fallback, and design implications.",
     icon: FileSpreadsheet,
   },
   {
@@ -30,8 +48,14 @@ const exportCards = [
   {
     fileName: EXPORT_FILENAMES.chapter4Metrics,
     title: "Chapter 4 summary metrics JSON",
-    description: "Summary metrics for RQ1, RQ2, RQ3, and RQ4 with export metadata.",
+    description: "Summary metrics grouped under RQ1, RQ2, and RQ3 with export metadata.",
     icon: FileJson,
+  },
+  {
+    fileName: EXPORT_FILENAMES.analysisReadyDataset,
+    title: "Analysis-ready paired CSV",
+    description: "One row per participant/session with paired touch and voice values plus exclusion flags.",
+    icon: FileSpreadsheet,
   },
 ];
 

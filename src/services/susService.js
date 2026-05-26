@@ -6,6 +6,7 @@ import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 
 const LOCAL_CONFIG_WARNING = "Questionnaire response was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Questionnaire response was saved on this device.";
+const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 
 export async function submitSusResponse({
   participantId,
@@ -31,6 +32,7 @@ export async function submitSusResponse({
   const record = {
     participantId,
     participantCode: participantCode || "",
+    schemaVersion: SCHEMA_VERSION,
     sessionId,
     conditionId,
     conditionOrder,

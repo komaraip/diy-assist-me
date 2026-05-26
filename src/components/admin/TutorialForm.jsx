@@ -90,7 +90,9 @@ export function TutorialForm({
               min="1"
               value={draft.estimated_minutes}
               onChange={(event) => updateField("estimated_minutes", event.target.value)}
+              required
             />
+            {errors.estimated_minutes ? <span className="field-error">{errors.estimated_minutes}</span> : null}
           </label>
           <label className="field-label checkbox-field">
             <input
@@ -139,9 +141,16 @@ export function TutorialForm({
           </label>
           <label className="field-label">
             Risk level
-            <input value={draft.risk_level} onChange={(event) => updateField("risk_level", event.target.value)} />
+            <input
+              value={draft.risk_level}
+              onChange={(event) => updateField("risk_level", event.target.value)}
+              placeholder="low"
+            />
           </label>
         </div>
+        <p className="status-note">
+          Study tutorials should be safe for desk-based simulation and avoid hazardous tools, substances, or expert-only skills.
+        </p>
       </section>
 
       <RepeatableStrings
@@ -168,6 +177,8 @@ export function TutorialForm({
             Add material
           </button>
         </div>
+
+        {errors.materials ? <p className="status-note error-note">{errors.materials}</p> : null}
 
         <div className="repeatable-list">
           {(draft.materials || []).map((material, index) => (
@@ -262,6 +273,9 @@ export function TutorialForm({
                 <label className="field-label">
                   Image alt text
                   <input value={step.imageAlt} onChange={(event) => updateArrayItem("steps", index, { imageAlt: event.target.value })} />
+                  {errors[`steps.${index}.imageAlt`] ? (
+                    <span className="field-error">{errors[`steps.${index}.imageAlt`]}</span>
+                  ) : null}
                 </label>
                 <label className="field-label">
                   Keywords

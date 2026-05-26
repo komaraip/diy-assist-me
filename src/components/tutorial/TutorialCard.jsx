@@ -35,8 +35,10 @@ export function TutorialCard({ tutorial, onOpen }) {
         </span>
         <span className="tutorial-card-meta">
           <span className="difficulty-pill">{tutorial.difficulty}</span>
+          <span>{tutorial.riskLevel || "low"} risk</span>
           <span>{(tutorial.materials || []).length} materials</span>
           <span>{(tutorial.steps || []).length} steps</span>
+          <span>{tutorial.verificationLevel || tutorial.source || "source listed"}</span>
         </span>
       </span>
     </button>
