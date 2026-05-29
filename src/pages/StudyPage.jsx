@@ -20,7 +20,7 @@ const initialEnvironment = {
   microphonePermissionStatus: "",
   roomNoiseLevelNote: "",
   internetConnectionNote: "",
-  taskEnvironmentNote: "",
+  taskEnvironmentNote: "Desk-based hands-busy simulation",
   researcherObservationNote: "",
 };
 
@@ -244,6 +244,15 @@ export function StudyPage() {
                 fullWidth
               />
             ))}
+            <label className="field-label full-width-field" style={{ marginTop: "1rem" }}>
+              Extra setup note (Optional)
+              <input
+                type="text"
+                value={environment.researcherObservationNote}
+                onChange={(event) => updateEnvironment("researcherObservationNote", event.target.value)}
+                placeholder="e.g. mic volume low, minor background noise, lag spike during voice load"
+              />
+            </label>
           </div>
         </section>
 
