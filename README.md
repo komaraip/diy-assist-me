@@ -96,6 +96,7 @@ The tutorial manager supports:
 - listing tutorials
 - searching by title or ID
 - filtering by category
+- importing the local `data.json` tutorial dataset into Firestore
 - creating tutorials
 - editing tutorials
 - deleting tutorials with confirmation
@@ -107,6 +108,9 @@ Tutorial documents should use fields compatible with the public tutorial normali
 - `id`
 - `title`
 - `category`
+- `study_role`
+- `guided_session_priority`
+- `thumbnailUrl`
 - `tags`
 - `source`
 - `source_url`
@@ -118,11 +122,14 @@ Tutorial documents should use fields compatible with the public tutorial normali
 - `estimated_minutes`
 - `difficulty`
 - `risk_level`
+- `selection_rationale`
 - `active`
 - `createdAt`
 - `updatedAt`
 
-Materials can be strings or objects with `name`, `quantity`, `unit`, and `notes`; new admin-created materials use object form. Steps use `step_index`, `step_text`, `imageUrl`, `imageAlt`, and `keywords`.
+`thumbnailUrl` is used for tutorial cards on the public tutorial list. Materials can be strings or objects with `name`, `quantity`, `unit`, and `notes`; new admin-created materials use object form. Steps use `step_index`, `step_text`, `imageUrl`, `imageAlt`, and `keywords`.
+Study roles use `core_practice`, `core_measured`, or `catalog`. Guided sessions prioritize the four core tutorials marked with `guided_session_priority`.
+Use the `Import local dataset` action in `/admin/tutorials` to upsert the 12 local tutorials from `data.json` into Firestore `tutorials/{tutorialId}` documents.
 
 ## Browser Guidance
 

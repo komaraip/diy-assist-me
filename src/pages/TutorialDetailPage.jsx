@@ -1,8 +1,10 @@
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { StepCard } from "../components/tutorial/StepCard.jsx";
+import { StepOverview } from "../components/tutorial/StepOverview.jsx";
 import { TutorialBottomBar } from "../components/tutorial/TutorialBottomBar.jsx";
+import { TutorialSearch } from "../components/tutorial/TutorialSearch.jsx";
 import { TutorialToolsSheet } from "../components/tutorial/TutorialToolsSheet.jsx";
 import { useVoiceCommands } from "../hooks/useVoiceCommands.js";
 import { logTouchInteraction } from "../services/logService.js";
@@ -72,6 +74,10 @@ export function TutorialDetailPage({
   const isVoiceCondition = studyContext?.modality === "voice";
   const voiceControlsEnabled = allowedModality !== "touch";
   const progressValue = steps.length ? ((activeStepIndex + 1) / steps.length) * 100 : 0;
+  const searchResults = useMemo(
+    () => getTutorialSearchResults(tutorial, tutorialSearchQuery),
+    [tutorial, tutorialSearchQuery]
+  );
   function logTutorialTouch(eventType, details = {}) {
     void logTouchInteraction({
       participantId: studyContext?.participantId || null,
@@ -587,7 +593,29 @@ export function TutorialDetailPage({
                 onRepeat={handleRepeat}
                 onNext={handleNext}
                 onComplete={handleComplete}
-              />
+              >
+                <section className="tutorial-tool-card tutorial-overview-card" aria-labelledby="tutorial-overview-heading">
+                  <StepOverview
+                    headingId="tutorial-overview-heading"
+                    steps={steps}
+                    activeStepIndex={activeStepIndex}
+                    onJumpToStep={handleOverviewJump}
+                    isOpen={isOverviewOpen}
+                    onToggle={handleToggleOverview}
+                    copy={copy}
+                  />
+                </section>
+
+                <section className="tutorial-tool-card tutorial-search-card">
+                  <TutorialSearch
+                    query={tutorialSearchQuery}
+                    onQueryChange={handleTutorialSearchChange}
+                    results={searchResults}
+                    onJumpToStep={handleSearchJump}
+                    copy={copy}
+                  />
+                </section>
+              </TutorialToolsSheet>
             </div>
 
             <TutorialBottomBar
@@ -628,4 +656,39 @@ export function TutorialDetailPage({
 function isCompactTutorialViewport() {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
   return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function getTutorialSearchResults(tutorial, query) {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!tutorial || !normalizedQuery) return [];
+
+  const sharedText = normalizeSearchText([
+    tutorial.title,
+    tutorial.description,
+    ...(tutorial.tags || []),
+    ...(tutorial.materials || []).flatMap((material) => [
+      material.name,
+      material.quantity,
+      material.unit,
+      material.notes,
+    ]),
+  ].join(" "));
+
+  return (tutorial.steps || []).filter((step) => {
+    const stepText = normalizeSearchText([
+      step.title,
+      step.instruction,
+      ...(step.keywords || []),
+    ].join(" "));
+
+    return stepText.includes(normalizedQuery) || sharedText.includes(normalizedQuery);
+  });
+}
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }

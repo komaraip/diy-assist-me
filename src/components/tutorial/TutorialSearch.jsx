@@ -12,9 +12,7 @@ export function TutorialSearch({ query, onQueryChange, results, onJumpToStep, co
 
   return (
     <section className="tutorial-search" aria-label={searchCopy.aria}>
-      <h2>{searchCopy.heading}</h2>
-      <label className="search-field">
-        <span>{searchCopy.label}</span>
+      <label className="search-field" aria-label={searchCopy.label}>
         <span className="search-input-wrap">
           <Search aria-hidden="true" />
           <input

@@ -1,8 +1,9 @@
-import { Plus, RefreshCcw, Search } from "lucide-react";
+import { Plus, RefreshCcw, Search, UploadCloud } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   createAdminTutorial,
   deleteAdminTutorial,
+  importLocalTutorialDataset,
   isAdminTutorialCrudAvailable,
   listAdminTutorials,
   updateAdminTutorial,
@@ -22,6 +23,7 @@ export function TutorialManager() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [draft, setDraft] = useState(null);
@@ -123,6 +125,31 @@ export function TutorialManager() {
     await loadTutorials();
   }
 
+  async function handleImportLocalDataset() {
+    const confirmed = window.confirm(
+      "Import local dataset to Firebase? This will upsert all 12 local tutorials into the tutorials collection."
+    );
+    if (!confirmed) return;
+
+    setDraft(null);
+    setEditingId(null);
+    setFormErrors({});
+    setStatusMessage("");
+    setErrorMessage("");
+    setIsImporting(true);
+
+    const result = await importLocalTutorialDataset();
+    setIsImporting(false);
+
+    if (!result.success) {
+      setErrorMessage(result.error);
+      return;
+    }
+
+    setStatusMessage(`Imported ${result.data.imported} tutorials from local dataset.`);
+    await loadTutorials();
+  }
+
   if (!isAdminTutorialCrudAvailable()) {
     return (
       <section className="admin-panel">
@@ -166,6 +193,15 @@ export function TutorialManager() {
           <button type="button" className="button secondary-action" onClick={loadTutorials}>
             <RefreshCcw aria-hidden="true" />
             Refresh
+          </button>
+          <button
+            type="button"
+            className="button secondary-action"
+            onClick={handleImportLocalDataset}
+            disabled={isImporting}
+          >
+            <UploadCloud aria-hidden="true" />
+            {isImporting ? "Importing..." : "Import local dataset"}
           </button>
           <button type="button" className="button primary-button" onClick={handleCreate}>
             <Plus aria-hidden="true" />

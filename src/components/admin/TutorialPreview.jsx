@@ -14,9 +14,14 @@ export function TutorialPreview({ draft }) {
         </div>
       </div>
       <div className="tutorial-preview-card">
+        {preview.thumbnailUrl ? (
+          <img src={preview.thumbnailUrl} alt="" className="tutorial-card-image" />
+        ) : null}
         <span>{preview.category}</span>
+        <span>{formatStudyRole(preview.studyRole)}{preview.guidedSessionPriority ? " · Guided session priority" : ""}</span>
         <h3>{preview.title}</h3>
         <p>{preview.description}</p>
+        {preview.selectionRationale ? <p>{preview.selectionRationale}</p> : null}
         <dl className="tutorial-preview-meta">
           <div>
             <dt>Materials</dt>
@@ -39,4 +44,10 @@ export function TutorialPreview({ draft }) {
       </div>
     </section>
   );
+}
+
+function formatStudyRole(value) {
+  if (value === "core_practice") return "Core practice";
+  if (value === "core_measured") return "Core measured";
+  return "Catalog";
 }

@@ -22,6 +22,7 @@
       "category": "cooking",
       "study_role": "core_practice",
       "guided_session_priority": true,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "oats",
         "fruit",
@@ -33,7 +34,7 @@
         "kitchen"
       ],
       "source": "Instructables: Easy Overnight Oats",
-      "source_url": "[https://www.instructables.com/Easy-Overnight-Oats/](https://www.instructables.com/Easy-Overnight-Oats/)",
+      "source_url": "https://www.instructables.com/Easy-Overnight-Oats/",
       "verification_level": "page_open",
       "summary": "Prepare a simple oats bowl by mixing dry oats with milk or yogurt, then topping it with fruit. The task is safe, repeatable, and suitable for a short hands-busy practice session.",
       "materials": [
@@ -139,6 +140,7 @@
       "category": "cooking",
       "study_role": "core_measured",
       "guided_session_priority": true,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "egg",
         "cheese",
@@ -150,7 +152,7 @@
         "kitchen"
       ],
       "source": "NC Egg Association: Microwave Egg & Cheese Burrito",
-      "source_url": "[https://ncegg.org/recipe/microwave-egg-cheese-burrito/](https://ncegg.org/recipe/microwave-egg-cheese-burrito/)",
+      "source_url": "https://ncegg.org/recipe/microwave-egg-cheese-burrito/",
       "verification_level": "page_open",
       "summary": "Make a basic egg and cheese wrap using a microwave-safe bowl and a tortilla. The step sequence includes a clear step 4 target for jump navigation and measured-session tasks.",
       "materials": [
@@ -256,6 +258,7 @@
       "category": "cooking",
       "study_role": "catalog",
       "guided_session_priority": false,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "yogurt",
         "berries",
@@ -266,7 +269,7 @@
         "kitchen"
       ],
       "source": "Instructables: RECIPE | BERRY YOGURT PARFAIT",
-      "source_url": "[https://www.instructables.com/RECIPE-BERRY-YOGURT-PARFAIT/](https://www.instructables.com/RECIPE-BERRY-YOGURT-PARFAIT/)",
+      "source_url": "https://www.instructables.com/RECIPE-BERRY-YOGURT-PARFAIT/",
       "verification_level": "page_open",
       "summary": "Layer yogurt, berries, and granola in a cup to make a simple parfait. The activity gives a safe catalog example for step navigation and keyword search.",
       "materials": [
@@ -356,6 +359,7 @@
       "category": "cooking",
       "study_role": "catalog",
       "guided_session_priority": false,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "oats",
         "peanut",
@@ -367,7 +371,7 @@
         "kitchen"
       ],
       "source": "Instructables: No-Bake Energy Balls",
-      "source_url": "[https://www.instructables.com/No-Bake-Energy-Balls/](https://www.instructables.com/No-Bake-Energy-Balls/)",
+      "source_url": "https://www.instructables.com/No-Bake-Energy-Balls/",
       "verification_level": "page_open",
       "summary": "Mix oats, nut butter, and honey into a sticky mixture, then roll it into small snack balls. The task is a low-risk catalog example with realistic hands-busy actions.",
       "materials": [
@@ -473,6 +477,7 @@
       "category": "cleaning",
       "study_role": "core_practice",
       "guided_session_priority": true,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "bottle",
         "soap",
@@ -484,7 +489,7 @@
         "kitchen"
       ],
       "source": "Instructables: 5 Ways to Clean a Funky Water Bottle",
-      "source_url": "[https://www.instructables.com/5-Ways-to-Clean-a-Funky-Water-Bottle/](https://www.instructables.com/5-Ways-to-Clean-a-Funky-Water-Bottle/)",
+      "source_url": "https://www.instructables.com/5-Ways-to-Clean-a-Funky-Water-Bottle/",
       "verification_level": "page_open",
       "summary": "Clean a reusable bottle using warm water, mild dish soap, a bottle brush, and careful rinsing. The sequence is safe, concrete, and well suited for guided practice commands.",
       "materials": [
@@ -584,6 +589,7 @@
       "category": "cleaning",
       "study_role": "catalog",
       "guided_session_priority": false,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "shoes",
         "soap",
@@ -594,7 +600,7 @@
         "low-risk"
       ],
       "source": "Nike: How to Clean Your Shoes in 6 Easy Steps",
-      "source_url": "[https://www.nike.com/id/a/how-to-clean-shoes](https://www.nike.com/id/a/how-to-clean-shoes)",
+      "source_url": "https://www.nike.com/id/a/how-to-clean-shoes",
       "verification_level": "page_open",
       "summary": "Refresh a pair of sneakers using a soft brush, mild soap, water, and a towel. The tutorial avoids harsh cleaners and keeps the task suitable for a supervised household simulation.",
       "materials": [
@@ -694,6 +700,7 @@
       "category": "cleaning",
       "study_role": "catalog",
       "guided_session_priority": false,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "keyboard",
         "cloth",
@@ -703,8 +710,8 @@
         "cleaning",
         "low-risk"
       ],
-      "source": "HP Tech Takes: Clean Your Keyboard",
-      "source_url": "[https://www.hp.com/us-en/shop/tech-takes/how-to-clean-keyboard](https://www.hp.com/us-en/shop/tech-takes/how-to-clean-keyboard)",
+      "source": "Microsoft Support: Clean and care for your Surface",
+      "source_url": "https://support.microsoft.com/en-us/surface/clean-and-care-for-your-surface-8b3e7e01-f2b7-5854-b7a6-dac2cbf6e104",
       "verification_level": "page_open",
       "summary": "Clean the outside of a keyboard using dry, gentle methods and careful handling. The adapted version avoids spraying liquid and focuses on safe exterior dust removal.",
       "materials": [
@@ -798,6 +805,7 @@
       "category": "cleaning",
       "study_role": "catalog",
       "guided_session_priority": false,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "desk",
         "cloth",
@@ -808,7 +816,7 @@
         "low-risk"
       ],
       "source": "Filtrete: 5 Tips for Cleaning Your At-Home Workspace",
-      "source_url": "[https://www.filtrete.com/3M/en_US/filtrete/home-tips/full-story/~/5-tips-for-cleaning-your-at-home-workspace/?storyid=527c9aa2-a2f8-462a-8bc9-138fdb125e1f](https://www.filtrete.com/3M/en_US/filtrete/home-tips/full-story/~/5-tips-for-cleaning-your-at-home-workspace/?storyid=527c9aa2-a2f8-462a-8bc9-138fdb125e1f)",
+      "source_url": "https://www.filtrete.com/3M/en_US/filtrete/home-tips/full-story/~/5-tips-for-cleaning-your-at-home-workspace/?storyid=527c9aa2-a2f8-462a-8bc9-138fdb125e1f",
       "verification_level": "page_open",
       "summary": "Clear a small desk area, wipe the surface, and return only needed items. This task is safe, desk-based, and useful for comparing touch and voice navigation during physical cleanup.",
       "materials": [
@@ -892,6 +900,7 @@
       "category": "organizing",
       "study_role": "core_measured",
       "guided_session_priority": true,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "cable",
         "label",
@@ -903,7 +912,7 @@
         "low-risk"
       ],
       "source": "Instructables: Computer Desk Cable Management on the Cheap",
-      "source_url": "[https://www.instructables.com/Computer-desk-cable-management-on-the-cheap/](https://www.instructables.com/Computer-desk-cable-management-on-the-cheap/)",
+      "source_url": "https://www.instructables.com/Computer-desk-cable-management-on-the-cheap/",
       "verification_level": "page_open",
       "summary": "Sort common desk cables by device, add simple labels, and group them with soft ties. The tutorial has a clear step 4 target and is highly comparable to the other core tasks.",
       "materials": [
@@ -1009,6 +1018,7 @@
       "category": "organizing",
       "study_role": "catalog",
       "guided_session_priority": false,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "drawer",
         "pens",
@@ -1019,7 +1029,7 @@
         "low-risk"
       ],
       "source": "IKEA: Desk organisation tips",
-      "source_url": "[https://www.ikea.com/gb/en/ideas/how-to-organise-your-desk-pubef5be6e0/](https://www.ikea.com/gb/en/ideas/how-to-organise-your-desk-pubef5be6e0/)",
+      "source_url": "https://www.ikea.com/gb/en/ideas/how-to-organise-your-desk-pubef5be6e0/",
       "verification_level": "page_open",
       "summary": "Sort pens, notes, clips, and small stationery into clear groups inside a drawer. This catalog tutorial supports realistic organizing without cutting, drilling, or heavy tools.",
       "materials": [
@@ -1119,6 +1129,7 @@
       "category": "organizing",
       "study_role": "catalog",
       "guided_session_priority": false,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "drawer",
         "sort",
@@ -1129,7 +1140,7 @@
         "low-risk"
       ],
       "source": "Just a Girl and Her Blog: How to Create an Organized Junk Drawer",
-      "source_url": "[https://justagirlandherblog.com/organized-junk-drawer/](https://justagirlandherblog.com/organized-junk-drawer/)",
+      "source_url": "https://justagirlandherblog.com/organized-junk-drawer/",
       "verification_level": "page_open",
       "summary": "Reset a small drawer by removing items, grouping them, and returning only useful objects. The task works well as a catalog example because it uses simple decisions and safe materials.",
       "materials": [
@@ -1229,6 +1240,7 @@
       "category": "organizing",
       "study_role": "catalog",
       "guided_session_priority": false,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80",
       "tags": [
         "study",
         "desk",
@@ -1239,7 +1251,7 @@
         "low-risk"
       ],
       "source": "IKEA Indonesia: Tips for Organizing a Nice Study Desk",
-      "source_url": "[https://www.ikea.co.id/en/inspirations/tips-for-organizing-a-nice-study-desk](https://www.ikea.co.id/en/inspirations/tips-for-organizing-a-nice-study-desk)",
+      "source_url": "https://www.ikea.co.id/en/inspirations/tips-for-organizing-a-nice-study-desk",
       "verification_level": "page_open",
       "summary": "Prepare a small study workspace by clearing clutter, placing essential supplies, and defining a central work zone. This tutorial is safe and suitable for household or lab simulation.",
       "materials": [

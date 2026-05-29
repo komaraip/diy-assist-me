@@ -37,6 +37,9 @@ export function normalizeTutorial(rawTutorial, index = 0) {
   const source = rawTutorial.source || "";
   const sourceUrl = rawTutorial.source_url || rawTutorial.sourceUrl || "";
   const verificationLevel = rawTutorial.verification_level || rawTutorial.verificationLevel || "";
+  const studyRole = rawTutorial.study_role || rawTutorial.studyRole || "catalog";
+  const guidedSessionPriority = Boolean(rawTutorial.guided_session_priority ?? rawTutorial.guidedSessionPriority);
+  const selectionRationale = rawTutorial.selection_rationale || rawTutorial.selectionRationale || "";
 
   return {
     id: rawTutorial.id || `tutorial_${String(index + 1).padStart(3, "0")}`,
@@ -47,8 +50,11 @@ export function normalizeTutorial(rawTutorial, index = 0) {
     difficulty: rawTutorial.difficulty || "Beginner",
     riskLevel: rawTutorial.risk_level || rawTutorial.riskLevel || "low",
     estimatedMinutes,
-    thumbnailUrl: rawTutorial.thumbnailUrl || PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length],
+    thumbnailUrl: rawTutorial.thumbnailUrl || rawTutorial.thumbnail_url || PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length],
     tags: rawTutorial.tags || [],
+    studyRole,
+    guidedSessionPriority,
+    selectionRationale,
     active: rawTutorial.active !== false,
     materials: normalizeMaterials(rawTutorial.materials),
     steps: normalizedSteps,

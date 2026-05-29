@@ -12,6 +12,7 @@ export function TutorialTable({ tutorials, onEdit, onDelete }) {
           <tr>
             <th>Title</th>
             <th>Category</th>
+            <th>Role</th>
             <th>Steps</th>
             <th>Status</th>
             <th>Updated</th>
@@ -26,6 +27,12 @@ export function TutorialTable({ tutorials, onEdit, onDelete }) {
                 <span>{tutorial.id}</span>
               </td>
               <td>{tutorial.normalized.category}</td>
+              <td>
+                {formatStudyRole(tutorial.raw.study_role || tutorial.normalized.studyRole)}
+                {tutorial.raw.guided_session_priority || tutorial.normalized.guidedSessionPriority ? (
+                  <span>Core</span>
+                ) : null}
+              </td>
               <td>{tutorial.normalized.steps.length}</td>
               <td>{tutorial.raw.active === false ? "Inactive" : "Active"}</td>
               <td>{formatDate(tutorial.raw.updatedAt || tutorial.raw.createdAt)}</td>
@@ -47,6 +54,12 @@ export function TutorialTable({ tutorials, onEdit, onDelete }) {
       </table>
     </div>
   );
+}
+
+function formatStudyRole(value) {
+  if (value === "core_practice") return "Core practice";
+  if (value === "core_measured") return "Core measured";
+  return "Catalog";
 }
 
 function formatDate(value) {

@@ -3,6 +3,9 @@ export function createEmptyTutorialDraft() {
     id: `tutorial_${Date.now()}`,
     title: "",
     category: "",
+    study_role: "catalog",
+    guided_session_priority: false,
+    thumbnailUrl: "",
     tags: [""],
     source: "",
     source_url: "",
@@ -14,6 +17,7 @@ export function createEmptyTutorialDraft() {
     estimated_minutes: "",
     difficulty: "Beginner",
     risk_level: "low",
+    selection_rationale: "",
     active: true,
   };
 }
@@ -25,13 +29,17 @@ export function createTutorialDraftFromRaw(rawTutorial = {}) {
     ...rawTutorial,
     id: rawTutorial.id || fallback.id,
     tags: normalizeStringList(rawTutorial.tags),
-    source_url: rawTutorial.source_url ?? rawTutorial.sourceUrl ?? "",
+    study_role: rawTutorial.study_role ?? rawTutorial.studyRole ?? fallback.study_role,
+    guided_session_priority: Boolean(rawTutorial.guided_session_priority ?? rawTutorial.guidedSessionPriority),
+    thumbnailUrl: rawTutorial.thumbnailUrl ?? rawTutorial.thumbnail_url ?? "",
+    source_url: normalizeSourceUrl(rawTutorial.source_url ?? rawTutorial.sourceUrl ?? ""),
     verification_level: rawTutorial.verification_level ?? rawTutorial.verificationLevel ?? "",
     materials: normalizeMaterialDrafts(rawTutorial.materials),
     steps: normalizeStepDrafts(rawTutorial.steps),
     optional_images: normalizeOptionalImages(rawTutorial.optional_images ?? rawTutorial.optionalImages),
     estimated_minutes: rawTutorial.estimated_minutes ?? rawTutorial.estimatedMinutes ?? "",
     risk_level: rawTutorial.risk_level ?? rawTutorial.riskLevel ?? "",
+    selection_rationale: rawTutorial.selection_rationale ?? rawTutorial.selectionRationale ?? "",
     active: rawTutorial.active !== false,
   };
 }
@@ -41,9 +49,12 @@ export function prepareTutorialForSave(draft) {
     id: String(draft.id || "").trim(),
     title: String(draft.title || "").trim(),
     category: String(draft.category || "").trim(),
+    study_role: normalizeStudyRole(draft.study_role || draft.studyRole),
+    guided_session_priority: Boolean(draft.guided_session_priority ?? draft.guidedSessionPriority),
+    thumbnailUrl: String(draft.thumbnailUrl || draft.thumbnail_url || "").trim(),
     tags: normalizeStringList(draft.tags).filter(Boolean),
     source: String(draft.source || "").trim(),
-    source_url: String(draft.source_url || "").trim(),
+    source_url: normalizeSourceUrl(draft.source_url || ""),
     verification_level: String(draft.verification_level || "").trim(),
     summary: String(draft.summary || "").trim(),
     materials: normalizeMaterialDrafts(draft.materials).filter((material) => hasAnyMaterialValue(material)),
@@ -57,6 +68,7 @@ export function prepareTutorialForSave(draft) {
     estimated_minutes: draft.estimated_minutes === "" ? "" : Number(draft.estimated_minutes),
     difficulty: String(draft.difficulty || "").trim(),
     risk_level: String(draft.risk_level || "low").trim(),
+    selection_rationale: String(draft.selection_rationale || "").trim(),
     active: draft.active !== false,
   };
 }
@@ -66,7 +78,10 @@ export function validateTutorialDraft(draft, { isCreate = false } = {}) {
   const id = String(draft.id || "").trim();
   const title = String(draft.title || "").trim();
   const category = String(draft.category || "").trim();
-  const sourceUrl = String(draft.source_url || "").trim();
+  const rawStudyRole = String(draft.study_role || draft.studyRole || "").trim();
+  const studyRole = normalizeStudyRole(rawStudyRole);
+  const thumbnailUrl = String(draft.thumbnailUrl || draft.thumbnail_url || "").trim();
+  const sourceUrl = normalizeSourceUrl(draft.source_url || "");
   const steps = Array.isArray(draft.steps) ? draft.steps : [];
   const materials = Array.isArray(draft.materials) ? draft.materials : [];
 
@@ -78,6 +93,12 @@ export function validateTutorialDraft(draft, { isCreate = false } = {}) {
 
   if (!title) errors.title = "Title is required.";
   if (!category) errors.category = "Category is required.";
+  if (!isValidStudyRole(rawStudyRole)) {
+    errors.study_role = "Select catalog, core practice, or core measured.";
+  }
+  if (thumbnailUrl && !isValidUrl(thumbnailUrl)) {
+    errors.thumbnailUrl = "Enter a valid thumbnail URL.";
+  }
   if (!sourceUrl) {
     errors.source_url = "Source URL is required.";
   } else if (!isValidUrl(sourceUrl)) {
@@ -184,4 +205,19 @@ function isValidUrl(value) {
   } catch {
     return false;
   }
+}
+
+function normalizeStudyRole(value) {
+  const role = String(value || "catalog").trim();
+  return isValidStudyRole(role) ? role : "catalog";
+}
+
+function isValidStudyRole(value) {
+  return ["core_practice", "core_measured", "catalog"].includes(String(value || "").trim());
+}
+
+function normalizeSourceUrl(value) {
+  const text = String(value || "").trim();
+  const markdownMatch = text.match(/^\[(https?:\/\/[^\]]+)\]\((https?:\/\/[^)]+)\)$/);
+  return markdownMatch?.[2] || markdownMatch?.[1] || text;
 }

@@ -1,6 +1,6 @@
 import { ListChecks } from "lucide-react";
 
-export function StepOverview({ steps, activeStepIndex, onJumpToStep, isOpen, onToggle, copy }) {
+export function StepOverview({ headingId, steps, activeStepIndex, onJumpToStep, isOpen, onToggle, copy }) {
   const panelId = "step-overview-panel";
   const overviewCopy = copy?.overview || {
     aria: "Tutorial step overview",
@@ -26,7 +26,7 @@ export function StepOverview({ steps, activeStepIndex, onJumpToStep, isOpen, onT
 
       {isOpen ? (
         <div id={panelId} className="step-overview compact-panel-scroll">
-          <h2>{overviewCopy.heading}</h2>
+          <h2 id={headingId}>{overviewCopy.heading}</h2>
           <ol>
             {steps.map((step, index) => (
               <li key={step.stepNumber}>

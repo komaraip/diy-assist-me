@@ -17,25 +17,29 @@ export const TUTORIAL_ROTATIONS = [
   {
     value: "rotation_a",
     label: "Rotation A",
+    practiceTutorialId: "tutorial_001",
+    measuredTutorialId: "tutorial_002",
     practiceIndex: 0,
     measuredIndex: 1,
   },
   {
     value: "rotation_b",
     label: "Rotation B",
-    practiceIndex: 2,
-    measuredIndex: 3,
+    practiceTutorialId: "tutorial_005",
+    measuredTutorialId: "tutorial_009",
+    practiceIndex: 4,
+    measuredIndex: 8,
   },
 ];
 
 const TASK_TARGETS = {
   rotation_a: {
-    practice: { preferredKeywords: ["cream", "milk", "sugar"], targetStep: 2 },
+    practice: { preferredKeywords: ["oats", "milk", "bowl"], targetStep: 2 },
     measured: { preferredKeywords: ["egg", "cheese", "wrap"], targetStep: 4 },
   },
   rotation_b: {
-    practice: { preferredKeywords: ["rice", "sweetener", "bowl"], targetStep: 2 },
-    measured: { preferredKeywords: ["microwave", "egg", "cheese"], targetStep: 4 },
+    practice: { preferredKeywords: ["bottle", "soap", "brush"], targetStep: 2 },
+    measured: { preferredKeywords: ["cable", "label", "desk"], targetStep: 4 },
   },
 };
 
@@ -56,8 +60,18 @@ export function buildStudyPlan({
     return [];
   }
 
-  const practiceTutorial = pickTutorial(availableTutorials, rotation.practiceIndex);
-  const measuredTutorial = pickTutorial(availableTutorials, rotation.measuredIndex);
+  const practiceTutorial = pickStudyTutorial({
+    tutorials: availableTutorials,
+    tutorialId: rotation.practiceTutorialId,
+    studyRole: "core_practice",
+    fallbackIndex: rotation.practiceIndex,
+  });
+  const measuredTutorial = pickStudyTutorial({
+    tutorials: availableTutorials,
+    tutorialId: rotation.measuredTutorialId,
+    studyRole: "core_measured",
+    fallbackIndex: rotation.measuredIndex,
+  });
 
   return sequence.modalities.map((modality, index) => {
     const conditionId = `condition_${index + 1}`;
@@ -206,4 +220,12 @@ function clampStep(stepNumber, stepCount) {
 
 function pickTutorial(tutorials, index) {
   return tutorials[index % tutorials.length];
+}
+
+function pickStudyTutorial({ tutorials, tutorialId, studyRole, fallbackIndex }) {
+  return (
+    tutorials.find((tutorial) => tutorial.id === tutorialId) ||
+    tutorials.find((tutorial) => tutorial.studyRole === studyRole && tutorial.guidedSessionPriority) ||
+    pickTutorial(tutorials, fallbackIndex)
+  );
 }

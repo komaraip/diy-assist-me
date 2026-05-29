@@ -42,6 +42,7 @@ export function TutorialToolsSheet({
   onRepeat,
   onNext,
   onComplete,
+  children,
 }) {
   const handleNextAction = isLastStep ? onComplete : onNext;
   const voiceButtonLabel = getVoiceButtonLabel({
@@ -146,6 +147,8 @@ export function TutorialToolsSheet({
             </p>
           )}
         </section>
+
+        {children}
       </aside>
 
       <TutorialPopover

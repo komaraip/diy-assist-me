@@ -7,9 +7,16 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
 import { normalizeTutorialFromFirestore } from "../utils/normalizeTutorial.js";
+import dataset from "../../data.json";
+import {
+  createTutorialDraftFromRaw,
+  prepareTutorialForSave,
+  validateTutorialDraft,
+} from "../utils/validateTutorial.js";
 
 const FIREBASE_REQUIRED_MESSAGE = "Firebase is required to manage tutorial content.";
 
@@ -79,6 +86,64 @@ export async function updateAdminTutorial(id, tutorial) {
     return { success: true, error: null };
   } catch (error) {
     return { success: false, error: getErrorMessage(error) };
+  }
+}
+
+export async function importLocalTutorialDataset() {
+  if (!isAdminTutorialCrudAvailable()) {
+    return { success: false, data: null, error: FIREBASE_REQUIRED_MESSAGE };
+  }
+
+  const localTutorials = Array.isArray(dataset.tutorials) ? dataset.tutorials : [];
+  const preparedTutorials = [];
+  const invalidTutorials = [];
+
+  localTutorials.forEach((rawTutorial) => {
+    const draft = createTutorialDraftFromRaw(rawTutorial);
+    const validation = validateTutorialDraft(draft, { isCreate: true });
+    if (!validation.isValid) {
+      invalidTutorials.push({
+        id: draft.id || rawTutorial?.id || "unknown",
+        errors: validation.errors,
+      });
+      return;
+    }
+
+    preparedTutorials.push(prepareTutorialForSave(draft));
+  });
+
+  if (invalidTutorials.length) {
+    return {
+      success: false,
+      data: { imported: 0, failedValidation: invalidTutorials },
+      error: `Local dataset validation failed for: ${invalidTutorials.map((tutorial) => tutorial.id).join(", ")}.`,
+    };
+  }
+
+  try {
+    const batch = writeBatch(db);
+    const timestamp = serverTimestamp();
+
+    preparedTutorials.forEach((tutorial) => {
+      batch.set(doc(db, "tutorials", tutorial.id), {
+        ...tutorial,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      });
+    });
+
+    await batch.commit();
+
+    return {
+      success: true,
+      data: {
+        imported: preparedTutorials.length,
+        failedValidation: [],
+      },
+      error: null,
+    };
+  } catch (error) {
+    return { success: false, data: null, error: getErrorMessage(error) };
   }
 }
 

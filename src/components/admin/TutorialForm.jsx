@@ -80,8 +80,27 @@ export function TutorialForm({
             {errors.category ? <span className="field-error">{errors.category}</span> : null}
           </label>
           <label className="field-label">
+            Study role
+            <select value={draft.study_role || "catalog"} onChange={(event) => updateField("study_role", event.target.value)}>
+              <option value="catalog">Catalog</option>
+              <option value="core_practice">Core practice</option>
+              <option value="core_measured">Core measured</option>
+            </select>
+            {errors.study_role ? <span className="field-error">{errors.study_role}</span> : null}
+          </label>
+          <label className="field-label">
             Difficulty
             <input value={draft.difficulty} onChange={(event) => updateField("difficulty", event.target.value)} />
+          </label>
+          <label className="field-label">
+            Thumbnail URL
+            <input
+              type="url"
+              value={draft.thumbnailUrl || ""}
+              onChange={(event) => updateField("thumbnailUrl", event.target.value)}
+              placeholder="https://images.example.com/tutorial.jpg"
+            />
+            {errors.thumbnailUrl ? <span className="field-error">{errors.thumbnailUrl}</span> : null}
           </label>
           <label className="field-label">
             Estimated minutes
@@ -102,11 +121,27 @@ export function TutorialForm({
             />
             Active tutorial
           </label>
+          <label className="field-label checkbox-field">
+            <input
+              type="checkbox"
+              checked={Boolean(draft.guided_session_priority)}
+              onChange={(event) => updateField("guided_session_priority", event.target.checked)}
+            />
+            Guided session priority
+          </label>
         </div>
 
         <label className="field-label">
           Summary
           <textarea value={draft.summary} onChange={(event) => updateField("summary", event.target.value)} rows={3} />
+        </label>
+        <label className="field-label">
+          Selection rationale
+          <textarea
+            value={draft.selection_rationale || ""}
+            onChange={(event) => updateField("selection_rationale", event.target.value)}
+            rows={3}
+          />
         </label>
       </section>
 
