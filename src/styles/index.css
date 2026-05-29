@@ -3060,7 +3060,7 @@ button:disabled {
   gap: 0.35rem;
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 8px 8px 0 0;
   background: var(--background);
   color: var(--foreground);
   padding: 0.8rem;
@@ -3076,6 +3076,231 @@ button:disabled {
 .session-list-item span,
 .session-list-item small {
   color: var(--muted);
+}
+
+/* Wrapper that groups the session button with its action row */
+.session-list-item-wrap {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.session-list-item-wrap .session-list-item {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.session-list-item-wrap .session-list-item.active {
+  border: none;
+  box-shadow: none;
+  background: white;
+}
+
+.session-list-item-wrap.session-excluded {
+  border-color: #fca5a5;
+  opacity: 0.8;
+}
+
+.session-list-item-wrap.session-excluded .session-list-item {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+/* Per-item action row (exclude toggle + delete button) */
+.session-list-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+
+.exclude-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.exclude-toggle-label input[type="checkbox"] {
+  accent-color: var(--primary-dark);
+  width: 14px;
+  height: 14px;
+}
+
+/* Exclude badge shown on excluded sessions */
+.exclude-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #fca5a5;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Danger buttons */
+.danger-button {
+  background: #dc2626;
+  color: white;
+  border: none;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  min-width: unset;
+  min-height: unset;
+  border-radius: 6px;
+}
+
+.danger-icon-button {
+  background: transparent;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+.danger-icon-button:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+/* Delete confirmation overlay */
+.admin-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.admin-confirm-dialog {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.admin-confirm-dialog h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.admin-confirm-dialog p {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.admin-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Session edit form */
+.session-edit-form {
+  background: var(--background);
+  border: 1px solid var(--primary-dark);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.session-edit-form h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.session-edit-form .form-row {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.session-edit-form label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.session-edit-form input,
+.session-edit-form textarea {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  color: var(--foreground);
+  font-family: inherit;
+}
+
+.session-edit-form textarea {
+  resize: vertical;
+}
+
+.session-edit-form .form-row-checkbox {
+  flex-direction: row;
+}
+
+.session-edit-form .form-row-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+/* Detail header actions row */
+.session-detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* Researcher note banner */
+.researcher-note-banner {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+  color: #92400e;
+}
+
+/* Exclusion notice in export controls */
+.exclude-notice {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 6px;
+  color: #b91c1c;
 }
 
 .session-list-topline,

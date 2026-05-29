@@ -89,6 +89,29 @@ export function updateLocalRecord(collectionName, id, patch) {
   }
 }
 
+export function deleteLocalRecord(collectionName, id) {
+  try {
+    const records = readCollection(collectionName);
+    const remaining = records.filter((record) => record.id !== id);
+    if (remaining.length === records.length) return serviceFailure("Local record not found.", "local");
+    writeCollection(collectionName, remaining);
+    return serviceSuccess({ id }, "local");
+  } catch (error) {
+    return serviceFailure(error, "local");
+  }
+}
+
+export function deleteLocalRecordsByField(collectionName, field, value) {
+  try {
+    const records = readCollection(collectionName);
+    const remaining = records.filter((record) => record[field] !== value);
+    writeCollection(collectionName, remaining);
+    return serviceSuccess({ deleted: records.length - remaining.length }, "local");
+  } catch (error) {
+    return serviceFailure(error, "local");
+  }
+}
+
 function generateLocalId(prefix = "record") {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }

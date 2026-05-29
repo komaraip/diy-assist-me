@@ -1,11 +1,67 @@
-import { ClipboardList } from "lucide-react";
-import { useMemo, useState } from "react";
-import { buildSessionBundles } from "../../services/adminDataService.js";
+import { ClipboardList, Pencil, Trash2, X } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { buildSessionBundles, deleteSessionBundle, updateSessionMeta } from "../../services/adminDataService.js";
 
 export function SessionReview({ adminData, dataSource = "" }) {
-  const sessions = useMemo(() => buildSessionBundles(adminData), [adminData]);
+  const initialBundles = useMemo(() => buildSessionBundles(adminData), [adminData]);
+  // Keep local mutable copy so edits/deletes reflect instantly without a full reload
+  const [sessions, setSessions] = useState(initialBundles);
   const [selectedSessionId, setSelectedSessionId] = useState("");
-  const selectedSession = sessions.find((session) => session.id === selectedSessionId) || sessions[0] || null;
+  const selectedSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0] || null;
+
+  // ── Delete ──────────────────────────────────────────────────────────────────
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
+  async function handleConfirmDelete() {
+    if (!deleteTargetId) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    // Find the session so we can also pass its participantId
+    const targetSession = sessions.find((s) => s.id === deleteTargetId);
+    const participantId = targetSession?.participantId || null;
+
+    const result = await deleteSessionBundle(deleteTargetId, participantId);
+    setIsDeleting(false);
+    if (result.error) {
+      setDeleteError(result.error);
+      return;
+    }
+    setSessions((prev) => {
+      const remaining = prev.filter((s) => s.id !== deleteTargetId);
+      // Auto-select next session, or clear selection
+      if (selectedSessionId === deleteTargetId) {
+        setSelectedSessionId(remaining[0]?.id || "");
+      }
+      return remaining;
+    });
+    setDeleteTargetId(null);
+  }
+
+  // ── Exclude toggle ───────────────────────────────────────────────────────────
+  async function handleToggleExclude(sessionId, currentValue) {
+    const newValue = !currentValue;
+    // Optimistic update
+    setSessions((prev) =>
+      prev.map((s) => (s.id === sessionId ? { ...s, excludeFromExport: newValue } : s))
+    );
+    const result = await updateSessionMeta(sessionId, { excludeFromExport: newValue });
+    if (result.error) {
+      // Revert on failure
+      setSessions((prev) =>
+        prev.map((s) => (s.id === sessionId ? { ...s, excludeFromExport: currentValue } : s))
+      );
+    }
+  }
+
+  // ── Edit callback (called from SessionDetail's inline form) ──────────────────
+  const handleSaveEdit = useCallback((sessionId, patch) => {
+    setSessions((prev) =>
+      prev.map((s) => (s.id === sessionId ? { ...s, ...patch } : s))
+    );
+  }, []);
 
   return (
     <section className="admin-panel" aria-labelledby="session-review-heading">
@@ -13,35 +69,104 @@ export function SessionReview({ adminData, dataSource = "" }) {
         <div>
           <p className="eyebrow">Session review</p>
           <h2 id="session-review-heading">Guided sessions</h2>
-          <p>Review session context, task activity, questionnaire responses, notes, and logs.</p>
+          <p>Select a session to review, edit metadata, or delete it from Firestore.</p>
         </div>
         <ClipboardList aria-hidden="true" />
       </div>
+
+      {/* Delete confirmation dialog */}
+      {deleteTargetId && (
+        <div className="admin-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title">
+          <div className="admin-confirm-dialog">
+            <h3 id="delete-confirm-title">Delete session?</h3>
+            <p>
+              This will permanently delete the session and <strong>all linked records</strong> (task trials, SUS
+              responses, interaction logs, debrief responses, observer notes) from Firestore. This cannot be undone.
+            </p>
+            {deleteError && <p className="status-note error-note">{deleteError}</p>}
+            <div className="admin-confirm-actions">
+              <button
+                type="button"
+                className="button secondary-action"
+                onClick={() => { setDeleteTargetId(null); setDeleteError(null); }}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button danger-button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting…" : "Yes, delete permanently"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {sessions.length ? (
         <div className="admin-review-grid">
           <div className="session-list" aria-label="Guided sessions">
             {sessions.map((session) => (
-              <button
-                type="button"
+              <div
                 key={session.id}
-                className={selectedSession?.id === session.id ? "session-list-item active" : "session-list-item"}
-                onClick={() => setSelectedSessionId(session.id)}
-                aria-current={selectedSession?.id === session.id}
+                className={[
+                  "session-list-item-wrap",
+                  session.excludeFromExport ? "session-excluded" : "",
+                ].join(" ").trim()}
               >
-                <span className="session-list-topline">
-                  <strong>{getParticipantDisplayName(session)}</strong>
-                  <span className="status-badge">{getSessionStatus(session)}</span>
-                </span>
-                <span>Code: {session.participantCode || session.participantId || "Not recorded"}</span>
-                <span>Sequence: {session.sequenceAssignment || "Not recorded"}</span>
-                <span>Started: {formatDate(session.startedAt || session.createdAt)}</span>
-                <small>Source: {session.source || dataSource || "Not recorded"}</small>
-              </button>
+                <button
+                  type="button"
+                  className={selectedSession?.id === session.id ? "session-list-item active" : "session-list-item"}
+                  onClick={() => setSelectedSessionId(session.id)}
+                  aria-current={selectedSession?.id === session.id}
+                >
+                  <span className="session-list-topline">
+                    <strong>{getParticipantDisplayName(session)}</strong>
+                    <span className="status-badge">{getSessionStatus(session)}</span>
+                  </span>
+                  <span>Code: {session.participantCode || session.participantId || "Not recorded"}</span>
+                  <span>Sequence: {session.sequenceAssignment || "Not recorded"}</span>
+                  <span>Started: {formatDate(session.startedAt || session.createdAt)}</span>
+                  {session.excludeFromExport && (
+                    <span className="exclude-badge">Excluded from export</span>
+                  )}
+                  <small>Source: {session.source || dataSource || "Not recorded"}</small>
+                </button>
+
+                <div className="session-list-actions">
+                  <label className="exclude-toggle-label" title="Toggle exclusion from exports">
+                    <input
+                      type="checkbox"
+                      checked={!!session.excludeFromExport}
+                      onChange={() => handleToggleExclude(session.id, !!session.excludeFromExport)}
+                      aria-label={`Exclude ${getParticipantDisplayName(session)} from exports`}
+                    />
+                    <span>Exclude</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="button icon-button danger-icon-button"
+                    title="Delete session permanently"
+                    onClick={() => setDeleteTargetId(session.id)}
+                    aria-label={`Delete session for ${getParticipantDisplayName(session)}`}
+                  >
+                    <Trash2 size={14} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
 
-          {selectedSession ? <SessionDetail session={selectedSession} dataSource={dataSource} /> : null}
+          {selectedSession ? (
+            <SessionDetail
+              session={selectedSession}
+              dataSource={dataSource}
+              onSaveEdit={handleSaveEdit}
+            />
+          ) : null}
         </div>
       ) : (
         <p className="empty-state">No guided sessions are available yet.</p>
@@ -50,8 +175,11 @@ export function SessionReview({ adminData, dataSource = "" }) {
   );
 }
 
-function SessionDetail({ session, dataSource }) {
+// ── Session Detail ─────────────────────────────────────────────────────────────
+
+function SessionDetail({ session, dataSource, onSaveEdit }) {
   const participantProfile = getParticipantProfile(session);
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <article className="session-detail">
@@ -60,8 +188,35 @@ function SessionDetail({ session, dataSource }) {
           <p className="eyebrow">Selected session</p>
           <h3>{getParticipantDisplayName(session)}</h3>
         </div>
-        <span className="status-badge">{getSessionStatus(session)}</span>
+        <div className="session-detail-header-actions">
+          <span className="status-badge">{getSessionStatus(session)}</span>
+          {session.excludeFromExport && (
+            <span className="exclude-badge">Excluded from export</span>
+          )}
+          <button
+            type="button"
+            className="button secondary-action"
+            onClick={() => setIsEditing((v) => !v)}
+            aria-expanded={isEditing}
+          >
+            {isEditing ? <><X size={14} aria-hidden="true" /> Cancel</> : <><Pencil size={14} aria-hidden="true" /> Edit</>}
+          </button>
+        </div>
       </div>
+
+      {isEditing && (
+        <SessionEditForm
+          session={session}
+          onSave={(patch) => { onSaveEdit(session.id, patch); setIsEditing(false); }}
+          onCancel={() => setIsEditing(false)}
+        />
+      )}
+
+      {session.researcherNote && (
+        <div className="researcher-note-banner">
+          <strong>Researcher note:</strong> {session.researcherNote}
+        </div>
+      )}
 
       <DetailSection title="Session overview">
         <dl className="detail-list">
@@ -260,6 +415,117 @@ function SessionDetail({ session, dataSource }) {
     </article>
   );
 }
+
+// ── Inline Edit Form ───────────────────────────────────────────────────────────
+
+function SessionEditForm({ session, onSave, onCancel }) {
+  const profile = getParticipantProfile(session);
+  const [participantCode, setParticipantCode] = useState(session.participantCode || "");
+  const [fullName, setFullName] = useState(profile.fullName || "");
+  const [email, setEmail] = useState(profile.email || "");
+  const [researcherNote, setResearcherNote] = useState(session.researcherNote || "");
+  const [excludeFromExport, setExcludeFromExport] = useState(!!session.excludeFromExport);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setIsSaving(true);
+    setSaveError(null);
+
+    const patch = {
+      participantCode,
+      participantProfile: {
+        ...(session.participantProfile || {}),
+        fullName,
+        email,
+      },
+      researcherNote,
+      excludeFromExport,
+    };
+
+    const result = await updateSessionMeta(session.id, patch);
+    setIsSaving(false);
+
+    if (result.error) {
+      setSaveError(result.error);
+      return;
+    }
+
+    onSave(patch);
+  }
+
+  return (
+    <form className="session-edit-form" onSubmit={handleSubmit} aria-label="Edit session metadata">
+      <h4>Edit session metadata</h4>
+
+      <div className="form-row">
+        <label htmlFor={`edit-code-${session.id}`}>Participant code</label>
+        <input
+          id={`edit-code-${session.id}`}
+          type="text"
+          value={participantCode}
+          onChange={(e) => setParticipantCode(e.target.value)}
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor={`edit-name-${session.id}`}>Full name</label>
+        <input
+          id={`edit-name-${session.id}`}
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor={`edit-email-${session.id}`}>Email</label>
+        <input
+          id={`edit-email-${session.id}`}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+
+      <div className="form-row">
+        <label htmlFor={`edit-note-${session.id}`}>Researcher note</label>
+        <textarea
+          id={`edit-note-${session.id}`}
+          value={researcherNote}
+          onChange={(e) => setResearcherNote(e.target.value)}
+          rows={2}
+          placeholder="e.g. test run, consent withdrawn…"
+        />
+      </div>
+
+      <div className="form-row form-row-checkbox">
+        <label>
+          <input
+            type="checkbox"
+            checked={excludeFromExport}
+            onChange={(e) => setExcludeFromExport(e.target.checked)}
+          />
+          Exclude this session from all exports
+        </label>
+      </div>
+
+      {saveError && <p className="status-note error-note">{saveError}</p>}
+
+      <div className="admin-confirm-actions">
+        <button type="button" className="button secondary-action" onClick={onCancel} disabled={isSaving}>
+          Cancel
+        </button>
+        <button type="submit" className="button primary-button" disabled={isSaving}>
+          {isSaving ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ── Small helpers ──────────────────────────────────────────────────────────────
 
 function DetailSection({ title, children }) {
   return (

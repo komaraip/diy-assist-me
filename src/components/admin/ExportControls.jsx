@@ -120,6 +120,12 @@ export function ExportControls() {
         <p className="empty-state">Generate exports to enable downloads.</p>
       )}
 
+      {(exportResult?.data?.excludedSessionCount ?? 0) > 0 ? (
+        <p className="status-note exclude-notice" role="status">
+          ℹ️ {exportResult.data.excludedSessionCount} session{exportResult.data.excludedSessionCount === 1 ? "" : "s"} excluded from this export (marked "Exclude from export" on the dashboard).
+        </p>
+      ) : null}
+
       {exportResult?.warning ? <p className="status-note">{exportResult.warning}</p> : null}
 
       {exportResult?.data ? (

@@ -19,10 +19,37 @@ export const EXPORT_FILENAMES = {
 
 export async function generateExportFiles() {
   const dataResult = await loadAdminData();
-  const data = dataResult.data || {};
+  const rawData = dataResult.data || {};
+
+  // Collect IDs of sessions the researcher has flagged to exclude
+  const excludedIds = new Set(
+    (rawData.sessions || [])
+      .filter((session) => session.excludeFromExport === true)
+      .map((session) => session.id)
+  );
+
+  // Build a filtered view: drop excluded sessions and all their child records
+  function filterExcluded(records) {
+    return records.filter((record) => !excludedIds.has(record.sessionId));
+  }
+
+  const data = excludedIds.size > 0
+    ? {
+        ...rawData,
+        sessions: (rawData.sessions || []).filter((s) => !excludedIds.has(s.id)),
+        taskTrials: filterExcluded(rawData.taskTrials || []),
+        interactionLogs: filterExcluded(rawData.interactionLogs || []),
+        susResponses: filterExcluded(rawData.susResponses || []),
+        debriefResponses: filterExcluded(rawData.debriefResponses || []),
+        observerNotes: filterExcluded(rawData.observerNotes || []),
+        participants: rawData.participants || [],
+      }
+    : rawData;
+
   const metadata = buildExportMetadata({
     exportSource: dataResult.source,
     appVersion: packageJson.version,
+    excludedSessionCount: excludedIds.size,
   });
   const metrics = calculateChapter4Metrics(data);
   const taskTrialValidations = buildTaskTrialValidation(data);
@@ -31,6 +58,7 @@ export async function generateExportFiles() {
     appVersion: metadata.appVersion,
     source: metadata.source,
     exportSource: metadata.exportSource,
+    excludedSessionCount: excludedIds.size,
     researchQuestions: metrics.researchQuestions,
     dataQuality: metrics.dataQuality,
   };
@@ -95,6 +123,7 @@ export async function generateExportFiles() {
     {
       metadata,
       recordCounts: getRecordCounts(data),
+      excludedSessionCount: excludedIds.size,
       files,
     },
     dataResult.source,

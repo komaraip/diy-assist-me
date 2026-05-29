@@ -1,11 +1,11 @@
-import { ClipboardCheck, FileText, MessageSquareText, Mic, RefreshCcw, TableProperties, Users } from "lucide-react";
+import { ClipboardCheck, FileText, MessageSquareText, Mic, RefreshCcw, TableProperties, Trash2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { EvidenceChecklist } from "../components/admin/EvidenceChecklist.jsx";
 import { InteractionLogViewer } from "../components/admin/InteractionLogViewer.jsx";
 import { MetricsSummary } from "../components/admin/MetricsSummary.jsx";
 import { SessionReview } from "../components/admin/SessionReview.jsx";
-import { loadAdminData } from "../services/adminDataService.js";
+import { loadAdminData, purgeAllStudyData } from "../services/adminDataService.js";
 
 export function AdminPage() {
   return (
@@ -65,6 +65,7 @@ function AdminDashboard() {
             <TableProperties aria-hidden="true" />
             Open exports
           </Link>
+          <PurgeButton onPurged={loadData} />
         </div>
       </div>
 
@@ -75,6 +76,96 @@ function AdminDashboard() {
       <InteractionLogViewer logs={adminData.interactionLogs || []} />
     </div>
   );
+}
+
+function PurgeButton({ onPurged }) {
+  const [step, setStep] = useState("idle"); // idle | confirm | purging | done | error
+  const [confirmText, setConfirmText] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [deletedCount, setDeletedCount] = useState(null);
+
+  async function handlePurge() {
+    if (confirmText !== "PURGE") return;
+    setStep("purging");
+    const result = await purgeAllStudyData();
+    if (result.error) {
+      setErrorMsg(result.error);
+      setStep("error");
+      return;
+    }
+    setDeletedCount(result.data?.deleted ?? "?");
+    setStep("done");
+    setConfirmText("");
+    onPurged();
+  }
+
+  if (step === "idle") {
+    return (
+      <button type="button" className="button danger-button" onClick={() => setStep("confirm")}>
+        <Trash2 size={14} aria-hidden="true" />
+        Purge all data
+      </button>
+    );
+  }
+
+  if (step === "confirm") {
+    return (
+      <div className="admin-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="purge-confirm-title">
+        <div className="admin-confirm-dialog">
+          <h3 id="purge-confirm-title">⚠️ Purge ALL Firestore data?</h3>
+          <p>
+            This will permanently delete <strong>every document</strong> in all study collections:
+            participants, sessions, taskTrials, interactionLogs, susResponses, debriefResponses, and observerNotes.
+            This cannot be undone.
+          </p>
+          <p>Type <strong>PURGE</strong> to confirm:</p>
+          <input
+            type="text"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="Type PURGE"
+            autoFocus
+            style={{ padding: "0.5rem 0.75rem", borderRadius: "6px", border: "1px solid #fca5a5", marginBottom: "1rem", width: "100%", fontSize: "0.9rem" }}
+          />
+          <div className="admin-confirm-actions">
+            <button type="button" className="button secondary-action" onClick={() => { setStep("idle"); setConfirmText(""); }}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="button danger-button"
+              onClick={handlePurge}
+              disabled={confirmText !== "PURGE"}
+            >
+              Yes, purge everything
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "purging") {
+    return <button type="button" className="button danger-button" disabled>Purging…</button>;
+  }
+
+  if (step === "done") {
+    return (
+      <button type="button" className="button secondary-action" onClick={() => setStep("idle")}>
+        ✓ Purged {deletedCount} docs — dismiss
+      </button>
+    );
+  }
+
+  if (step === "error") {
+    return (
+      <button type="button" className="button danger-button" onClick={() => setStep("idle")} title={errorMsg}>
+        Purge failed — dismiss
+      </button>
+    );
+  }
+
+  return null;
 }
 
 function AdminSummaryCards({ adminData }) {
