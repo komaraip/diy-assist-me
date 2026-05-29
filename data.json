@@ -1,563 +1,1337 @@
 {
   "dataset_name": "diy_dataset",
   "schema_version": "1.0",
-  "created_at": "2026-04-08",
+  "created_at": "2026-05-30",
   "curation_notes": {
-    "method": "manual_curation",
+    "method": "manual_research_curation",
     "alignment_with_paper": [
-      "title",
+      "structured_steps",
       "materials",
-      "steps.step_index",
-      "steps.step_text",
-      "optional_images"
+      "safe_hands_busy_tasks",
+      "touch_voice_comparable_content",
+      "searchable_keywords",
+      "guided_session_core_tutorials"
     ],
-    "content_policy_note": "Materials and steps are paraphrased summaries from source tutorials, not verbatim copies of the full articles.",
-    "source_scope": "Instructables tutorials relevant to hands-busy, quick-breakfast, cleaning, and simple DIY contexts."
+    "content_policy_note": "Materials and steps are paraphrased summaries from public source tutorials, not verbatim copies of full articles.",
+    "source_scope": "Public DIY tutorials suitable for low-risk hands-busy study tasks."
   },
   "tutorials": [
     {
       "id": "tutorial_001",
-      "title": "Easy Chocolate Ice Cream (Eggless and No Ice Cream Machine)",
+      "title": "No-Heat Overnight Oats Bowl",
       "category": "cooking",
+      "study_role": "core_practice",
+      "guided_session_priority": true,
       "tags": [
-        "dessert",
-        "hands-busy",
-        "family-activity",
-        "quick-prep"
-      ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/Easy-Chocolate-Ice-Cream-Eggless-and-No-Ice-Cream-/",
-      "verification_level": "page_open",
-      "summary": "Homemade chocolate ice cream made with a small ingredient list and a bag-of-ice method instead of an ice cream machine.",
-      "materials": [
-        "heavy whipping cream",
-        "whole milk",
-        "white sugar",
-        "semi-sweet chocolate chips",
-        "unsweetened cocoa powder",
-        "vanilla extract",
-        "rock salt",
-        "zip bags",
-        "whisk",
+        "oats",
+        "fruit",
         "bowl",
-        "towel"
+        "mix",
+        "hands-busy",
+        "quick",
+        "low-risk",
+        "kitchen"
+      ],
+      "source": "Instructables: Easy Overnight Oats",
+      "source_url": "[https://www.instructables.com/Easy-Overnight-Oats/](https://www.instructables.com/Easy-Overnight-Oats/)",
+      "verification_level": "page_open",
+      "summary": "Prepare a simple oats bowl by mixing dry oats with milk or yogurt, then topping it with fruit. The task is safe, repeatable, and suitable for a short hands-busy practice session.",
+      "materials": [
+        {
+          "name": "rolled oats",
+          "quantity": "1/2",
+          "unit": "cup",
+          "notes": "Use plain oats for simple texture."
+        },
+        {
+          "name": "milk or plant milk",
+          "quantity": "1/2",
+          "unit": "cup",
+          "notes": "Use enough liquid to cover the oats."
+        },
+        {
+          "name": "yogurt",
+          "quantity": "2",
+          "unit": "tablespoons",
+          "notes": "Optional, adds thickness."
+        },
+        {
+          "name": "banana slices",
+          "quantity": "1/2",
+          "unit": "banana",
+          "notes": "Use pre-sliced fruit for the study setup."
+        },
+        {
+          "name": "berries",
+          "quantity": "1/4",
+          "unit": "cup",
+          "notes": "Fresh or thawed berries work well."
+        },
+        {
+          "name": "spoon",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Used for mixing and serving."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Whisk together the milk and cream in a bowl."
+          "step_text": "Place the bowl on a stable desk or kitchen surface. Add the rolled oats first so the dry base is easy to see and measure.",
+          "keywords": [
+            "bowl",
+            "oats",
+            "surface",
+            "measure"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Warm the mixture, then add sugar, chocolate chips, and cocoa powder until the chocolate softens and the dry ingredients dissolve."
+          "step_text": "Pour the milk over the oats until the top layer is covered. Use the spoon to gently press dry oats into the liquid.",
+          "keywords": [
+            "milk",
+            "pour",
+            "oats",
+            "spoon"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Stir in vanilla and let the ice-cream base cool before chilling briefly."
+          "step_text": "Add the yogurt if you want a thicker bowl. Stir slowly until the oats, milk, and yogurt look evenly mixed.",
+          "keywords": [
+            "yogurt",
+            "stir",
+            "mix",
+            "thick"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Seal the base in a small zip bag, place it inside a larger bag with ice and rock salt, then shake until it thickens."
+          "step_text": "Place banana slices and berries on top of the oat mixture. Keep the fruit in separate small areas so the topping is easy to identify.",
+          "keywords": [
+            "banana",
+            "berries",
+            "fruit",
+            "top"
+          ]
         },
         {
           "step_index": 5,
-          "step_text": "Freeze longer if you want a firmer texture, then scoop and serve."
+          "step_text": "Cover the bowl or set it aside for later chilling. For the study task, the participant can stop after confirming the bowl is mixed and topped.",
+          "keywords": [
+            "cover",
+            "chill",
+            "finish",
+            "bowl"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 8,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This core practice tutorial has clear materials, repeated bowl-and-spoon actions, and searchable terms such as oats, fruit, mix, and spoon without heat or sharp tools.",
+      "active": true
     },
     {
       "id": "tutorial_002",
-      "title": "5 Minute Breakfast Quesadilla",
+      "title": "Microwave Egg and Cheese Wrap",
       "category": "cooking",
+      "study_role": "core_measured",
+      "guided_session_priority": true,
       "tags": [
-        "breakfast",
-        "quick",
-        "microwave-free",
-        "hands-busy"
-      ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/5-Minute-Breakfast-Quesadilla/",
-      "verification_level": "page_open",
-      "summary": "A very fast breakfast wrap built from a tortilla or pita, scrambled egg, cheese, and leftover vegetables.",
-      "materials": [
-        "tortilla or wrap",
         "egg",
-        "cheese slice",
-        "salt",
-        "leftover vegetables",
-        "pan",
-        "small bowl",
-        "wooden spatula"
+        "cheese",
+        "wrap",
+        "microwave",
+        "hands-busy",
+        "quick",
+        "low-risk",
+        "kitchen"
+      ],
+      "source": "NC Egg Association: Microwave Egg & Cheese Burrito",
+      "source_url": "[https://ncegg.org/recipe/microwave-egg-cheese-burrito/](https://ncegg.org/recipe/microwave-egg-cheese-burrito/)",
+      "verification_level": "page_open",
+      "summary": "Make a basic egg and cheese wrap using a microwave-safe bowl and a tortilla. The step sequence includes a clear step 4 target for jump navigation and measured-session tasks.",
+      "materials": [
+        {
+          "name": "flour tortilla",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use a soft wrap that fits inside or over the bowl."
+        },
+        {
+          "name": "egg",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use a fresh egg or a supervised study substitute."
+        },
+        {
+          "name": "shredded cheese",
+          "quantity": "2",
+          "unit": "tablespoons",
+          "notes": "Mild cheddar or similar cheese."
+        },
+        {
+          "name": "microwave-safe bowl",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "A small cereal bowl is enough."
+        },
+        {
+          "name": "paper towel",
+          "quantity": "1",
+          "unit": "sheet",
+          "notes": "Lines the bowl and helps lift the wrap."
+        },
+        {
+          "name": "fork",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Used to beat and stir the egg."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Warm the tortilla or wrap gently in a covered pan."
+          "step_text": "Line the microwave-safe bowl with the paper towel and press the tortilla gently into the bowl. Keep the edges open so the wrap can be lifted later.",
+          "keywords": [
+            "bowl",
+            "tortilla",
+            "paper",
+            "line"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Crack and beat the egg in a bowl, then scramble it in the pan with a little salt."
+          "step_text": "Crack the egg into the center of the tortilla. Beat it carefully with the fork without tearing the wrap.",
+          "keywords": [
+            "egg",
+            "fork",
+            "beat",
+            "center"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Tear or fold the cheese into smaller pieces so it melts faster."
+          "step_text": "Microwave the egg briefly, then stir it once with the fork. Continue only until the egg is set and no loose liquid is visible.",
+          "keywords": [
+            "microwave",
+            "stir",
+            "egg",
+            "cook"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Place the cooked egg, cheese, and any leftover vegetables onto the wrap."
+          "step_text": "Sprinkle the cheese over the warm egg. Let the cheese soften for a short moment so it stays inside the wrap when folded.",
+          "keywords": [
+            "cheese",
+            "sprinkle",
+            "warm",
+            "step four"
+          ]
         },
         {
           "step_index": 5,
-          "step_text": "Heat briefly on low to melt the cheese, fold the wrap, and serve."
+          "step_text": "Lift the tortilla from the bowl and fold the bottom edge over the egg. Fold both sides inward to make a simple handheld wrap.",
+          "keywords": [
+            "fold",
+            "wrap",
+            "lift",
+            "sides"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 9,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This core measured tutorial is short, targetable at step 4, and uses simple voice-search terms such as egg, cheese, microwave, bowl, and fold.",
+      "active": true
     },
     {
       "id": "tutorial_003",
-      "title": "5-Minute Breakfast Rice",
+      "title": "Berry Yogurt Parfait Cup",
       "category": "cooking",
+      "study_role": "catalog",
+      "guided_session_priority": false,
       "tags": [
-        "breakfast",
+        "yogurt",
+        "berries",
+        "granola",
+        "layer",
         "quick",
-        "leftovers",
-        "vegetarian-option"
+        "low-risk",
+        "kitchen"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/5-Minute-Breakfast-Rice/",
+      "source": "Instructables: RECIPE | BERRY YOGURT PARFAIT",
+      "source_url": "[https://www.instructables.com/RECIPE-BERRY-YOGURT-PARFAIT/](https://www.instructables.com/RECIPE-BERRY-YOGURT-PARFAIT/)",
       "verification_level": "page_open",
-      "summary": "A quick sweet breakfast that repurposes leftover rice with liquid, fat, and sweetener.",
+      "summary": "Layer yogurt, berries, and granola in a cup to make a simple parfait. The activity gives a safe catalog example for step navigation and keyword search.",
       "materials": [
-        "cooked brown rice",
-        "water or soy milk or milk",
-        "butter or margarine",
-        "sweetener or sugar",
-        "saucepan"
+        {
+          "name": "plain or vanilla yogurt",
+          "quantity": "1/2",
+          "unit": "cup",
+          "notes": "Use a single serving amount."
+        },
+        {
+          "name": "berries",
+          "quantity": "1/3",
+          "unit": "cup",
+          "notes": "Use strawberries, blueberries, or mixed berries."
+        },
+        {
+          "name": "granola",
+          "quantity": "1/4",
+          "unit": "cup",
+          "notes": "Adds a crunchy top layer."
+        },
+        {
+          "name": "clear cup",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "A clear cup makes layers easy to inspect."
+        },
+        {
+          "name": "spoon",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Used for layering and eating."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Add cooked rice, liquid, and butter or margarine to a saucepan."
+          "step_text": "Set the clear cup on a flat surface and spoon in a base layer of yogurt. Smooth the top lightly so the next layer sits evenly.",
+          "keywords": [
+            "cup",
+            "yogurt",
+            "spoon",
+            "base"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Heat until the rice is hot and most of the liquid has cooked off."
+          "step_text": "Add a layer of berries over the yogurt. Spread the fruit around the edge so it is visible through the cup.",
+          "keywords": [
+            "berries",
+            "fruit",
+            "layer",
+            "edge"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Stir in sweetener until fully mixed."
+          "step_text": "Add a second spoonful of yogurt on top of the berries. Keep the spoon low to avoid mixing all layers together.",
+          "keywords": [
+            "yogurt",
+            "top",
+            "spoon",
+            "layer"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Serve in a bowl and add optional fruit or other toppings if desired."
+          "step_text": "Sprinkle granola over the final yogurt layer just before serving. This keeps the granola crunchy during the short tutorial task.",
+          "keywords": [
+            "granola",
+            "sprinkle",
+            "crunch",
+            "serve"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 6,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This catalog tutorial adds cooking variety while remaining safe, no-heat, and easy to search by yogurt, berries, granola, and layer.",
+      "active": true
     },
     {
       "id": "tutorial_004",
-      "title": "Microwave Scrambled Eggs",
+      "title": "No-Bake Energy Balls",
       "category": "cooking",
+      "study_role": "catalog",
+      "guided_session_priority": false,
       "tags": [
-        "breakfast",
-        "microwave",
-        "very-quick",
-        "single-serve"
+        "oats",
+        "peanut",
+        "honey",
+        "roll",
+        "hands-busy",
+        "quick",
+        "low-risk",
+        "kitchen"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/Microwave-Scrambled-Eggs/",
+      "source": "Instructables: No-Bake Energy Balls",
+      "source_url": "[https://www.instructables.com/No-Bake-Energy-Balls/](https://www.instructables.com/No-Bake-Energy-Balls/)",
       "verification_level": "page_open",
-      "summary": "A single-egg microwave breakfast prepared in a silicone cupcake liner or mug.",
+      "summary": "Mix oats, nut butter, and honey into a sticky mixture, then roll it into small snack balls. The task is a low-risk catalog example with realistic hands-busy actions.",
       "materials": [
-        "egg",
-        "silicone cupcake liner or mug",
-        "cheese (optional)",
-        "salt and pepper (optional)",
-        "bowl",
-        "fork",
-        "microwave"
+        {
+          "name": "rolled oats",
+          "quantity": "1/2",
+          "unit": "cup",
+          "notes": "Use quick or rolled oats."
+        },
+        {
+          "name": "peanut butter",
+          "quantity": "3",
+          "unit": "tablespoons",
+          "notes": "Use a nut-free spread if needed."
+        },
+        {
+          "name": "honey",
+          "quantity": "2",
+          "unit": "tablespoons",
+          "notes": "Helps bind the mixture."
+        },
+        {
+          "name": "cinnamon",
+          "quantity": "1/4",
+          "unit": "teaspoon",
+          "notes": "Optional flavoring."
+        },
+        {
+          "name": "mixing bowl",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Medium size is enough."
+        },
+        {
+          "name": "spoon",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Used for mixing and scooping."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Crack the egg into a bowl and beat it with a fork."
+          "step_text": "Add the oats and cinnamon to the mixing bowl. Stir the dry ingredients so the cinnamon is not concentrated in one spot.",
+          "keywords": [
+            "oats",
+            "cinnamon",
+            "bowl",
+            "stir"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Mix in any add-ins such as cheese, milk, salt, or pepper."
+          "step_text": "Spoon in the peanut butter and honey. Press the spoon through the mixture until the oats begin to clump together.",
+          "keywords": [
+            "peanut",
+            "honey",
+            "spoon",
+            "mix"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Pour the mixture into a silicone liner or mug and microwave for about a minute, watching to avoid overflow."
+          "step_text": "Check the texture by pressing a small amount against the side of the bowl. Add a little more oats if it is too wet, or a small drop of honey if it will not hold.",
+          "keywords": [
+            "texture",
+            "press",
+            "oats",
+            "honey"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Let it cool slightly, then eat immediately."
+          "step_text": "Scoop small portions and roll each one gently between clean hands. Place each ball on a plate with space between pieces.",
+          "keywords": [
+            "scoop",
+            "roll",
+            "hands",
+            "plate"
+          ]
+        },
+        {
+          "step_index": 5,
+          "step_text": "Let the balls rest for a few minutes before serving or chilling. Count the finished pieces so the task has a clear endpoint.",
+          "keywords": [
+            "rest",
+            "chill",
+            "count",
+            "finish"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 10,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This catalog tutorial is safe and tactile, creating hands-busy conditions without cooking heat, sharp tools, or complex judgment.",
+      "active": true
     },
     {
       "id": "tutorial_005",
-      "title": "Easy Cheesy Egg Bread (using the Microwave)",
-      "category": "cooking",
+      "title": "Clean a Reusable Water Bottle",
+      "category": "cleaning",
+      "study_role": "core_practice",
+      "guided_session_priority": true,
       "tags": [
-        "breakfast",
-        "microwave",
-        "college-friendly",
-        "very-quick"
+        "bottle",
+        "soap",
+        "water",
+        "brush",
+        "hands-busy",
+        "cleaning",
+        "low-risk",
+        "kitchen"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/Easy-Cheesy-Egg-Bread-using-the-Microwave/",
+      "source": "Instructables: 5 Ways to Clean a Funky Water Bottle",
+      "source_url": "[https://www.instructables.com/5-Ways-to-Clean-a-Funky-Water-Bottle/](https://www.instructables.com/5-Ways-to-Clean-a-Funky-Water-Bottle/)",
       "verification_level": "page_open",
-      "summary": "A microwave breakfast using bread, egg, cheese, and a mug for fast cooking with minimal cleanup.",
+      "summary": "Clean a reusable bottle using warm water, mild dish soap, a bottle brush, and careful rinsing. The sequence is safe, concrete, and well suited for guided practice commands.",
       "materials": [
-        "slice of bread",
-        "egg",
-        "shredded cheese",
-        "optional chopped vegetables",
-        "optional spices",
-        "microwave-safe mug"
+        {
+          "name": "reusable water bottle",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use an empty bottle for the study task."
+        },
+        {
+          "name": "mild dish soap",
+          "quantity": "2",
+          "unit": "drops",
+          "notes": "Avoid bleach or harsh cleaners."
+        },
+        {
+          "name": "warm water",
+          "quantity": "1",
+          "unit": "cup",
+          "notes": "Warm tap water is enough."
+        },
+        {
+          "name": "bottle brush",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use a soft brush that fits the bottle."
+        },
+        {
+          "name": "dry towel",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Used for drying and placing parts."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Fold the bread into a mug and crack the egg into the center."
+          "step_text": "Take off the bottle lid and place the lid on the towel. Check that the bottle is empty before adding any water.",
+          "keywords": [
+            "bottle",
+            "lid",
+            "towel",
+            "empty"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Add shredded cheese and any extra toppings."
+          "step_text": "Add warm water and a few drops of mild dish soap to the bottle. Hold the bottle steady so the water does not spill onto the workspace.",
+          "keywords": [
+            "water",
+            "soap",
+            "bottle",
+            "steady"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Microwave for about 1 to 2 minutes until the egg is set and the cheese melts."
+          "step_text": "Use the bottle brush to scrub the inside walls and the bottom. Move the brush slowly up and down so the whole inside surface is reached.",
+          "keywords": [
+            "brush",
+            "scrub",
+            "inside",
+            "bottom"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Serve hot straight from the mug."
+          "step_text": "Scrub the lid area with the brush or a corner of the towel. Pay attention to the rim because that is where drink residue often collects.",
+          "keywords": [
+            "lid",
+            "rim",
+            "scrub",
+            "residue"
+          ]
+        },
+        {
+          "step_index": 5,
+          "step_text": "Rinse the bottle and lid with clean water until no soap bubbles remain. Place both parts upside down on the towel to dry.",
+          "keywords": [
+            "rinse",
+            "dry",
+            "water",
+            "bubbles"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 8,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This core practice tutorial uses simple cleaning actions and strong searchable keywords such as soap, water, brush, rinse, and dry.",
+      "active": true
     },
     {
       "id": "tutorial_006",
-      "title": "Breakfast Taquitos",
-      "category": "cooking",
+      "title": "Gently Clean Everyday Sneakers",
+      "category": "cleaning",
+      "study_role": "catalog",
+      "guided_session_priority": false,
       "tags": [
-        "breakfast",
-        "meal-prep",
-        "batch-cooking",
-        "hands-busy"
+        "shoes",
+        "soap",
+        "brush",
+        "dry",
+        "cleaning",
+        "hands-busy",
+        "low-risk"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/Breakfast-Taquitos/",
-      "verification_level": "json_api",
-      "summary": "A make-ahead breakfast tortilla filled with scrambled eggs and other savory fillings, then baked until crisp.",
+      "source": "Nike: How to Clean Your Shoes in 6 Easy Steps",
+      "source_url": "[https://www.nike.com/id/a/how-to-clean-shoes](https://www.nike.com/id/a/how-to-clean-shoes)",
+      "verification_level": "page_open",
+      "summary": "Refresh a pair of sneakers using a soft brush, mild soap, water, and a towel. The tutorial avoids harsh cleaners and keeps the task suitable for a supervised household simulation.",
       "materials": [
-        "tortillas",
-        "eggs",
-        "butter",
-        "spinach",
-        "cheese",
-        "sundried tomatoes",
-        "Italian sausage or another protein",
-        "spring onions",
-        "salt and pepper",
-        "baking paper",
-        "frying pan",
-        "spatula",
-        "oven tray",
-        "optional salsa or guacamole"
+        {
+          "name": "sneakers",
+          "quantity": "1",
+          "unit": "pair",
+          "notes": "Use dry everyday shoes."
+        },
+        {
+          "name": "soft brush",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "A toothbrush can be used for small areas."
+        },
+        {
+          "name": "mild dish soap",
+          "quantity": "2",
+          "unit": "drops",
+          "notes": "Mix with water before use."
+        },
+        {
+          "name": "small bowl of water",
+          "quantity": "1",
+          "unit": "bowl",
+          "notes": "Use lukewarm water."
+        },
+        {
+          "name": "dry towel",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Used for blotting and drying."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Cook scrambled eggs in butter, season them, and add spinach or other fillings until everything is ready to use."
+          "step_text": "Remove loose dirt from the shoe surface with the dry brush. Brush away from your body and keep the shoes on the towel.",
+          "keywords": [
+            "shoes",
+            "brush",
+            "dirt",
+            "towel"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Place a moderate amount of filling into the center of each tortilla without overstuffing it."
+          "step_text": "Mix a small amount of mild soap with water in the bowl. Dip only the brush tips so the shoe does not become soaked.",
+          "keywords": [
+            "soap",
+            "water",
+            "bowl",
+            "dip"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Roll each tortilla into a cylinder, place seam-side down on a lined tray, and brush lightly with butter if desired."
+          "step_text": "Brush the upper part of the shoe in small circles. Use light pressure so the fabric or surface is not damaged.",
+          "keywords": [
+            "brush",
+            "upper",
+            "circles",
+            "light"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Bake until browned and crisp, or use an air fryer or frying pan for a crispy finish."
+          "step_text": "Wipe the cleaned areas with the towel to remove remaining soap. Repeat gently on the sole if dirt is still visible.",
+          "keywords": [
+            "wipe",
+            "soap",
+            "sole",
+            "repeat"
+          ]
         },
         {
           "step_index": 5,
-          "step_text": "Freeze individually for meal prep if needed, then reheat later and serve with sauces."
+          "step_text": "Leave the shoes in an open area to air dry. Do not use strong heat because it can damage the shoe shape.",
+          "keywords": [
+            "dry",
+            "air",
+            "heat",
+            "finish"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 12,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This catalog tutorial creates realistic hands-busy cleaning actions while staying low-risk with soft tools, mild soap, and no machine washing.",
+      "active": true
     },
     {
       "id": "tutorial_007",
-      "title": "Homemade Instant Oatmeal",
-      "category": "cooking",
+      "title": "Dry-Clean a Keyboard Exterior",
+      "category": "cleaning",
+      "study_role": "catalog",
+      "guided_session_priority": false,
       "tags": [
-        "breakfast",
-        "portable",
-        "office-friendly",
-        "make-ahead"
+        "keyboard",
+        "cloth",
+        "brush",
+        "dust",
+        "desk-based",
+        "cleaning",
+        "low-risk"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/Homemade-instant-oatmeal/",
-      "verification_level": "rich_search_snippet",
-      "summary": "A dry oatmeal mix for quick breakfasts at school or work, with an optional apple-cinnamon variation.",
+      "source": "HP Tech Takes: Clean Your Keyboard",
+      "source_url": "[https://www.hp.com/us-en/shop/tech-takes/how-to-clean-keyboard](https://www.hp.com/us-en/shop/tech-takes/how-to-clean-keyboard)",
+      "verification_level": "page_open",
+      "summary": "Clean the outside of a keyboard using dry, gentle methods and careful handling. The adapted version avoids spraying liquid and focuses on safe exterior dust removal.",
       "materials": [
-        "quick-cooking oats",
-        "nonfat dry milk powder (optional)",
-        "salt",
-        "sweetener or sugar",
-        "cinnamon (optional)",
-        "dried apple bits (optional)",
-        "storage bag or container",
-        "hot water"
+        {
+          "name": "keyboard",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use an unplugged keyboard or study prop."
+        },
+        {
+          "name": "microfiber cloth",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use dry or barely damp only if needed."
+        },
+        {
+          "name": "soft brush",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Small paintbrush or keyboard brush."
+        },
+        {
+          "name": "sticky note",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Used to lift dust from edges."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Add oats, milk powder, salt, and sweetener to a storage container; add cinnamon and dried apple if you want the apple-cinnamon version."
+          "step_text": "Make sure the keyboard is unplugged or powered off. Place it flat on the desk so it does not slide while cleaning.",
+          "keywords": [
+            "keyboard",
+            "power",
+            "desk",
+            "safe"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Seal the container and shake or stir until the dry mix is evenly combined."
+          "step_text": "Turn the keyboard gently and tap it once over the towel or desk area. This helps remove loose crumbs without opening the keyboard.",
+          "keywords": [
+            "turn",
+            "tap",
+            "crumbs",
+            "loose"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "When ready to eat, pour the mix into a bowl, add hot water, stir, and let it sit a few minutes before serving."
+          "step_text": "Brush between the keys using short, light strokes. Move across one row at a time so no area is skipped.",
+          "keywords": [
+            "brush",
+            "keys",
+            "row",
+            "dust"
+          ]
+        },
+        {
+          "step_index": 4,
+          "step_text": "Wipe the key tops and frame with the microfiber cloth. Keep the cloth dry or only barely damp, and never spray liquid onto the keyboard.",
+          "keywords": [
+            "cloth",
+            "wipe",
+            "keys",
+            "frame"
+          ]
+        },
+        {
+          "step_index": 5,
+          "step_text": "Use the sticky edge of a note to pick up dust near the corners. Finish by checking that the keyboard surface is dry and clear.",
+          "keywords": [
+            "note",
+            "corners",
+            "dust",
+            "finish"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 7,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This catalog tutorial supports safe desk-based cleaning and avoids liquid entering electronics, making it appropriate for low-risk simulation.",
+      "active": true
     },
     {
       "id": "tutorial_008",
-      "title": "Easy and Delicious Fruit Snack!!!",
-      "category": "cooking",
+      "title": "Wipe and Reset a Desk Surface",
+      "category": "cleaning",
+      "study_role": "catalog",
+      "guided_session_priority": false,
       "tags": [
-        "snack",
-        "fruit",
-        "no-cook",
-        "quick"
+        "desk",
+        "cloth",
+        "wipe",
+        "dust",
+        "desk-based",
+        "cleaning",
+        "low-risk"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/Easy-and-Delicious-Fruit-Snack/",
-      "verification_level": "rich_search_snippet",
-      "summary": "A no-cook fruit snack built from sliced fruit and a light maple syrup drizzle.",
+      "source": "Filtrete: 5 Tips for Cleaning Your At-Home Workspace",
+      "source_url": "[https://www.filtrete.com/3M/en_US/filtrete/home-tips/full-story/~/5-tips-for-cleaning-your-at-home-workspace/?storyid=527c9aa2-a2f8-462a-8bc9-138fdb125e1f](https://www.filtrete.com/3M/en_US/filtrete/home-tips/full-story/~/5-tips-for-cleaning-your-at-home-workspace/?storyid=527c9aa2-a2f8-462a-8bc9-138fdb125e1f)",
+      "verification_level": "page_open",
+      "summary": "Clear a small desk area, wipe the surface, and return only needed items. This task is safe, desk-based, and useful for comparing touch and voice navigation during physical cleanup.",
       "materials": [
-        "apple",
-        "banana",
-        "pear",
-        "mandarin",
-        "maple syrup"
+        {
+          "name": "microfiber cloth",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use dry or slightly damp."
+        },
+        {
+          "name": "small tray",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Holds items while the desk is cleared."
+        },
+        {
+          "name": "trash bag",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "For paper scraps only."
+        },
+        {
+          "name": "desk items",
+          "quantity": "5",
+          "unit": "pieces",
+          "notes": "Pens, notebook, charger, cup, or similar props."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Slice the banana, apple, and pear, and peel or separate the mandarin."
+          "step_text": "Move loose desk items onto the tray. Keep only safe, lightweight items in the study area.",
+          "keywords": [
+            "desk",
+            "items",
+            "tray",
+            "move"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Arrange the fruit pieces together and drizzle maple syrup on top."
+          "step_text": "Collect paper scraps or obvious trash and place them in the trash bag. Do not throw away study props unless instructed.",
+          "keywords": [
+            "paper",
+            "trash",
+            "bag",
+            "collect"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Serve immediately as a quick snack or breakfast side."
+          "step_text": "Wipe the empty desk surface with the microfiber cloth. Start at the back edge and move toward the front so dust is not pushed into clean areas.",
+          "keywords": [
+            "wipe",
+            "cloth",
+            "surface",
+            "dust"
+          ]
+        },
+        {
+          "step_index": 4,
+          "step_text": "Return the needed items to the desk in a simple row or group. Leave open space in the center for the next task.",
+          "keywords": [
+            "return",
+            "group",
+            "center",
+            "space"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 7,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This catalog tutorial provides safe cleaning actions that are easy to segment into navigation steps and simple search terms.",
+      "active": true
     },
     {
       "id": "tutorial_009",
-      "title": "How to Clean Your Shoes",
-      "category": "cleaning",
+      "title": "Sort and Label Desk Cables",
+      "category": "organizing",
+      "study_role": "core_measured",
+      "guided_session_priority": true,
       "tags": [
-        "footwear",
-        "maintenance",
-        "white-shoes",
-        "household"
+        "cable",
+        "label",
+        "sort",
+        "desk",
+        "hands-busy",
+        "organizing",
+        "desk-based",
+        "low-risk"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/How-to-Clean-Your-Shoes/",
+      "source": "Instructables: Computer Desk Cable Management on the Cheap",
+      "source_url": "[https://www.instructables.com/Computer-desk-cable-management-on-the-cheap/](https://www.instructables.com/Computer-desk-cable-management-on-the-cheap/)",
       "verification_level": "page_open",
-      "summary": "A simple shoe-cleaning routine using toothpaste for the uppers and diluted bleach for the laces.",
+      "summary": "Sort common desk cables by device, add simple labels, and group them with soft ties. The tutorial has a clear step 4 target and is highly comparable to the other core tasks.",
       "materials": [
-        "white shoes",
-        "toothpaste",
-        "toothbrush",
-        "bleach",
-        "water",
-        "bowl",
-        "wash cloth or towel"
+        {
+          "name": "loose charging cables",
+          "quantity": "3",
+          "unit": "pieces",
+          "notes": "Use unplugged study props only."
+        },
+        {
+          "name": "soft cable ties",
+          "quantity": "3",
+          "unit": "pieces",
+          "notes": "Use reusable hook-and-loop ties, not tight plastic ties."
+        },
+        {
+          "name": "paper labels",
+          "quantity": "3",
+          "unit": "pieces",
+          "notes": "Pre-cut labels avoid scissors."
+        },
+        {
+          "name": "marker",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Used to write simple names."
+        },
+        {
+          "name": "small tray",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Holds sorted cables."
+        },
+        {
+          "name": "desk area",
+          "quantity": "1",
+          "unit": "space",
+          "notes": "A clear surface for grouping."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Gather the shoes, toothpaste, toothbrush, bleach, water, bowl, and cloth."
+          "step_text": "Place all unplugged cables on the desk and spread them so each end is visible. Keep power adapters out of the study task unless they are props.",
+          "keywords": [
+            "cable",
+            "desk",
+            "spread",
+            "unplugged"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Soak the shoelaces in a diluted bleach-and-water mixture while you clean the shoes."
+          "step_text": "Sort the cables by purpose, such as phone, laptop, or headphones. Put each cable group in a separate area of the tray.",
+          "keywords": [
+            "sort",
+            "phone",
+            "laptop",
+            "group"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Use a wet toothbrush and toothpaste to scrub dirty sections of the shoe and let the paste sit briefly."
+          "step_text": "Untangle one cable at a time by following it from one end to the other. Lay the cable in a loose loop so it is easier to label.",
+          "keywords": [
+            "untangle",
+            "loop",
+            "cable",
+            "end"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Wipe the toothpaste off with water and a cloth until the surface looks clean."
+          "step_text": "Write a short label for each cable and attach it near one end. Use simple names like phone, laptop, or headphones so the label is easy to read and search.",
+          "keywords": [
+            "label",
+            "write",
+            "phone",
+            "step four"
+          ]
         },
         {
           "step_index": 5,
-          "step_text": "Dry the shoes and laces, then re-lace the shoes."
+          "step_text": "Bundle each cable loosely with a soft tie and place it back in its tray group. Leave enough slack so the cable is not bent tightly.",
+          "keywords": [
+            "bundle",
+            "tie",
+            "tray",
+            "slack"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 10,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This core measured tutorial is desk-based, safe, and rich in navigation keywords such as sort, cable, label, drawer, desk, group, and step four.",
+      "active": true
     },
     {
       "id": "tutorial_010",
-      "title": "How to Clean Your Shoes Without Shoe Cleaner.",
-      "category": "cleaning",
+      "title": "Organize a Stationery Drawer",
+      "category": "organizing",
+      "study_role": "catalog",
+      "guided_session_priority": false,
       "tags": [
-        "footwear",
-        "budget",
-        "white-shoes",
-        "household"
+        "drawer",
+        "pens",
+        "labels",
+        "sort",
+        "organizing",
+        "desk-based",
+        "low-risk"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/How-to-Clean-Your-Shoes-Without-Shoe-Cleaner/",
+      "source": "IKEA: Desk organisation tips",
+      "source_url": "[https://www.ikea.com/gb/en/ideas/how-to-organise-your-desk-pubef5be6e0/](https://www.ikea.com/gb/en/ideas/how-to-organise-your-desk-pubef5be6e0/)",
       "verification_level": "page_open",
-      "summary": "A low-cost shoe-cleaning method that uses soap powder and an old toothbrush instead of a dedicated shoe cleaner.",
+      "summary": "Sort pens, notes, clips, and small stationery into clear groups inside a drawer. This catalog tutorial supports realistic organizing without cutting, drilling, or heavy tools.",
       "materials": [
-        "dirty shoes",
-        "soap powder",
-        "old toothbrush",
-        "sink",
-        "rag or towel"
+        {
+          "name": "empty drawer or tray",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use a portable tray if no drawer is available."
+        },
+        {
+          "name": "pens and pencils",
+          "quantity": "5",
+          "unit": "pieces",
+          "notes": "Study props are enough."
+        },
+        {
+          "name": "sticky notes",
+          "quantity": "1",
+          "unit": "pad",
+          "notes": "Used as a stationery item and optional label."
+        },
+        {
+          "name": "paper clips",
+          "quantity": "6",
+          "unit": "pieces",
+          "notes": "Place in a small cup or section."
+        },
+        {
+          "name": "small containers",
+          "quantity": "3",
+          "unit": "pieces",
+          "notes": "Use cups, boxes, or drawer inserts."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Scrub the outsole with soap powder and a wet toothbrush until visible dirt lifts."
+          "step_text": "Empty the drawer or tray onto the desk. Spread items out so pens, notes, clips, and other supplies can be seen.",
+          "keywords": [
+            "drawer",
+            "tray",
+            "desk",
+            "empty"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Brush the vamp carefully so the inside of the shoe does not get too wet."
+          "step_text": "Sort the items into groups by type. Put writing tools together, paper items together, and small loose items together.",
+          "keywords": [
+            "sort",
+            "pens",
+            "paper",
+            "group"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Clean the toe cap with extra care and wipe away excess moisture if needed."
+          "step_text": "Place each group into a small container or drawer section. Keep the items used most often near the front.",
+          "keywords": [
+            "container",
+            "section",
+            "front",
+            "items"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Remove the laces, scrub them separately with soap, and rinse if necessary."
+          "step_text": "Add a simple label or sticky note for each section if needed. Use short names such as pens, notes, and clips.",
+          "keywords": [
+            "label",
+            "sticky",
+            "pens",
+            "clips"
+          ]
         },
         {
           "step_index": 5,
-          "step_text": "Leave everything in a warm place to dry before wearing again."
+          "step_text": "Close the drawer or move the tray gently to check that nothing spills. Adjust any section that feels crowded.",
+          "keywords": [
+            "close",
+            "tray",
+            "adjust",
+            "finish"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 11,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This catalog tutorial is a safe organizing task with clear sorting and labeling vocabulary for search and voice navigation.",
+      "active": true
     },
     {
       "id": "tutorial_011",
-      "title": "Cleaning Your Room! Fast and Easy",
+      "title": "Reset a Small Junk Drawer",
       "category": "organizing",
+      "study_role": "catalog",
+      "guided_session_priority": false,
       "tags": [
-        "room-cleaning",
+        "drawer",
+        "sort",
+        "keep",
+        "discard",
         "organizing",
-        "household",
-        "stepwise"
+        "desk-based",
+        "low-risk"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/Cleaning-Your-Room%21-Fast-and-Easy/",
+      "source": "Just a Girl and Her Blog: How to Create an Organized Junk Drawer",
+      "source_url": "[https://justagirlandherblog.com/organized-junk-drawer/](https://justagirlandherblog.com/organized-junk-drawer/)",
       "verification_level": "page_open",
-      "summary": "A room-cleaning workflow that starts with visible surfaces and ends with floors and reset steps.",
+      "summary": "Reset a small drawer by removing items, grouping them, and returning only useful objects. The task works well as a catalog example because it uses simple decisions and safe materials.",
       "materials": [
-        "laundry basket or hamper",
-        "trash bag",
-        "cleaning cloth",
-        "vacuum",
-        "optional wood oil or surface cleaner"
+        {
+          "name": "small drawer or box",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use a study prop drawer or shallow box."
+        },
+        {
+          "name": "mixed small items",
+          "quantity": "8",
+          "unit": "pieces",
+          "notes": "Examples: clips, tape, cards, batteries as dummy props."
+        },
+        {
+          "name": "sorting tray",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Holds keep items."
+        },
+        {
+          "name": "small cup",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Holds tiny objects."
+        },
+        {
+          "name": "paper label",
+          "quantity": "2",
+          "unit": "pieces",
+          "notes": "Pre-cut labels for categories."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Start by making the bed so the room looks more orderly right away."
+          "step_text": "Remove every item from the drawer or box and place everything on the desk. This creates a clear starting point for sorting.",
+          "keywords": [
+            "drawer",
+            "box",
+            "remove",
+            "desk"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Collect and sort laundry, then clear and reset the nightstand."
+          "step_text": "Make three groups: keep, move, and discard. For the study task, use only the prepared props and do not throw away real personal items.",
+          "keywords": [
+            "keep",
+            "move",
+            "discard",
+            "sort"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Put away random items and clear dresser or tabletop clutter."
+          "step_text": "Put the smallest items into a cup or small section. This prevents clips or tiny parts from spreading around the drawer.",
+          "keywords": [
+            "small",
+            "cup",
+            "clips",
+            "section"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Sort and reset shelves or a desk, removing garbage and loose electronics."
+          "step_text": "Return the keep items to the drawer in simple groups. Place the most useful items near the front edge.",
+          "keywords": [
+            "return",
+            "keep",
+            "front",
+            "groups"
+          ]
         },
         {
           "step_index": 5,
-          "step_text": "Sweep or vacuum the floor and edges, then put tools away and finish the reset."
+          "step_text": "Add labels for the main groups and check that the drawer still opens smoothly. Remove one item if the drawer feels too full.",
+          "keywords": [
+            "labels",
+            "check",
+            "open",
+            "finish"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 12,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This catalog tutorial adds organizing variety while staying desk-based and structured around simple search terms like drawer, sort, keep, label, and group.",
+      "active": true
     },
     {
       "id": "tutorial_012",
-      "title": "How to Clean Birkenstocks",
-      "category": "cleaning",
+      "title": "Prepare a Focused Study Workspace",
+      "category": "organizing",
+      "study_role": "catalog",
+      "guided_session_priority": false,
       "tags": [
-        "footwear",
-        "maintenance",
-        "sandals",
-        "specific-care"
+        "study",
+        "desk",
+        "notebook",
+        "light",
+        "organizing",
+        "desk-based",
+        "low-risk"
       ],
-      "source": "Instructables",
-      "source_url": "https://www.instructables.com/How-to-Clean-Birkenstocks/",
-      "verification_level": "rich_search_snippet",
-      "summary": "A sandal-cleaning guide focused on the footbed, with an optional leather-strap conditioning step.",
+      "source": "IKEA Indonesia: Tips for Organizing a Nice Study Desk",
+      "source_url": "[https://www.ikea.co.id/en/inspirations/tips-for-organizing-a-nice-study-desk](https://www.ikea.co.id/en/inspirations/tips-for-organizing-a-nice-study-desk)",
+      "verification_level": "page_open",
+      "summary": "Prepare a small study workspace by clearing clutter, placing essential supplies, and defining a central work zone. This tutorial is safe and suitable for household or lab simulation.",
       "materials": [
-        "Birkenstock sandals",
-        "old toothbrush",
-        "baking soda",
-        "water",
-        "cup and spoon",
-        "cloth rag",
-        "optional leather cleaner"
+        {
+          "name": "notebook",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Represents the active study item."
+        },
+        {
+          "name": "pen",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Place within easy reach."
+        },
+        {
+          "name": "desk lamp or lamp prop",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Use a safe unplugged prop if needed."
+        },
+        {
+          "name": "small tray",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Holds extra supplies."
+        },
+        {
+          "name": "timer card",
+          "quantity": "1",
+          "unit": "piece",
+          "notes": "Paper card representing a study timer."
+        }
       ],
       "steps": [
         {
           "step_index": 1,
-          "step_text": "Wipe off loose dirt from the footbed using a damp cloth and minimal water."
+          "step_text": "Clear the center of the desk and move unrelated items to the side tray. Leave enough space for one notebook.",
+          "keywords": [
+            "desk",
+            "clear",
+            "tray",
+            "space"
+          ]
         },
         {
           "step_index": 2,
-          "step_text": "Mix baking soda with water to form a cleaning paste."
+          "step_text": "Place the notebook in the center work zone. Put the pen on the same side as the participant's writing hand.",
+          "keywords": [
+            "notebook",
+            "center",
+            "pen",
+            "work"
+          ]
         },
         {
           "step_index": 3,
-          "step_text": "Scrub the footbed with the paste using an old toothbrush in circular motions."
+          "step_text": "Place the lamp or lamp prop near the back corner of the desk. Keep the central area open so it does not block the notebook.",
+          "keywords": [
+            "lamp",
+            "corner",
+            "open",
+            "notebook"
+          ]
         },
         {
           "step_index": 4,
-          "step_text": "Wipe away excess paste with a damp cloth."
+          "step_text": "Put extra supplies into the tray and keep only the pen and notebook in the active zone. This reduces visual clutter during the task.",
+          "keywords": [
+            "supplies",
+            "tray",
+            "active",
+            "clutter"
+          ]
         },
         {
           "step_index": 5,
-          "step_text": "Let the sandals dry overnight in a dark, dry place away from direct sunlight."
-        },
-        {
-          "step_index": 6,
-          "step_text": "Optionally condition the leather straps with diluted leather cleaner to finish the restoration."
+          "step_text": "Place the timer card where it can be seen without covering the notebook. Check that the workspace has a clear left, center, and right area.",
+          "keywords": [
+            "timer",
+            "workspace",
+            "left",
+            "right"
+          ]
         }
       ],
-      "optional_images": []
+      "optional_images": [],
+      "estimated_minutes": 9,
+      "difficulty": "Beginner",
+      "risk_level": "low",
+      "selection_rationale": "This catalog tutorial provides a calm organizing task with desk, notebook, tray, and workspace keywords suitable for voice search and touch navigation.",
+      "active": true
     }
   ]
 }
