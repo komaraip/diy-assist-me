@@ -267,11 +267,6 @@ export function StudySessionPage() {
                         {copy.sessionPage.questionnaireButton}
                       </button>
                     )}
-                    {conditionSusDone && (
-                      <span style={{ fontSize: "0.82rem", color: "var(--primary-dark)", fontWeight: "600", textAlign: "center" }}>
-                        ✓ SUS Questionnaire Completed
-                      </span>
-                    )}
                   </div>
                 </div>
               </section>
@@ -344,11 +339,6 @@ export function StudySessionPage() {
                     <span aria-hidden="true">🔒</span>
                     {copy.sessionPage.questionnaireButton}
                   </button>
-                )}
-                {conditionSusDone && (
-                  <span style={{ fontSize: "0.82rem", color: "var(--primary-dark)", fontWeight: "600", textAlign: "center" }}>
-                    ✓ SUS Questionnaire Completed
-                  </span>
                 )}
               </div>
             </section>

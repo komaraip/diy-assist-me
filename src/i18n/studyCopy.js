@@ -169,7 +169,7 @@ const en = {
     modeLabel: (order) => `Mode ${order}`,
     taskType: (trialType) => (trialType === "practice" ? "Practice" : "Task"),
     taskMeta: (trialType, tutorialId) => `${trialType === "practice" ? "Practice" : "Task"} for ${tutorialId}`,
-    voiceHelper: "Use voice commands when you can. The buttons stay available if you need them.",
+    voiceHelper: "Use voice commands when you can. The buttons are still there.",
     touchHelper: "Use the on-screen buttons to move through the tutorial steps.",
     tutorialHelper: "Follow the tutorial instructions at your own pace.",
     startPractice: "Start practice",
