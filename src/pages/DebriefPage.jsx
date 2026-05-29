@@ -79,12 +79,6 @@ export function DebriefPage() {
           {copy.shared.sessionCode}: {session.participantCode}
         </span>
       </div>
-      <GuidedProgress
-        steps={copy.debriefPage.progress}
-        currentStepId="feedback"
-        title={copy.debriefPage.progressTitle}
-        eyebrow={copy.shared.progressEyebrow}
-      />
       <DebriefForm isSubmitting={isSubmitting} onSubmit={handleSubmit} language={language} />
       {statusMessage ? (
         <div className={statusMessage === copy.debriefPage.completeStatus ? "result-panel" : "result-panel error"} role="status">

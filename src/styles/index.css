@@ -3900,7 +3900,6 @@ details.debrief-accordion {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
-  margin-bottom: 1.25rem;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(51, 56, 54, 0.04);
   transition: border-color 0.2s ease;
