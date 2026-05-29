@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Compass, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 const navItems = [
@@ -49,7 +49,7 @@ export function AppHeader() {
         aria-label="Primary navigation"
       >
         <NavLink className="brand-link" to="/" aria-label="DIY Assist home">
-          <Compass aria-hidden="true" />
+          <img src="/logo-2.png" alt="" aria-hidden="true" />
           <span>DIY Assist</span>
         </NavLink>
 
