@@ -1,4 +1,5 @@
 import { BarChart3, BookOpenText, Download, Home, LogOut, ShieldCheck } from "lucide-react";
+import { useEffect } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { logoutAdmin } from "../../services/adminAuthService.js";
 import { AdminGate } from "./AdminGate.jsx";
@@ -11,6 +12,33 @@ const adminNavItems = [
 ];
 
 export function AdminLayout() {
+  useEffect(() => {
+    const meta = document.querySelector("meta[name='robots']");
+    const previous = meta?.getAttribute("content");
+    let createdMeta = null;
+
+    if (meta) {
+      meta.setAttribute("content", "noindex,nofollow");
+    } else {
+      createdMeta = document.createElement("meta");
+      createdMeta.setAttribute("name", "robots");
+      createdMeta.setAttribute("content", "noindex,nofollow");
+      document.head.appendChild(createdMeta);
+    }
+
+    return () => {
+      if (meta) {
+        if (previous) {
+          meta.setAttribute("content", previous);
+        } else {
+          meta.removeAttribute("content");
+        }
+      } else if (createdMeta) {
+        createdMeta.remove();
+      }
+    };
+  }, []);
+
   return (
     <div className="admin-app-shell">
       <a className="skip-link" href="#admin-main-content">
