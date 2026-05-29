@@ -12,13 +12,22 @@ export async function createParticipant({
   sequenceAssignment = "",
   tutorialRotation = "",
   language = DEFAULT_STUDY_LANGUAGE,
+  participantProfile = {},
   notes = "",
 } = {}) {
   const createdAt = new Date().toISOString();
   const normalizedLanguage = normalizeStudyLanguage(language);
+  const normalizedParticipantProfile = normalizeParticipantProfile(participantProfile);
 
   if (!isFirebaseEnabled || !db) {
-    const participant = createLocalParticipant({ sequenceAssignment, tutorialRotation, language: normalizedLanguage, notes, createdAt });
+    const participant = createLocalParticipant({
+      sequenceAssignment,
+      tutorialRotation,
+      language: normalizedLanguage,
+      participantProfile: normalizedParticipantProfile,
+      notes,
+      createdAt,
+    });
     if (participant.error) return participant;
     return serviceSuccess(participant.data, "local", LOCAL_CONFIG_WARNING);
   }
@@ -31,19 +40,27 @@ export async function createParticipant({
       sequenceAssignment,
       tutorialRotation,
       language: normalizedLanguage,
+      participantProfile: normalizedParticipantProfile,
       notes,
       createdAt,
     };
     const docRef = await addDoc(collection(db, "participants"), participantData);
     return serviceSuccess({ id: docRef.id, ...participantData }, "firebase");
   } catch {
-    const participant = createLocalParticipant({ sequenceAssignment, tutorialRotation, language: normalizedLanguage, notes, createdAt });
+    const participant = createLocalParticipant({
+      sequenceAssignment,
+      tutorialRotation,
+      language: normalizedLanguage,
+      participantProfile: normalizedParticipantProfile,
+      notes,
+      createdAt,
+    });
     if (participant.error) return participant;
     return serviceSuccess(participant.data, "local", FIREBASE_FALLBACK_WARNING);
   }
 }
 
-function createLocalParticipant({ sequenceAssignment, tutorialRotation, language, notes, createdAt }) {
+function createLocalParticipant({ sequenceAssignment, tutorialRotation, language, participantProfile, notes, createdAt }) {
   const participantCode = getNextLocalParticipantCode();
   return createLocalRecord("participants", {
     participantCode,
@@ -51,9 +68,20 @@ function createLocalParticipant({ sequenceAssignment, tutorialRotation, language
     sequenceAssignment,
     tutorialRotation,
     language,
+    participantProfile,
     notes,
     createdAt,
   });
+}
+
+function normalizeParticipantProfile(participantProfile = {}) {
+  return {
+    fullName: String(participantProfile.fullName || "").trim(),
+    email: String(participantProfile.email || "").trim(),
+    ageRange: String(participantProfile.ageRange || "").trim(),
+    englishAbility: String(participantProfile.englishAbility || "").trim(),
+    tutorialAppUsage: String(participantProfile.tutorialAppUsage || "").trim(),
+  };
 }
 
 function getNextLocalParticipantCode() {

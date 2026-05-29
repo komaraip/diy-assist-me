@@ -1,10 +1,18 @@
-import { GitBranch, MonitorCheck, ShieldCheck } from "lucide-react";
+import { GitBranch, MonitorCheck, ShieldCheck, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
 import { createStudySession } from "../services/studyService.js";
 import { SEQUENCE_ASSIGNMENTS, TUTORIAL_ROTATIONS } from "../utils/studyAssignments.js";
-import { DEFAULT_STUDY_LANGUAGE, STUDY_LANGUAGE_OPTIONS, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { DEFAULT_STUDY_LANGUAGE, getStudyCopy } from "../i18n/studyCopy.js";
+
+const initialParticipantProfile = {
+  fullName: "",
+  email: "",
+  ageRange: "",
+  englishAbility: "",
+  tutorialAppUsage: "",
+};
 
 const initialEnvironment = {
   deviceType: "",
@@ -17,7 +25,7 @@ const initialEnvironment = {
 };
 
 export function StudyPage() {
-  const [language, setLanguage] = useState(DEFAULT_STUDY_LANGUAGE);
+  const [participantProfile, setParticipantProfile] = useState(initialParticipantProfile);
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [environment, setEnvironment] = useState(initialEnvironment);
   const [sequenceAssignment, setSequenceAssignment] = useState("AB");
@@ -25,8 +33,7 @@ export function StudyPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [sessionResult, setSessionResult] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const normalizedLanguage = normalizeStudyLanguage(language);
-  const copy = getStudyCopy(normalizedLanguage);
+  const copy = getStudyCopy(DEFAULT_STUDY_LANGUAGE);
   const speechSupportStatus = getSpeechSupportStatus(copy);
   const environmentFields = copy.environmentFields;
 
@@ -34,6 +41,13 @@ export function StudyPage() {
     event.preventDefault();
     setIsSubmitting(true);
     setStatusMessage("");
+
+    if (!hasCompleteParticipantProfile(participantProfile)) {
+      setSessionResult({ data: null, source: "local", warning: null, error: copy.setupPage.participantError });
+      setStatusMessage(copy.setupPage.participantError);
+      setIsSubmitting(false);
+      return;
+    }
 
     if (!consentConfirmed) {
       setSessionResult({ data: null, source: "local", warning: null, error: copy.setupPage.consentError });
@@ -50,11 +64,12 @@ export function StudyPage() {
     }
 
     const result = await createStudySession({
+      participantProfile,
       consentConfirmed,
       environment,
       sequenceAssignment,
       tutorialRotation,
-      language: normalizedLanguage,
+      language: DEFAULT_STUDY_LANGUAGE,
     });
     setSessionResult(result);
     setStatusMessage(
@@ -63,6 +78,13 @@ export function StudyPage() {
         : copy.setupPage.sessionReady
     );
     setIsSubmitting(false);
+  }
+
+  function updateParticipantProfile(field, value) {
+    setParticipantProfile((current) => ({
+      ...current,
+      [field]: value,
+    }));
   }
 
   function updateEnvironment(field, value) {
@@ -87,33 +109,58 @@ export function StudyPage() {
           title={copy.setupPage.progressTitle}
           eyebrow={copy.shared.progressEyebrow}
         />
-
-        <section className="language-section" aria-labelledby="language-heading">
-          <div className="guided-progress-heading">
-            <p className="eyebrow">{copy.languageSelector.eyebrow}</p>
-            <h2 id="language-heading">{copy.languageSelector.heading}</h2>
-          </div>
-          <div className="language-option-list" role="radiogroup" aria-label={copy.languageSelector.label}>
-            {STUDY_LANGUAGE_OPTIONS.map((option) => {
-              const isSelected = option.value === normalizedLanguage;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={isSelected ? "language-option current" : "language-option"}
-                  role="radio"
-                  aria-checked={isSelected}
-                  onClick={() => setLanguage(normalizeStudyLanguage(option.value))}
-                >
-                  <strong>{option.label}</strong>
-                </button>
-              );
-            })}
-          </div>
-        </section>
       </div>
 
       <form className="study-form" onSubmit={handleCreateSession}>
+        <section className="form-section participant-profile-card" aria-labelledby="participant-profile-heading">
+          <UserRound aria-hidden="true" />
+          <div>
+            <h2 id="participant-profile-heading">{copy.setupPage.participantHeading}</h2>
+            <p>{copy.setupPage.participantDescription}</p>
+            <div className="form-grid">
+              <label className="field-label">
+                {copy.setupPage.participantFields.fullName}
+                <input
+                  type="text"
+                  value={participantProfile.fullName}
+                  onChange={(event) => updateParticipantProfile("fullName", event.target.value)}
+                  required
+                />
+              </label>
+              <label className="field-label">
+                {copy.setupPage.participantFields.email}
+                <input
+                  type="email"
+                  value={participantProfile.email}
+                  onChange={(event) => updateParticipantProfile("email", event.target.value)}
+                  required
+                />
+              </label>
+              <SelectInput
+                label={copy.setupPage.participantFields.ageRange}
+                value={participantProfile.ageRange}
+                onChange={(value) => updateParticipantProfile("ageRange", value)}
+                placeholder={copy.setupPage.participantPlaceholders.ageRange}
+                options={copy.participantProfileOptions.ageRange}
+              />
+              <SelectInput
+                label={copy.setupPage.participantFields.englishAbility}
+                value={participantProfile.englishAbility}
+                onChange={(value) => updateParticipantProfile("englishAbility", value)}
+                placeholder={copy.setupPage.participantPlaceholders.englishAbility}
+                options={copy.participantProfileOptions.englishAbility}
+              />
+              <SelectInput
+                label={copy.setupPage.participantFields.tutorialAppUsage}
+                value={participantProfile.tutorialAppUsage}
+                onChange={(value) => updateParticipantProfile("tutorialAppUsage", value)}
+                placeholder={copy.setupPage.participantPlaceholders.tutorialAppUsage}
+                options={copy.participantProfileOptions.tutorialAppUsage}
+              />
+            </div>
+          </div>
+        </section>
+
         <section className="form-section study-consent-card" aria-labelledby="consent-heading">
           <ShieldCheck aria-hidden="true" />
           <div>
@@ -237,6 +284,16 @@ function SelectInput({ label, value, onChange, placeholder, options, fullWidth =
 
 function hasCompleteEnvironment(environment, environmentFields) {
   return environmentFields.every((field) => String(environment[field.field] || "").trim());
+}
+
+function hasCompleteParticipantProfile(participantProfile) {
+  return [
+    participantProfile.fullName,
+    participantProfile.email,
+    participantProfile.ageRange,
+    participantProfile.englishAbility,
+    participantProfile.tutorialAppUsage,
+  ].every((value) => String(value || "").trim());
 }
 
 function getSpeechSupportStatus(copy) {

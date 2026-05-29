@@ -30,9 +30,10 @@ export function SessionReview({ adminData, dataSource = "" }) {
                 aria-current={selectedSession?.id === session.id}
               >
                 <span className="session-list-topline">
-                  <strong>{session.participantCode || session.participantId || "Unknown user"}</strong>
+                  <strong>{getParticipantDisplayName(session)}</strong>
                   <span className="status-badge">{getSessionStatus(session)}</span>
                 </span>
+                <span>Code: {session.participantCode || session.participantId || "Not recorded"}</span>
                 <span>Sequence: {session.sequenceAssignment || "Not recorded"}</span>
                 <span>Started: {formatDate(session.startedAt || session.createdAt)}</span>
                 <small>Source: {session.source || dataSource || "Not recorded"}</small>
@@ -50,12 +51,14 @@ export function SessionReview({ adminData, dataSource = "" }) {
 }
 
 function SessionDetail({ session, dataSource }) {
+  const participantProfile = getParticipantProfile(session);
+
   return (
     <article className="session-detail">
       <div className="session-detail-header">
         <div>
           <p className="eyebrow">Selected session</p>
-          <h3>{session.participantCode || "Session detail"}</h3>
+          <h3>{getParticipantDisplayName(session)}</h3>
         </div>
         <span className="status-badge">{getSessionStatus(session)}</span>
       </div>
@@ -64,6 +67,11 @@ function SessionDetail({ session, dataSource }) {
         <dl className="detail-list">
           <DetailItem label="Session ID" value={session.id} />
           <DetailItem label="User code" value={session.participantCode || session.participantId} />
+          <DetailItem label="Participant name" value={participantProfile.fullName} />
+          <DetailItem label="Email" value={participantProfile.email} />
+          <DetailItem label="Age range" value={participantProfile.ageRange} />
+          <DetailItem label="English ability" value={formatLabel(participantProfile.englishAbility)} />
+          <DetailItem label="Tutorial app usage" value={formatLabel(participantProfile.tutorialAppUsage)} />
           <DetailItem label="Sequence" value={session.sequenceAssignment} />
           <DetailItem label="Tutorial rotation" value={session.tutorialRotation} />
           <DetailItem label="Started" value={formatDate(session.startedAt || session.createdAt)} />
@@ -221,6 +229,21 @@ function DetailItem({ label, value }) {
 
 function EmptyState({ children }) {
   return <p className="empty-state">{children}</p>;
+}
+
+function getParticipantProfile(session = {}) {
+  return {
+    fullName: session.participantProfile?.fullName || session.participant?.participantProfile?.fullName || "",
+    email: session.participantProfile?.email || session.participant?.participantProfile?.email || "",
+    ageRange: session.participantProfile?.ageRange || session.participant?.participantProfile?.ageRange || "",
+    englishAbility: session.participantProfile?.englishAbility || session.participant?.participantProfile?.englishAbility || "",
+    tutorialAppUsage: session.participantProfile?.tutorialAppUsage || session.participant?.participantProfile?.tutorialAppUsage || "",
+  };
+}
+
+function getParticipantDisplayName(session = {}) {
+  const profile = getParticipantProfile(session);
+  return profile.fullName || session.participantCode || session.participantId || "Unknown user";
 }
 
 function getSessionStatus(session) {

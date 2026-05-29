@@ -6,6 +6,7 @@ import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
 export async function createStudySession({
+  participantProfile = {},
   consentConfirmed,
   environment = {},
   sequenceAssignment = "AB",
@@ -14,6 +15,11 @@ export async function createStudySession({
 } = {}) {
   const normalizedLanguage = normalizeStudyLanguage(language);
   const copy = getStudyCopy(normalizedLanguage).setupPage;
+  const normalizedParticipantProfile = normalizeParticipantProfile(participantProfile);
+
+  if (!hasCompleteParticipantProfile(normalizedParticipantProfile)) {
+    return serviceFailure(copy.participantError, "local");
+  }
 
   if (!consentConfirmed) {
     return serviceFailure(copy.consentError, "local");
@@ -35,6 +41,7 @@ export async function createStudySession({
     sequenceAssignment,
     tutorialRotation,
     language: normalizedLanguage,
+    participantProfile: normalizedParticipantProfile,
   });
 
   if (participantResult.error) {
@@ -45,6 +52,7 @@ export async function createStudySession({
   const sessionResult = await createSession({
     participantId: participant.id,
     participantCode: participant.participantCode,
+    participantProfile: normalizedParticipantProfile,
     consentConfirmed,
     environment,
     sequenceAssignment,
@@ -70,6 +78,26 @@ export async function createStudySession({
 
 export async function getStudySession(sessionId) {
   return getSessionById(sessionId);
+}
+
+function normalizeParticipantProfile(participantProfile = {}) {
+  return {
+    fullName: String(participantProfile.fullName || "").trim(),
+    email: String(participantProfile.email || "").trim(),
+    ageRange: String(participantProfile.ageRange || "").trim(),
+    englishAbility: String(participantProfile.englishAbility || "").trim(),
+    tutorialAppUsage: String(participantProfile.tutorialAppUsage || "").trim(),
+  };
+}
+
+function hasCompleteParticipantProfile(participantProfile) {
+  return [
+    participantProfile.fullName,
+    participantProfile.email,
+    participantProfile.ageRange,
+    participantProfile.englishAbility,
+    participantProfile.tutorialAppUsage,
+  ].every(Boolean);
 }
 
 function combineWarnings(warnings) {

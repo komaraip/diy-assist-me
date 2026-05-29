@@ -1,10 +1,5 @@
 export const DEFAULT_STUDY_LANGUAGE = "en";
-export const SUPPORTED_STUDY_LANGUAGES = ["en", "id"];
-
-export const STUDY_LANGUAGE_OPTIONS = [
-  { value: "en", label: "English" },
-  { value: "id", label: "Indonesia" },
-];
+export const SUPPORTED_STUDY_LANGUAGES = ["en"];
 
 const environmentOptionValues = {
   deviceType: ["Laptop", "Desktop computer", "Tablet", "Smartphone"],
@@ -27,6 +22,21 @@ const environmentOptionValues = {
   ],
 };
 
+const participantProfileOptionValues = {
+  ageRange: ["<18", "18-24", "25-34", "35-44", "45-54", "55+"],
+  englishAbility: [
+    { value: "can_understand", label: "Can understand English" },
+    { value: "limited", label: "Limited English understanding" },
+    { value: "not_comfortable", label: "Not comfortable with English" },
+  ],
+  tutorialAppUsage: [
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+    { value: "rarely_never", label: "Rarely or never" },
+  ],
+};
+
 const susItemsEn = [
   "I think that I would like to use this system frequently.",
   "I found the system unnecessarily complex.",
@@ -40,26 +50,7 @@ const susItemsEn = [
   "I needed to learn a lot of things before I could get going with this system.",
 ];
 
-const susItemsId = [
-  "Saya rasa saya ingin sering menggunakan sistem ini.",
-  "Saya merasa sistem ini terlalu rumit.",
-  "Saya merasa sistem ini mudah digunakan.",
-  "Saya rasa saya membutuhkan bantuan orang teknis untuk dapat menggunakan sistem ini.",
-  "Saya merasa berbagai fungsi dalam sistem ini sudah terintegrasi dengan baik.",
-  "Saya merasa ada terlalu banyak ketidakkonsistenan dalam sistem ini.",
-  "Saya membayangkan kebanyakan orang akan belajar menggunakan sistem ini dengan sangat cepat.",
-  "Saya merasa sistem ini sangat merepotkan untuk digunakan.",
-  "Saya merasa sangat percaya diri saat menggunakan sistem ini.",
-  "Saya perlu mempelajari banyak hal sebelum dapat mulai menggunakan sistem ini.",
-];
-
 const en = {
-  languageSelector: {
-    eyebrow: "Language",
-    heading: "Choose study language",
-    description: "Choose the language for the guided study pages. English is used unless you choose Bahasa Indonesia.",
-    label: "Study language",
-  },
   shared: {
     progressEyebrow: "Progress",
     notRecorded: "Not recorded",
@@ -84,7 +75,7 @@ const en = {
     thisMode: "this mode",
   },
   setupProgress: [
-    { id: "setup", label: "Set up your session", status: "Add consent and choose the session options." },
+    { id: "setup", label: "Set up your session", status: "Add your profile, consent, and session options." },
     { id: "tutorials", label: "Follow the guided tasks", status: "Try touch mode and voice mode." },
     { id: "feedback", label: "Share feedback", status: "Answer quick questions at the end." },
   ],
@@ -94,9 +85,24 @@ const en = {
     description:
       "You will try a short tutorial flow with touch controls and voice commands. Start here, then follow each page for the next step.",
     progressTitle: "What happens next",
+    participantHeading: "Participant profile",
+    participantDescription:
+      "Enter respondent identity and screening details before starting the questionnaire flow. This is not an account login.",
+    participantFields: {
+      fullName: "Full name",
+      email: "Email",
+      ageRange: "Age range",
+      englishAbility: "English ability",
+      tutorialAppUsage: "Tutorial app usage",
+    },
+    participantPlaceholders: {
+      ageRange: "Select age range",
+      englishAbility: "Select English ability",
+      tutorialAppUsage: "Select usage frequency",
+    },
     consentHeading: "Consent",
     consentDescription:
-      "Confirm that anonymous interaction details may be saved for this guided session. Use an anonymous participant code only. No real name or raw microphone audio is collected.",
+      "Confirm that respondent profile, questionnaire answers, and interaction details may be saved for this guided session. No password, phone number, or raw microphone audio is collected.",
     consentLabel: "I confirm consent before creating a guided session.",
     choicesHeading: "Session choices",
     choicesDescription:
@@ -108,6 +114,7 @@ const en = {
       `Record Chrome desktop, microphone permission, internet condition, and room noise before testing. Select one option for each setup field. Current browser voice support: ${speechSupportStatus}.`,
     startButton: "Start guided session",
     startingButton: "Starting...",
+    participantError: "Please complete the participant profile before creating a guided session.",
     consentError: "Please confirm consent before creating a guided session.",
     setupError: "Please complete all setup notes before creating a guided session.",
     sessionReady: "Session ready.",
@@ -115,6 +122,11 @@ const en = {
     sessionErrorTitle: "Session could not start",
     continueButton: "Continue to guided session",
     missingTutorialsError: "At least one tutorial is needed before starting a guided session.",
+  },
+  participantProfileOptions: {
+    ageRange: participantProfileOptionValues.ageRange.map((value) => ({ value, label: value })),
+    englishAbility: participantProfileOptionValues.englishAbility,
+    tutorialAppUsage: participantProfileOptionValues.tutorialAppUsage,
   },
   environmentFields: [
     {
@@ -540,543 +552,7 @@ const en = {
   },
 };
 
-const id = {
-  ...en,
-  languageSelector: {
-    eyebrow: "Bahasa",
-    heading: "Pilih bahasa panduan",
-    description:
-      "Pilih bahasa untuk halaman studi terpandu. Bahasa Inggris tetap digunakan kecuali Anda memilih Bahasa Indonesia.",
-    label: "Bahasa studi",
-  },
-  shared: {
-    ...en.shared,
-    progressEyebrow: "Progres",
-    notRecorded: "Belum tercatat",
-    available: "tersedia",
-    notAvailable: "tidak tersedia",
-    notChecked: "belum dicek",
-    sessionCode: "Kode sesi",
-    sourceListed: "sumber tercatat",
-    lowRisk: "rendah",
-    minutesSuffix: "menit",
-    stepsSuffix: (count) => `${count} langkah`,
-    materialsSuffix: (count) => `${count} bahan`,
-    itemSuffix: (count) => `${count} item tercatat.`,
-  },
-  modes: {
-    voiceTitle: "Mode suara",
-    touchTitle: "Mode sentuh",
-    tutorialTitle: "Mode tutorial",
-    voiceLower: "mode suara",
-    touchLower: "mode sentuh",
-    tutorialLower: "mode tutorial",
-    thisMode: "mode ini",
-  },
-  setupProgress: [
-    { id: "setup", label: "Siapkan sesi Anda", status: "Tambahkan persetujuan dan pilih opsi sesi." },
-    { id: "tutorials", label: "Ikuti tugas terpandu", status: "Coba mode sentuh dan mode suara." },
-    { id: "feedback", label: "Berikan umpan balik", status: "Jawab pertanyaan singkat di akhir." },
-  ],
-  setupPage: {
-    ...en.setupPage,
-    eyebrow: "Mode terpandu",
-    title: "Mulai sesi terpandu",
-    description:
-      "Anda akan mencoba alur tutorial singkat dengan kontrol sentuh dan perintah suara. Mulai dari sini, lalu ikuti setiap halaman untuk langkah berikutnya.",
-    progressTitle: "Apa yang terjadi berikutnya",
-    consentHeading: "Persetujuan",
-    consentDescription:
-      "Konfirmasi bahwa detail interaksi anonim boleh disimpan untuk sesi terpandu ini. Gunakan hanya kode peserta anonim. Nama asli dan audio mentah mikrofon tidak dikumpulkan.",
-    consentLabel: "Saya mengonfirmasi persetujuan sebelum membuat sesi terpandu.",
-    choicesHeading: "Pilihan sesi",
-    choicesDescription:
-      "Pilih apakah mode sentuh atau mode suara digunakan terlebih dahulu, lalu pilih set tutorial. Gunakan 12 sesi AB dan 12 sesi BA untuk sampel seimbang yang direncanakan.",
-    modeOrderLabel: "Urutan mode",
-    tutorialSetLabel: "Set tutorial",
-    setupHeading: "Catatan persiapan",
-    setupDescription: (speechSupportStatus) =>
-      `Catat Chrome desktop, izin mikrofon, kondisi internet, dan kebisingan ruangan sebelum pengujian. Pilih satu opsi untuk setiap kolom persiapan. Dukungan suara browser saat ini: ${speechSupportStatus}.`,
-    startButton: "Mulai sesi terpandu",
-    startingButton: "Memulai...",
-    consentError: "Harap konfirmasi persetujuan sebelum membuat sesi terpandu.",
-    setupError: "Harap lengkapi semua catatan persiapan sebelum membuat sesi terpandu.",
-    sessionReady: "Sesi siap.",
-    sessionReadyTitle: "Sesi siap",
-    sessionErrorTitle: "Sesi tidak dapat dimulai",
-    continueButton: "Lanjut ke sesi terpandu",
-    missingTutorialsError: "Minimal satu tutorial diperlukan sebelum memulai sesi terpandu.",
-  },
-  environmentFields: [
-    {
-      field: "deviceType",
-      label: "Jenis perangkat",
-      placeholder: "Pilih jenis perangkat",
-      options: [
-        { value: "Laptop", label: "Laptop" },
-        { value: "Desktop computer", label: "Komputer desktop" },
-        { value: "Tablet", label: "Tablet" },
-        { value: "Smartphone", label: "Smartphone" },
-      ],
-    },
-    {
-      field: "browserName",
-      label: "Nama browser",
-      placeholder: "Pilih browser",
-      options: [
-        { value: "Google Chrome desktop", label: "Google Chrome desktop" },
-        { value: "Microsoft Edge desktop", label: "Microsoft Edge desktop" },
-        { value: "Safari", label: "Safari" },
-        { value: "Firefox", label: "Firefox" },
-        { value: "Other browser", label: "Browser lain" },
-      ],
-    },
-    {
-      field: "microphonePermissionStatus",
-      label: "Status izin mikrofon",
-      placeholder: "Pilih status mikrofon",
-      options: [
-        { value: "Allowed", label: "Diizinkan" },
-        { value: "Blocked", label: "Diblokir" },
-        { value: "Prompt not shown yet", label: "Prompt belum muncul" },
-        { value: "Not checked", label: "Belum dicek" },
-      ],
-    },
-    {
-      field: "roomNoiseLevelNote",
-      label: "Tingkat kebisingan ruangan",
-      placeholder: "Pilih tingkat kebisingan",
-      options: [
-        { value: "Quiet room", label: "Ruangan tenang" },
-        { value: "Low background noise", label: "Sedikit suara latar" },
-        { value: "Moderate background noise", label: "Suara latar sedang" },
-        { value: "Noisy room", label: "Ruangan berisik" },
-      ],
-    },
-    {
-      field: "internetConnectionNote",
-      label: "Koneksi internet",
-      placeholder: "Pilih kondisi internet",
-      options: [
-        { value: "Stable connection", label: "Koneksi stabil" },
-        { value: "Slow but usable", label: "Lambat tetapi masih bisa digunakan" },
-        { value: "Unstable connection", label: "Koneksi tidak stabil" },
-        { value: "Disconnected", label: "Terputus" },
-      ],
-    },
-    {
-      field: "taskEnvironmentNote",
-      label: "Lingkungan tugas",
-      placeholder: "Pilih lingkungan tugas",
-      options: [
-        { value: "Desk-based hands-busy simulation", label: "Simulasi tangan sibuk di meja" },
-        { value: "Kitchen-like controlled setup", label: "Setup terkontrol seperti dapur" },
-        { value: "Workshop-like controlled setup", label: "Setup terkontrol seperti workshop" },
-        { value: "Other controlled setup", label: "Setup terkontrol lainnya" },
-      ],
-    },
-    {
-      field: "researcherObservationNote",
-      label: "Catatan persiapan tambahan",
-      placeholder: "Pilih catatan tambahan",
-      fullWidth: true,
-      options: [
-        { value: "No extra setup issue observed", label: "Tidak ada masalah persiapan tambahan" },
-        { value: "Participant needed setup clarification", label: "Peserta membutuhkan klarifikasi persiapan" },
-        { value: "Microphone or browser issue observed", label: "Masalah mikrofon atau browser terlihat" },
-        { value: "Internet or environment issue observed", label: "Masalah internet atau lingkungan terlihat" },
-        { value: "Facilitator intervention needed", label: "Intervensi fasilitator dibutuhkan" },
-      ],
-    },
-  ],
-  sequenceAssignments: {
-    AB: "Sentuh dulu, lalu suara",
-    BA: "Suara dulu, lalu sentuh",
-  },
-  tutorialRotations: {
-    rotation_a: "Rotasi A",
-    rotation_b: "Rotasi B",
-  },
-  sessionPage: {
-    ...en.sessionPage,
-    loading: "Memuat sesi terpandu...",
-    back: "Kembali ke persiapan terpandu",
-    unavailableTitle: "Sesi terpandu tidak tersedia",
-    unavailableFallback: "Sesi tidak ditemukan.",
-    eyebrow: "Sesi terpandu",
-    title: "Sesi terpandu Anda",
-    description:
-      "Ikuti kartu di bawah secara berurutan. Anda akan mencoba mode sentuh, mode suara, kuesioner singkat, dan umpan balik akhir.",
-    loadError: "Kami tidak dapat memuat sesi terpandu ini.",
-    progressTitle: "Langkah sesi terpandu",
-    modeLabel: (order) => `Mode ${order}`,
-    taskType: (trialType) => (trialType === "practice" ? "Latihan" : "Tugas"),
-    taskMeta: (trialType, tutorialId) => `${trialType === "practice" ? "Latihan" : "Tugas"} untuk ${tutorialId}`,
-    voiceHelper: "Gunakan perintah suara jika bisa. Tombol tetap tersedia jika diperlukan.",
-    touchHelper: "Gunakan tombol di layar untuk berpindah antar langkah tutorial.",
-    tutorialHelper: "Ikuti instruksi tutorial sesuai kecepatan Anda.",
-    startPractice: "Mulai latihan",
-    startTask: "Mulai tugas",
-    reviewTask: "Tinjau tugas selesai",
-    continueTask: "Lanjutkan tugas",
-    notStarted: "Belum dimulai",
-    completedIn: (seconds) => `Selesai${seconds ? ` dalam ${seconds}d` : ""}`,
-    inProgress: "Sedang berjalan",
-    questionnaireButton: "Jawab kuesioner",
-    finalFeedbackButton: "Selesaikan dengan umpan balik akhir",
-    noTasksTitle: "Belum ada tugas untuk sesi ini.",
-    noTasksDescription: "Kembali dan mulai sesi terpandu baru jika sesi ini terlihat belum lengkap.",
-    whatNextTitle: "Apa berikutnya?",
-    whatNextDescription: (taskCount) =>
-      `Selesaikan tugas di setiap mode, jawab kuesioner untuk mode tersebut, lalu akhiri dengan umpan balik akhir. Sesi ini memiliki ${taskCount} tugas.`,
-    progress: {
-      setupLabel: "Persiapan",
-      setupStatus: "Selesai",
-      tasksLabel: "Coba setiap mode",
-      tasksStatus: (completeCount, totalCount) => `${completeCount} dari ${totalCount} tugas selesai`,
-      noTasks: "Tidak ada tugas",
-      questionnairesLabel: "Kuesioner singkat",
-      questionnairesStatus: "Jawab satu setelah setiap mode",
-      feedbackLabel: "Umpan balik akhir",
-      feedbackStatus: "Selesaikan setelah kedua mode",
-    },
-  },
-  taskPage: {
-    ...en.taskPage,
-    loading: "Memuat tugas...",
-    back: "Kembali ke sesi terpandu",
-    unavailableTitle: "Tugas tidak tersedia",
-    unavailableFallback: "Tugas tidak ditemukan dalam sesi ini.",
-    title: "Ikuti tugas tutorial ini",
-    description: (mode) =>
-      `Tugas ini menggunakan ${mode}. Mulai saat Anda siap, ikuti tutorial, lalu selesaikan tugas sebelum kembali ke sesi terpandu.`,
-    loadError: "Kami tidak dapat memuat tugas ini.",
-    progressTitle: "Progres tugas",
-    whatNextTitle: "Apa yang perlu dilakukan berikutnya",
-    whatNextItems: (modeHelper) => [
-      "Mulai tugas saat Anda siap.",
-      modeHelper,
-      "Selesaikan tugas saat pekerjaan tutorial sudah selesai.",
-      "Kembali ke sesi terpandu untuk langkah berikutnya.",
-    ],
-    measuredScriptHeading: "Skrip tugas terukur",
-    practiceScriptHeading: "Skrip tugas latihan",
-    measuredMeta: ({ targetKeyword, targetStep, successCriteria }) =>
-      `Kata kunci target: ${targetKeyword || "belum diatur"}. Langkah target: ${targetStep || "belum diatur"}. Kriteria sukses: ${successCriteria}`,
-    startedStatus: "Tugas dimulai. Ikuti tutorial di bawah.",
-    finishedStatus: "Tugas selesai. Anda dapat kembali ke sesi terpandu.",
-    completedTitle: "Tugas selesai",
-    startTutorialTitle: "Mulai tugas untuk membuka tutorial",
-    startTutorialDescription: "Tutorial akan muncul di sini setelah tugas dimulai.",
-    embeddedBackLabel: "Kembali ke sesi terpandu",
-    voiceHelper: 'Coba perintah suara berbahasa Inggris seperti "next step", "repeat", dan "show materials". Tombol selalu tersedia.',
-    touchHelper: "Gunakan tombol di layar untuk berpindah antar langkah.",
-    tutorialHelper: "Gunakan kontrol tutorial untuk berpindah antar langkah.",
-    progress: {
-      startLabel: "Mulai",
-      startPending: "Mulai tugas ini terlebih dahulu",
-      complete: "Selesai",
-      taskLabel: "Ikuti tutorial",
-      inProgress: "Sedang berjalan",
-      waiting: "Menunggu dimulai",
-      finishLabel: "Akhiri",
-      finishStatus: "Akhiri setelah pekerjaan tutorial selesai",
-    },
-  },
-  susPage: {
-    ...en.susPage,
-    loading: "Memuat kuesioner...",
-    back: "Kembali ke sesi terpandu",
-    unavailableTitle: "Kuesioner tidak tersedia",
-    unavailableFallback: "Mode tidak ditemukan dalam sesi ini.",
-    eyebrow: "Kuesioner",
-    title: "Kuesioner kegunaan singkat",
-    description: (mode) =>
-      `Jawab pertanyaan ini hanya berdasarkan ${mode} yang baru saja Anda gunakan. Setelah menyimpan, kembali ke sesi terpandu untuk langkah berikutnya.`,
-    progressTitle: "Progres kuesioner",
-    savedStatus: "Terima kasih, jawaban Anda sudah disimpan.",
-    savedTitle: "Kuesioner disimpan",
-    notSavedTitle: "Kuesioner tidak tersimpan",
-    backButton: "Kembali ke sesi terpandu",
-    progress: {
-      modeTask: (modeTitle) => `Tugas ${modeTitle.toLowerCase()}`,
-      modeStatus: "Selesaikan mode ini terlebih dahulu",
-      questionnaireLabel: "Kuesioner",
-      questionnaireStatus: "Jawab semua 10 item",
-      continueLabel: "Lanjut",
-      continueStatus: "Kembali ke sesi terpandu",
-    },
-  },
-  susForm: {
-    ...en.susForm,
-    eyebrow: "Kuesioner singkat",
-    description:
-      "Pilih satu jawaban untuk setiap item hanya berdasarkan kondisi ini. Skor SUS 0-100 mendukung perbandingan persepsi kegunaan RQ1.",
-    items: susItemsId,
-    scaleLabels: ["Sangat tidak setuju", "Tidak setuju", "Netral", "Setuju", "Sangat setuju"],
-    submit: "Kirim kuesioner",
-    submitting: "Mengirim...",
-    incomplete: "Jawab semua item untuk mengirim.",
-  },
-  debriefPage: {
-    ...en.debriefPage,
-    loading: "Memuat formulir umpan balik...",
-    back: "Kembali ke sesi terpandu",
-    unavailableTitle: "Formulir umpan balik tidak tersedia",
-    unavailableFallback: "Sesi tidak ditemukan.",
-    eyebrow: "Umpan balik akhir",
-    title: "Umpan balik akhir",
-    description: "Hampir selesai. Beri tahu kami apa yang berjalan baik dan apa yang bisa diperbaiki.",
-    progressTitle: "Langkah terakhir",
-    completeStatus: "Sesi selesai. Terima kasih atas umpan balik Anda.",
-    completeTitle: "Sesi selesai",
-    notSavedTitle: "Umpan balik tidak tersimpan",
-    homeButton: "Kembali ke beranda",
-    progress: [
-      { id: "tasks", label: "Tugas terpandu", status: "Selesaikan mode tutorial" },
-      { id: "questionnaires", label: "Kuesioner", status: "Jawab setelah setiap mode" },
-      { id: "feedback", label: "Umpan balik akhir", status: "Kirim formulir ini untuk selesai" },
-    ],
-  },
-  debriefForm: {
-    ...en.debriefForm,
-    eyebrow: "Umpan balik akhir",
-    title: "Ceritakan pengalaman Anda",
-    description: "Jawaban singkat tidak masalah. Bagikan apa pun yang membuat tutorial lebih mudah atau lebih sulit diikuti.",
-    preferredMode: "Mode yang disukai",
-    selectOne: "Pilih satu",
-    touch: "Sentuh",
-    voice: "Suara",
-    noPreference: "Tidak ada preferensi",
-    fields: {
-      easiestPart: "Apa yang paling mudah?",
-      hardestPart: "Apa yang paling sulit?",
-      voiceProblems: "Masalah kegunaan apa yang muncul di mode suara?",
-      touchProblems: "Masalah kegunaan apa yang muncul di mode sentuh?",
-      commandClarity: "Apakah perintah suara jelas?",
-      recoveryEffort: "Seberapa besar usaha yang dibutuhkan untuk pulih dari kesalahan suara?",
-      fallbackComments: "Bagaimana tombol cadangan bekerja untuk Anda?",
-      designImplications: "Implikasi desain apa yang perlu dipertimbangkan?",
-      suggestions: "Apa yang bisa membuat ini lebih baik?",
-    },
-    submit: "Kirim umpan balik",
-    submitting: "Mengirim...",
-  },
-  taskTrial: {
-    ...en.taskTrial,
-    practiceEyebrow: "Tugas latihan",
-    measuredEyebrow: "Tugas",
-    recorded: (seconds) => `${seconds ?? 0}d tercatat`,
-    elapsed: (seconds) => `${seconds}d`,
-    modeLine: (mode, tutorialId) => `${mode} untuk tutorial ${tutorialId}`,
-    starting: "Memulai tugas...",
-    start: "Mulai tugas",
-    startedAt: (startedAt, endedAt, completed) =>
-      `Dimulai pada ${startedAt}${completed ? ` dan selesai pada ${endedAt}.` : ". Selesaikan tugas ini saat pekerjaan tutorial sudah selesai."}`,
-    finishing: "Menyelesaikan...",
-    finished: "Tugas selesai",
-    finish: "Selesaikan tugas",
-    facilitatorSummary: "Detail tugas fasilitator",
-    facilitatorDescription: "Gunakan bagian ini hanya saat hasil tugas atau catatan fasilitator perlu dicatat.",
-    outcomeLabel: "Hasil tugas",
-    outcomes: {
-      successful: "Berhasil",
-      partially_successful: "Sebagian berhasil",
-      unsuccessful: "Tidak berhasil",
-    },
-    invalidLabel: "Tandai tugas ini tidak valid.",
-    invalidReason: "Alasan tugas tidak valid",
-    taskNote: "Catatan tugas",
-    notRecorded: "belum tercatat",
-  },
-  observerNotes: {
-    ...en.observerNotes,
-    summary: "Catatan fasilitator",
-    description: "Catatan opsional khusus fasilitator untuk masalah, detail persiapan, atau hal yang memengaruhi tugas ini.",
-    rq3Reminder: "Catatan observer direkomendasikan sebagai bukti RQ3, terutama saat peserta memulihkan masalah suara atau memakai touch fallback.",
-    noteLabel: "Catatan fasilitator",
-    severityLabel: "Tingkat keparahan",
-    severities: {
-      note: "Catatan",
-      minor: "Masalah kecil",
-      major: "Masalah besar",
-      critical: "Masalah kritis",
-    },
-    tagsLabel: "Tag",
-    tagsPlaceholder: "Pilih atau ketik tag",
-    tagHint: en.observerNotes.tagHint,
-    saveNote: "Simpan catatan fasilitator",
-    setupLabel: "Catatan persiapan atau browser",
-    saveSetup: "Simpan catatan persiapan",
-    noteSaved: "Catatan fasilitator disimpan.",
-    setupSaved: "Catatan persiapan disimpan.",
-  },
-  tasks: {
-    practiceGoal: "Latih mode navigasi yang dipilih sebelum tugas terukur.",
-    measuredGoal: "Selesaikan skrip navigasi tutorial hands-busy yang ditetapkan menggunakan mode yang dipilih.",
-    practiceLabel: "Tugas latihan",
-    measuredLabel: "Tugas tutorial terukur",
-    practiceScript: [
-      'Gunakan perintah "show materials".',
-      'Gunakan perintah "next step".',
-      'Gunakan perintah "repeat".',
-      "Kembali ke sesi terpandu saat Anda sudah familier dengan kontrol.",
-    ],
-    measuredScript: ({ targetKeyword, targetStep }) => [
-      'Gunakan perintah "show materials".',
-      'Gunakan perintah "next step".',
-      'Gunakan perintah "repeat".',
-      `Gunakan perintah "search for ${targetKeyword}".`,
-      `Gunakan perintah "go to step ${targetStep}".`,
-      'Gunakan perintah "previous step".',
-      `Kembali ke langkah ${targetStep}.`,
-      "Selesaikan tugas.",
-    ],
-    practiceSuccess: "Peserta memahami kontrol yang tersedia sebelum kondisi terukur.",
-    measuredSuccess: "Peserta mencapai instruksi target dan menyelesaikan tugas tanpa intervensi fasilitator.",
-    targetKeywordFallback: "materials",
-  },
-  tutorial: {
-    ...en.tutorial,
-    loading: "Memuat tutorial...",
-    unavailableTitle: "Tutorial tidak tersedia",
-    unavailableDescription: "Kami tidak dapat memuat tutorial ini. Silakan coba tutorial lain.",
-    sectionLabel: "Tutorial",
-    currentStepLabel: "Langkah tutorial saat ini",
-    stepProgress: (current, total) => `Langkah ${current} dari ${total}`,
-    instructionTitle: "Instruksi",
-    toolsTitle: "Alat",
-    toolsAria: "Aksi tutorial",
-    navAria: "Kontrol navigasi tutorial",
-    materialsTitle: "Bahan",
-    voiceCommandsTitle: "Perintah suara",
-    noStepsMessage: "Tidak ada langkah yang tersedia.",
-    movedToStep: (step, total) => `Pindah ke langkah ${step} dari ${total}.`,
-    movedToStepShort: (step) => `Pindah ke langkah ${step}.`,
-    repeatStep: (step, instruction) => `Ulangi langkah ${step}: ${instruction}`,
-    materialsShown: "Bahan ditampilkan.",
-    materialsHidden: "Bahan disembunyikan.",
-    materialsOpened: "Panel bahan dibuka.",
-    materialsClosed: "Panel bahan ditutup.",
-    overviewShown: "Ringkasan tutorial ditampilkan.",
-    overviewHidden: "Ringkasan tutorial disembunyikan.",
-    completeMessage: (count) => `Tutorial selesai. Anda meninjau ${count} langkah.`,
-    currentStepLive: (step, total) => `Langkah saat ini ${step} dari ${total}.`,
-    topMessage: "Pindah ke bagian atas.",
-    bottomMessage: "Pindah ke bagian bawah.",
-    scrolledDown: "Menggulir ke bawah.",
-    scrolledUp: "Menggulir ke atas.",
-    lastStepError: "Anda sudah berada di langkah terakhir yang tersedia.",
-    firstStepError: "Anda sudah berada di langkah pertama.",
-    missingInstructionError: "Instruksi saat ini tidak tersedia.",
-    missingSearchError: "Harap sertakan kata pencarian.",
-    searchingTutorial: (query) => `Mencari "${query}" di tutorial ini.`,
-    searchingFor: (query) => `Mencari "${query}".`,
-    showingCommands: "Menampilkan contoh perintah suara.",
-    listeningStopped: "Pendengaran suara dihentikan. Anda tetap bisa menggunakan tombol.",
-    stepOutOfRange: (count) => `Langkah itu tidak tersedia. Coba angka antara 1 dan ${count}.`,
-    unsupportedCommand: "Saya belum mengenali perintah itu.",
-    voiceButtonOn: "Hentikan navigasi suara",
-    voiceButtonOff: "Mulai navigasi suara",
-    voiceUnavailable: "Navigasi suara tidak tersedia",
-    commandButton: "Tampilkan perintah suara",
-    commandUnavailable: "Perintah suara tidak tersedia untuk tugas ini",
-    previousStep: "Pergi ke langkah sebelumnya",
-    repeatInstruction: "Ulangi instruksi saat ini",
-    finishTutorial: "Selesaikan tutorial",
-    nextStep: "Pergi ke langkah berikutnya",
-    showMaterials: "Tampilkan bahan",
-    hideMaterials: "Sembunyikan bahan",
-    noMaterials: "Tidak ada bahan tercatat.",
-    noMaterialsLong: "Tidak ada bahan tercatat untuk tutorial ini.",
-    closePanel: (title) => `Tutup ${title}`,
-    primaryControls: "Kontrol tutorial utama",
-    touchControls: {
-      aria: "Kontrol tutorial sentuh",
-      previous: "Sebelumnya",
-      repeat: "Ulangi",
-      overview: "Ringkasan",
-      hideOverview: "Sembunyikan ringkasan",
-      next: "Berikutnya",
-      complete: "Selesai",
-    },
-    search: {
-      aria: "Cari di dalam tutorial",
-      heading: "Cari",
-      label: "Cari langkah",
-      placeholder: "Cari bahan atau langkah...",
-      matchingSteps: (count) => `${count} langkah cocok`,
-      stepLabel: (step) => `Langkah ${step}`,
-    },
-    overview: {
-      aria: "Ringkasan langkah tutorial",
-      show: "Tampilkan ringkasan",
-      hide: "Sembunyikan ringkasan",
-      heading: "Ringkasan",
-      note: "Buka ringkasan untuk melompat antar langkah.",
-      stepLabel: (step) => `Langkah ${step}`,
-    },
-    categories: {
-      Cooking: "Memasak",
-      Cleaning: "Membersihkan",
-      Organizing: "Merapikan",
-      general: "Umum",
-    },
-    difficulty: {
-      Beginner: "Pemula",
-    },
-    risk: {
-      low: "rendah",
-    },
-  },
-  voice: {
-    ...en.voice,
-    heard: "Terdengar:",
-    feedbackAria: "Umpan balik suara",
-    unavailableBrowser: "Suara tidak tersedia di browser ini.",
-    unavailableLong: "Perintah suara tidak tersedia di browser ini. Anda tetap bisa menggunakan tombol.",
-    listeningAgain: "Mendengarkan lagi...",
-    listening: "Mendengarkan.",
-    processing: "Memproses perintah suara.",
-    voiceOn: "Suara aktif.",
-    voiceOff: "Suara nonaktif.",
-    commandsOn: "Perintah suara aktif. Ucapkan perintah kapan saja.",
-    commandsOff: "Perintah suara nonaktif.",
-    unknownCommand: (transcript) =>
-      `Saya mendengar "${transcript}", tetapi itu bukan perintah yang didukung. Coba "next step", "previous step", "repeat", "show materials", atau "search for <keyword>".`,
-    commandCompleted: "Perintah suara selesai.",
-    dispatchError: "Perintah suara itu tidak dapat diselesaikan.",
-    recognitionStartError: "Pengenalan suara tidak dapat dimulai.",
-    noSpeechPaused: "Tidak ada suara terdeteksi. Perintah suara dijeda. Tekan Mulai suara saat Anda siap.",
-    microphoneBlocked: "Akses mikrofon diblokir. Izinkan akses mikrofon untuk menggunakan perintah suara.",
-    noMicrophone: "Tidak ada mikrofon terdeteksi. Periksa mikrofon dan coba lagi.",
-    networkError: "Perintah suara mengalami masalah jaringan. Anda tetap bisa menggunakan tombol.",
-    noSpeech: "Tidak ada suara terdeteksi. Coba lagi atau gunakan tombol.",
-    unsupportedBrowserBest: "Perintah suara tidak tersedia di browser ini. Google Chrome desktop bekerja paling baik.",
-    genericError: "Perintah suara mengalami masalah. Anda tetap bisa menggunakan tombol.",
-    hints: [
-      "show materials",
-      "next step",
-      "repeat",
-      "search for <keyword>",
-      "go to step 4",
-      "previous step",
-      "scroll down",
-      "scroll up",
-      "stop listening",
-    ],
-    preferredHints: [
-      "show materials",
-      "next step",
-      "repeat",
-      "search for <keyword>",
-      "go to step 4",
-      "previous step",
-    ],
-  },
-};
-
-export const studyCopy = { en, id };
+export const studyCopy = { en };
 
 export function normalizeStudyLanguage(value) {
   return SUPPORTED_STUDY_LANGUAGES.includes(value) ? value : DEFAULT_STUDY_LANGUAGE;
@@ -1087,7 +563,8 @@ export function getStudyCopy(language = DEFAULT_STUDY_LANGUAGE) {
 }
 
 export function getSpeechRecognitionLocale(language = DEFAULT_STUDY_LANGUAGE) {
-  return normalizeStudyLanguage(language) === "id" ? "id-ID" : "en-US";
+  normalizeStudyLanguage(language);
+  return "en-US";
 }
 
 export function formatStudyMode(modality, language = DEFAULT_STUDY_LANGUAGE, variant = "title") {
@@ -1098,21 +575,6 @@ export function formatStudyMode(modality, language = DEFAULT_STUDY_LANGUAGE, var
 }
 
 export function translateTargetKeyword(keyword = "", language = DEFAULT_STUDY_LANGUAGE) {
-  if (normalizeStudyLanguage(language) !== "id") return keyword;
-
-  const dictionary = {
-    cream: "krim",
-    milk: "susu",
-    sugar: "gula",
-    egg: "telur",
-    cheese: "keju",
-    wrap: "wrap",
-    rice: "nasi",
-    sweetener: "pemanis",
-    bowl: "mangkuk",
-    microwave: "microwave",
-    materials: "bahan",
-  };
-
-  return dictionary[String(keyword).toLowerCase()] || keyword;
+  normalizeStudyLanguage(language);
+  return keyword;
 }

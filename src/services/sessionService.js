@@ -13,6 +13,7 @@ const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
 export async function createSession({
   participantId,
   participantCode,
+  participantProfile = {},
   consentConfirmed,
   environment = {},
   sequenceAssignment = "",
@@ -30,6 +31,7 @@ export async function createSession({
   const sessionData = {
     participantId,
     participantCode,
+    participantProfile: normalizeParticipantProfile(participantProfile),
     schemaVersion: SCHEMA_VERSION,
     consentConfirmed: true,
     status: "created",
@@ -162,6 +164,16 @@ function normalizeEnvironment(environment) {
     internetConnectionNote: environment.internetConnectionNote || "",
     taskEnvironmentNote: environment.taskEnvironmentNote || "",
     researcherObservationNote: environment.researcherObservationNote || "",
+  };
+}
+
+function normalizeParticipantProfile(participantProfile = {}) {
+  return {
+    fullName: String(participantProfile.fullName || "").trim(),
+    email: String(participantProfile.email || "").trim(),
+    ageRange: String(participantProfile.ageRange || "").trim(),
+    englishAbility: String(participantProfile.englishAbility || "").trim(),
+    tutorialAppUsage: String(participantProfile.tutorialAppUsage || "").trim(),
   };
 }
 

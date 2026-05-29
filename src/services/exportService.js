@@ -45,27 +45,27 @@ export async function generateExportFiles() {
     {
       fileName: EXPORT_FILENAMES.susResponses,
       mimeType: "text/csv;charset=utf-8",
-      content: buildSusResponsesCsv(data.susResponses || []),
+      content: buildSusResponsesCsv(data),
     },
     {
       fileName: EXPORT_FILENAMES.voiceLogs,
       mimeType: "text/csv;charset=utf-8",
-      content: buildVoiceLogsCsv(sessionLinkedLogs.filter((log) => log.modality === "voice")),
+      content: buildVoiceLogsCsv(data, sessionLinkedLogs.filter((log) => log.modality === "voice")),
     },
     {
       fileName: EXPORT_FILENAMES.touchLogs,
       mimeType: "text/csv;charset=utf-8",
-      content: buildTouchLogsCsv(sessionLinkedLogs.filter((log) => log.modality === "touch")),
+      content: buildTouchLogsCsv(data, sessionLinkedLogs.filter((log) => log.modality === "touch")),
     },
     {
       fileName: EXPORT_FILENAMES.observerNotes,
       mimeType: "text/csv;charset=utf-8",
-      content: buildObserverNotesCsv(data.observerNotes || []),
+      content: buildObserverNotesCsv(data),
     },
     {
       fileName: EXPORT_FILENAMES.debriefResponses,
       mimeType: "text/csv;charset=utf-8",
-      content: buildDebriefResponsesCsv(data.debriefResponses || []),
+      content: buildDebriefResponsesCsv(data),
     },
     {
       fileName: EXPORT_FILENAMES.fullSessions,
@@ -120,6 +120,7 @@ function buildTaskTrialsCsv(data) {
   return toCsv(data.taskTrials || [], [
     { header: "participantCode", value: (row) => row.participantCode || context.getSession(row)?.participantCode || "" },
     { header: "participantId", key: "participantId" },
+    ...participantProfileColumns(context),
     { header: "sessionId", key: "sessionId" },
     { header: "sequenceAssignment", value: (row) => row.sequenceAssignment || context.getSession(row)?.sequenceAssignment || "" },
     { header: "tutorialRotation", value: (row) => row.tutorialRotation || context.getSession(row)?.tutorialRotation || "" },
@@ -161,10 +162,12 @@ function buildTaskTrialsCsv(data) {
   ]);
 }
 
-function buildSusResponsesCsv(susResponses) {
-  return toCsv(susResponses, [
+function buildSusResponsesCsv(data) {
+  const context = buildSessionContext(data);
+  return toCsv(data.susResponses || [], [
     { header: "participantCode", key: "participantCode" },
     { header: "participantId", key: "participantId" },
+    ...participantProfileColumns(context),
     { header: "sessionId", key: "sessionId" },
     { header: "conditionId", key: "conditionId" },
     { header: "conditionOrder", key: "conditionOrder" },
@@ -178,10 +181,12 @@ function buildSusResponsesCsv(susResponses) {
   ]);
 }
 
-function buildVoiceLogsCsv(voiceLogs) {
+function buildVoiceLogsCsv(data, voiceLogs) {
+  const context = buildSessionContext(data);
   return toCsv(voiceLogs, [
     { header: "participantCode", key: "participantCode" },
     { header: "participantId", key: "participantId" },
+    ...participantProfileColumns(context),
     { header: "sessionId", key: "sessionId" },
     { header: "conditionId", key: "conditionId" },
     { header: "conditionOrder", key: "conditionOrder" },
@@ -210,10 +215,12 @@ function buildVoiceLogsCsv(voiceLogs) {
   ]);
 }
 
-function buildTouchLogsCsv(touchLogs) {
+function buildTouchLogsCsv(data, touchLogs) {
+  const context = buildSessionContext(data);
   return toCsv(touchLogs, [
     { header: "participantCode", key: "participantCode" },
     { header: "participantId", key: "participantId" },
+    ...participantProfileColumns(context),
     { header: "sessionId", key: "sessionId" },
     { header: "conditionId", key: "conditionId" },
     { header: "conditionOrder", key: "conditionOrder" },
@@ -230,10 +237,12 @@ function buildTouchLogsCsv(touchLogs) {
   ]);
 }
 
-function buildObserverNotesCsv(observerNotes) {
-  return toCsv(observerNotes, [
+function buildObserverNotesCsv(data) {
+  const context = buildSessionContext(data);
+  return toCsv(data.observerNotes || [], [
     { header: "participantCode", key: "participantCode" },
     { header: "participantId", key: "participantId" },
+    ...participantProfileColumns(context),
     { header: "sessionId", key: "sessionId" },
     { header: "conditionId", key: "conditionId" },
     { header: "taskId", key: "taskId" },
@@ -245,10 +254,12 @@ function buildObserverNotesCsv(observerNotes) {
   ]);
 }
 
-function buildDebriefResponsesCsv(debriefResponses) {
-  return toCsv(debriefResponses, [
+function buildDebriefResponsesCsv(data) {
+  const context = buildSessionContext(data);
+  return toCsv(data.debriefResponses || [], [
     { header: "participantCode", key: "participantCode" },
     { header: "participantId", key: "participantId" },
+    ...participantProfileColumns(context),
     { header: "sessionId", key: "sessionId" },
     { header: "preferredModality", value: (row) => row.responses?.preferredModality || "" },
     { header: "easiestPart", value: (row) => row.responses?.easiestPart || "" },
@@ -265,8 +276,10 @@ function buildDebriefResponsesCsv(debriefResponses) {
 }
 
 function buildAnalysisReadyCsv(data) {
+  const context = buildSessionContext(data);
   return toCsv(buildAnalysisReadyRows(data), [
     { header: "participantCode", key: "participantCode" },
+    ...participantProfileColumns(context),
     { header: "sequenceAssignment", key: "sequenceAssignment" },
     { header: "tutorialRotation", key: "tutorialRotation" },
     { header: "touch_task_duration_seconds", key: "touch_task_duration_seconds" },
@@ -313,11 +326,29 @@ function getRecordCounts(data) {
 }
 
 function buildSessionContext(data) {
+  const participants = data.participants || [];
   const sessions = data.sessions || [];
+  const participantById = new Map(participants.map((participant) => [participant.id, participant]));
+  const participantByCode = new Map(participants.map((participant) => [participant.participantCode, participant]));
   const sessionById = new Map(sessions.map((session) => [session.id, session]));
 
   function getSession(row) {
     return sessionById.get(row.sessionId) || null;
+  }
+
+  function getParticipant(row) {
+    const session = getSession(row);
+    return (
+      participantById.get(row.participantId || session?.participantId) ||
+      participantByCode.get(row.participantCode || session?.participantCode) ||
+      null
+    );
+  }
+
+  function getParticipantProfile(row) {
+    const session = getSession(row);
+    const participant = getParticipant(row);
+    return normalizeParticipantProfile(session?.participantProfile || participant?.participantProfile || {});
   }
 
   function getCondition(row) {
@@ -330,8 +361,30 @@ function buildSessionContext(data) {
 
   return {
     getSession,
+    getParticipant,
+    getParticipantProfile,
     getCondition,
     getTask,
+  };
+}
+
+function participantProfileColumns(context) {
+  return [
+    { header: "participantName", value: (row) => context.getParticipantProfile(row).fullName },
+    { header: "participantEmail", value: (row) => context.getParticipantProfile(row).email },
+    { header: "ageRange", value: (row) => context.getParticipantProfile(row).ageRange },
+    { header: "englishAbility", value: (row) => context.getParticipantProfile(row).englishAbility },
+    { header: "tutorialAppUsage", value: (row) => context.getParticipantProfile(row).tutorialAppUsage },
+  ];
+}
+
+function normalizeParticipantProfile(participantProfile = {}) {
+  return {
+    fullName: participantProfile.fullName || "",
+    email: participantProfile.email || "",
+    ageRange: participantProfile.ageRange || "",
+    englishAbility: participantProfile.englishAbility || "",
+    tutorialAppUsage: participantProfile.tutorialAppUsage || "",
   };
 }
 
