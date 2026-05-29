@@ -69,8 +69,60 @@ function SessionDetail({ session, dataSource }) {
           <DetailItem label="User code" value={session.participantCode || session.participantId} />
           <DetailItem label="Participant name" value={participantProfile.fullName} />
           <DetailItem label="Email" value={participantProfile.email} />
-          <DetailItem label="Age range" value={participantProfile.ageRange} />
-          <DetailItem label="English ability" value={formatLabel(participantProfile.englishAbility)} />
+          <DetailItem
+            label="Age range"
+            value={
+              <span style={{ display: "inline-flex", alignItems: "center" }}>
+                <span>{participantProfile.ageRange || "Not recorded"}</span>
+                {participantProfile.ageRange &&
+                  participantProfile.ageRange !== "18-24" &&
+                  participantProfile.ageRange !== "25-34" && (
+                    <span
+                      className="screening-warning"
+                      style={{
+                        marginLeft: "0.5rem",
+                        color: "#dc2626",
+                        background: "#fee2e2",
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        padding: "0.1rem 0.4rem",
+                        borderRadius: "0.25rem",
+                        border: "1px solid #fca5a5",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      ⚠️ Out of Target (18-35)
+                    </span>
+                  )}
+              </span>
+            }
+          />
+          <DetailItem
+            label="English ability"
+            value={
+              <span style={{ display: "inline-flex", alignItems: "center" }}>
+                <span>{formatLabel(participantProfile.englishAbility)}</span>
+                {participantProfile.englishAbility === "not_comfortable" && (
+                  <span
+                    className="screening-warning"
+                    style={{
+                      marginLeft: "0.5rem",
+                      color: "#dc2626",
+                      background: "#fee2e2",
+                      fontSize: "0.75rem",
+                      fontWeight: "600",
+                      padding: "0.1rem 0.4rem",
+                      borderRadius: "0.25rem",
+                      border: "1px solid #fca5a5",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    ⚠️ Inadequate (Target: English commands)
+                  </span>
+                )}
+              </span>
+            }
+          />
           <DetailItem label="Tutorial app usage" value={formatLabel(participantProfile.tutorialAppUsage)} />
           <DetailItem label="Sequence" value={session.sequenceAssignment} />
           <DetailItem label="Tutorial rotation" value={session.tutorialRotation} />

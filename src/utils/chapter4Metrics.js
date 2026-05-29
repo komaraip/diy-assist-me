@@ -225,6 +225,8 @@ export function buildAnalysisReadyRows(data = {}) {
   const interactionLogs = data.interactionLogs || [];
   const sessions = getAnalysisSessions(data);
   const validationByTrialKey = mapValidationsByTrialKey(buildTaskTrialValidation(data));
+  const participants = data.participants || [];
+  const participantMap = new Map(participants.map((p) => [p.id, p]));
 
   return sessions.map((session) => {
     const sessionTrials = taskTrials.filter((trial) => trial.sessionId === session.id);
@@ -240,6 +242,12 @@ export function buildAnalysisReadyRows(data = {}) {
       : interactionLogs.filter((log) => log.sessionId === session.id && log.modality === "voice");
     const voiceCommandLogs = voiceLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined);
     const voiceFallbackTouchCount = voiceValidation?.fallbackTouchActionCount || 0;
+
+    const profile = session.participantProfile || participantMap.get(session.participantId)?.participantProfile || {};
+    const hasProfile = !!(profile.fullName || profile.email || profile.ageRange || profile.englishAbility);
+    const ageInvalid = hasProfile && profile.ageRange && profile.ageRange !== "18-24" && profile.ageRange !== "25-34";
+    const languageInvalid = hasProfile && profile.englishAbility === "not_comfortable";
+
     const invalidReasons = [
       !touchTrial ? "missing_touch_trial" : "",
       !voiceTrial ? "missing_voice_trial" : "",
@@ -250,6 +258,8 @@ export function buildAnalysisReadyRows(data = {}) {
         : "",
       !touchSus ? "missing_touch_sus" : "",
       !voiceSus ? "missing_voice_sus" : "",
+      ageInvalid ? "demographic_age_outside_criteria" : "",
+      languageInvalid ? "demographic_language_inadequate" : "",
     ].filter(Boolean);
 
     return {
