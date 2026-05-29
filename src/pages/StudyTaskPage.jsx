@@ -169,17 +169,24 @@ export function StudyTaskPage() {
         ) : null}
       </section>
 
-      <TaskTrialControls
-        task={task}
-        taskTrial={activeTrial}
-        isStarting={isStarting}
-        isCompleting={isCompleting}
-        onStart={handleStartTrial}
-        onComplete={handleCompleteTrial}
-        language={language}
-      />
-
-      {statusMessage ? <p className="status-note" role="status">{statusMessage}</p> : null}
+      <details className="facilitator-notes-panel">
+        <summary>🔒 Researcher Console (Controls & Notes)</summary>
+        <div className="facilitator-console-content">
+          <TaskTrialControls
+            task={task}
+            taskTrial={activeTrial}
+            isStarting={isStarting}
+            isCompleting={isCompleting}
+            onStart={handleStartTrial}
+            onComplete={handleCompleteTrial}
+            language={language}
+          />
+          {statusMessage ? <p className="status-note" role="status" style={{ marginTop: "0.5rem" }}>{statusMessage}</p> : null}
+          <div style={{ marginTop: "1.25rem", borderTop: "1px dashed var(--border)", paddingTop: "1.25rem" }}>
+            <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
+          </div>
+        </div>
+      </details>
 
       {canRenderTutorial ? (
         <TutorialDetailPage
@@ -197,8 +204,6 @@ export function StudyTaskPage() {
           <p className="study-context-line">{copy.taskPage.startTutorialDescription}</p>
         </section>
       )}
-
-      <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
     </section>
   );
 }

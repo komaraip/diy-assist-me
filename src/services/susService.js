@@ -1,6 +1,6 @@
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
-import { createLocalRecord } from "./localStore.js";
+import { createLocalRecord, listLocalRecords } from "./localStore.js";
 import { calculateSusScore, hasCompleteSusResponses } from "../utils/susScoring.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 
@@ -58,5 +58,33 @@ export async function submitSusResponse({
     const localResult = createLocalRecord("susResponses", record);
     if (localResult.error) return localResult;
     return serviceSuccess(localResult.data, "local", FIREBASE_FALLBACK_WARNING);
+  }
+}
+
+export async function listSusResponsesBySession(sessionId) {
+  const source = isFirebaseEnabled && db ? "firebase" : "local";
+
+  if (!sessionId) {
+    return serviceFailure("Session id is required.", source, []);
+  }
+
+  if (!isFirebaseEnabled || !db) {
+    const localResult = listLocalRecords("susResponses");
+    if (localResult.error) return localResult;
+    return serviceSuccess(
+      (localResult.data || []).filter((item) => item.sessionId === sessionId),
+      "local",
+      "Questionnaire responses were loaded from this device."
+    );
+  }
+
+  try {
+    const snapshot = await getDocs(query(collection(db, "susResponses"), where("sessionId", "==", sessionId)));
+    const susResponses = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+    return serviceSuccess(susResponses, "firebase");
+  } catch {
+    const localResult = listLocalRecords("susResponses");
+    const susResponses = (localResult.data || []).filter((item) => item.sessionId === sessionId);
+    return serviceSuccess(susResponses, "local", "Questionnaire responses were loaded from this device.");
   }
 }

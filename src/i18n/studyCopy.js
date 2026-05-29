@@ -270,7 +270,6 @@ const en = {
     scaleLabels: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
     submit: "Submit questionnaire",
     submitting: "Submitting...",
-    incomplete: "Answer all items to submit.",
   },
   debriefPage: {
     loading: "Loading debrief form...",

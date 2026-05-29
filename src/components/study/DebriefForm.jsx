@@ -52,15 +52,26 @@ export function DebriefForm({ isSubmitting, onSubmit, language = "en" }) {
         </select>
       </label>
 
-      <Textarea label={copy.fields.easiestPart} value={responses.easiestPart} onChange={(value) => updateResponse("easiestPart", value)} />
-      <Textarea label={copy.fields.hardestPart} value={responses.hardestPart} onChange={(value) => updateResponse("hardestPart", value)} />
-      <Textarea label={copy.fields.voiceProblems} value={responses.voiceProblems} onChange={(value) => updateResponse("voiceProblems", value)} />
-      <Textarea label={copy.fields.touchProblems} value={responses.touchProblems} onChange={(value) => updateResponse("touchProblems", value)} />
-      <Textarea label={copy.fields.commandClarity} value={responses.commandClarity} onChange={(value) => updateResponse("commandClarity", value)} />
-      <Textarea label={copy.fields.recoveryEffort} value={responses.recoveryEffort} onChange={(value) => updateResponse("recoveryEffort", value)} />
-      <Textarea label={copy.fields.fallbackComments} value={responses.fallbackComments} onChange={(value) => updateResponse("fallbackComments", value)} />
-      <Textarea label={copy.fields.designImplications} value={responses.designImplications} onChange={(value) => updateResponse("designImplications", value)} />
-      <Textarea label={copy.fields.suggestions} value={responses.suggestions} onChange={(value) => updateResponse("suggestions", value)} />
+      <details className="debrief-accordion">
+        <summary>Usability & Modality Problems (Optional)</summary>
+        <div className="accordion-content">
+          <Textarea label={copy.fields.voiceProblems} value={responses.voiceProblems} onChange={(value) => updateResponse("voiceProblems", value)} />
+          <Textarea label={copy.fields.touchProblems} value={responses.touchProblems} onChange={(value) => updateResponse("touchProblems", value)} />
+          <Textarea label={copy.fields.commandClarity} value={responses.commandClarity} onChange={(value) => updateResponse("commandClarity", value)} />
+          <Textarea label={copy.fields.recoveryEffort} value={responses.recoveryEffort} onChange={(value) => updateResponse("recoveryEffort", value)} />
+        </div>
+      </details>
+
+      <details className="debrief-accordion">
+        <summary>Suggestions & Design Implications (Optional)</summary>
+        <div className="accordion-content">
+          <Textarea label={copy.fields.easiestPart} value={responses.easiestPart} onChange={(value) => updateResponse("easiestPart", value)} />
+          <Textarea label={copy.fields.hardestPart} value={responses.hardestPart} onChange={(value) => updateResponse("hardestPart", value)} />
+          <Textarea label={copy.fields.designImplications} value={responses.designImplications} onChange={(value) => updateResponse("designImplications", value)} />
+          <Textarea label={copy.fields.suggestions} value={responses.suggestions} onChange={(value) => updateResponse("suggestions", value)} />
+          <Textarea label={copy.fields.fallbackComments} value={responses.fallbackComments} onChange={(value) => updateResponse("fallbackComments", value)} />
+        </div>
+      </details>
 
       <button type="submit" className="button primary-button form-action" disabled={isSubmitting}>
         {isSubmitting ? copy.submitting : copy.submit}

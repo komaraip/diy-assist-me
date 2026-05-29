@@ -32,20 +32,21 @@ export function SUSForm({ condition, isSubmitting, onSubmit, language = "en" }) 
       {items.map((item, index) => {
         const itemNumber = index + 1;
         return (
-          <fieldset className="sus-item" key={item}>
-            <legend>{itemNumber}. {item}</legend>
+          <div className="sus-item" key={item}>
+            <h3 className="sus-question-text">{itemNumber}. {item}</h3>
             <div className="sus-scale">
               {copy.susForm.scaleLabels.map((label, scaleIndex) => {
                 const value = scaleIndex + 1;
                 const id = `sus-${itemNumber}-${value}`;
+                const isSelected = responses[`item${itemNumber}`] === value;
                 return (
-                  <label key={id} htmlFor={id}>
+                  <label key={id} htmlFor={id} className={isSelected ? "selected" : ""}>
                     <input
                       id={id}
                       type="radio"
                       name={`item${itemNumber}`}
                       value={value}
-                      checked={responses[`item${itemNumber}`] === value}
+                      checked={isSelected}
                       onChange={(event) => updateResponse(itemNumber, event.target.value)}
                     />
                     <span>{value}</span>
@@ -54,14 +55,25 @@ export function SUSForm({ condition, isSubmitting, onSubmit, language = "en" }) 
                 );
               })}
             </div>
-          </fieldset>
+          </div>
         );
       })}
 
-      <button type="submit" className="button primary-button form-action" disabled={!isComplete || isSubmitting}>
-        {isSubmitting ? copy.susForm.submitting : copy.susForm.submit}
-      </button>
-      {!isComplete ? <p className="status-note" role="status">{copy.susForm.incomplete}</p> : null}
+      {isComplete ? (
+        <button type="submit" className="button primary-button form-action" disabled={isSubmitting}>
+          {isSubmitting ? copy.susForm.submitting : copy.susForm.submit}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="button primary-button form-action"
+          disabled
+          style={{ cursor: "not-allowed", opacity: 1, color: "#2d332f" }}
+        >
+          <span aria-hidden="true">🔒</span>
+          {copy.susForm.submit}
+        </button>
+      )}
     </form>
   );
 }
