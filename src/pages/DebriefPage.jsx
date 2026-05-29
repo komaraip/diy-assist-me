@@ -54,7 +54,7 @@ export function DebriefPage() {
 
   if (resultMeta.error || !session) {
     return (
-      <section className="page-section narrow-page">
+      <section className="page-section">
         <Link className="inline-link" to={`/study/session/${sessionId}`}>
           <ArrowLeft aria-hidden="true" />
           {copy.debriefPage.back}
@@ -68,15 +68,16 @@ export function DebriefPage() {
   }
 
   return (
-    <section className="page-section narrow-page">
+    <section className="page-section">
       <Link className="inline-link" to={`/study/session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
         {copy.debriefPage.back}
       </Link>
-      <div className="page-header">
-        <p className="eyebrow">{copy.debriefPage.eyebrow}</p>
+      <div className="page-header compact-header">
         <h1>{copy.debriefPage.title}</h1>
-        <p>{copy.debriefPage.description}</p>
+        <span className="session-code">
+          {copy.shared.sessionCode}: {session.participantCode}
+        </span>
       </div>
       <GuidedProgress
         steps={copy.debriefPage.progress}

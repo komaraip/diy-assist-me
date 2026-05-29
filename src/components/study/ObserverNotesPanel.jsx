@@ -48,10 +48,9 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
   }
 
   return (
-    <details className="study-panel facilitator-notes-panel">
-      <summary>{copy.summary}</summary>
-      <p className="study-context-line">{copy.description}</p>
-      <p className="status-note">{copy.rq3Reminder}</p>
+    <div className="observer-notes-panel-flat">
+      <p className="study-context-line" style={{ margin: "0 0 0.4rem", fontSize: "0.9rem" }}>{copy.description}</p>
+      <p className="status-note" style={{ margin: "0 0 1rem", fontSize: "0.85rem" }}>{copy.rq3Reminder}</p>
 
       <div className="two-column-grid">
         <form className="note-form" onSubmit={handleSaveObserverNote}>
@@ -113,6 +112,6 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
       </div>
 
       {statusMessage ? <p className="status-note" role="status">{statusMessage}</p> : null}
-    </details>
+    </div>
   );
 }

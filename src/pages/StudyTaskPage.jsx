@@ -1,7 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
 import { ObserverNotesPanel } from "../components/study/ObserverNotesPanel.jsx";
 import { TaskTrialControls } from "../components/study/TaskTrialControls.jsx";
 import { TutorialDetailPage } from "./TutorialDetailPage.jsx";
@@ -127,64 +126,60 @@ export function StudyTaskPage() {
         {copy.taskPage.back}
       </Link>
 
-      <div className="page-header">
-        <p className="eyebrow">{formatTaskType(task.trialType, copy)}</p>
-        <h1>{copy.taskPage.title}</h1>
-        <p>{copy.taskPage.description(formatModality(task.modality, language))}</p>
-        {resultMeta.error ? <p className="data-source-note error">{copy.taskPage.loadError}</p> : null}
+      <div className="page-header compact-header">
+        <h1>{task.trialType === "measured" ? copy.tasks.measuredLabel : copy.tasks.practiceLabel}</h1>
+        <span className="session-code">
+          {copy.shared.sessionCode}: {session.participantCode} | {formatModality(task.modality, language)}
+        </span>
+        {resultMeta.error ? <p className="data-source-note error" style={{ width: "100%", margin: "0.5rem 0 0" }}>{copy.taskPage.loadError}</p> : null}
       </div>
 
-      <GuidedProgress
-        steps={buildTaskProgress(activeTrial, copy)}
-        currentStepId="task"
-        title={copy.taskPage.progressTitle}
-        eyebrow={copy.shared.progressEyebrow}
+
+      <div className="two-column-grid" style={{ marginBottom: "1.25rem" }}>
+        <section className="study-panel what-next-panel" style={{ margin: 0 }} aria-labelledby="what-next-heading">
+          <h2 id="what-next-heading">{copy.taskPage.whatNextTitle}</h2>
+          <ol className="plain-list">
+            {copy.taskPage.whatNextItems(getModeHelper(task.modality, copy)).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="study-panel" style={{ margin: 0 }} aria-labelledby="task-script-heading">
+          <h2 id="task-script-heading">{task.trialType === "measured" ? copy.taskPage.measuredScriptHeading : copy.taskPage.practiceScriptHeading}</h2>
+          <ol className="plain-list">
+            {(() => {
+              const isPractice = task.trialType === "practice";
+              const isVoice = task.modality === "voice";
+              const script = isPractice
+                ? (isVoice ? copy.tasks.voicePracticeScript : copy.tasks.touchPracticeScript)
+                : (isVoice
+                    ? copy.tasks.voiceMeasuredScript({ targetKeyword: task.targetKeyword, targetStep: task.targetStep })
+                    : copy.tasks.touchMeasuredScript({ targetKeyword: task.targetKeyword, targetStep: task.targetStep })
+                  );
+              return (script || []).map((scriptItem) => (
+                <li key={scriptItem}>{scriptItem}</li>
+              ));
+            })()}
+          </ol>
+        </section>
+      </div>
+
+      <TaskTrialControls
+        task={task}
+        taskTrial={activeTrial}
+        isStarting={isStarting}
+        isCompleting={isCompleting}
+        onStart={handleStartTrial}
+        onComplete={handleCompleteTrial}
+        language={language}
       />
+      {statusMessage ? <p className="status-note" role="status" style={{ marginTop: "0.5rem", marginBottom: "1.25rem" }}>{statusMessage}</p> : null}
 
-      <section className="study-panel what-next-panel" aria-labelledby="what-next-heading">
-        <h2 id="what-next-heading">{copy.taskPage.whatNextTitle}</h2>
-        <ol className="plain-list">
-          {copy.taskPage.whatNextItems(getModeHelper(task.modality, copy)).map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="study-panel" aria-labelledby="task-script-heading">
-        <h2 id="task-script-heading">{task.trialType === "measured" ? copy.taskPage.measuredScriptHeading : copy.taskPage.practiceScriptHeading}</h2>
-        <p className="study-context-line">{task.taskGoal}</p>
-        <ol className="plain-list">
-          {(task.taskScript || []).map((scriptItem) => (
-            <li key={scriptItem}>{scriptItem}</li>
-          ))}
-        </ol>
-        {task.trialType === "measured" ? (
-          <p className="status-note">
-            {copy.taskPage.measuredMeta({
-              targetKeyword: task.targetKeyword,
-              targetStep: task.targetStep,
-              successCriteria: task.successCriteria,
-            })}
-          </p>
-        ) : null}
-      </section>
-
-      <details className="facilitator-notes-panel">
-        <summary>🔒 Researcher Console (Controls & Notes)</summary>
-        <div className="facilitator-console-content">
-          <TaskTrialControls
-            task={task}
-            taskTrial={activeTrial}
-            isStarting={isStarting}
-            isCompleting={isCompleting}
-            onStart={handleStartTrial}
-            onComplete={handleCompleteTrial}
-            language={language}
-          />
-          {statusMessage ? <p className="status-note" role="status" style={{ marginTop: "0.5rem" }}>{statusMessage}</p> : null}
-          <div style={{ marginTop: "1.25rem", borderTop: "1px dashed var(--border)", paddingTop: "1.25rem" }}>
-            <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
-          </div>
+      <details className="debrief-accordion" style={{ marginTop: "1.25rem", marginBottom: "1.5rem" }}>
+        <summary>📝 {copy.observerNotes.summary}</summary>
+        <div className="accordion-content" style={{ background: "var(--surface-soft)" }}>
+          <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
         </div>
       </details>
 
@@ -198,12 +193,7 @@ export function StudyTaskPage() {
           language={language}
           embedded
         />
-      ) : (
-        <section className="study-panel">
-          <h2>{activeTrial?.endedAt ? copy.taskPage.completedTitle : copy.taskPage.startTutorialTitle}</h2>
-          <p className="study-context-line">{copy.taskPage.startTutorialDescription}</p>
-        </section>
-      )}
+      ) : null}
     </section>
   );
 }

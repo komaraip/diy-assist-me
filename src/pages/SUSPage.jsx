@@ -1,7 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
 import { SUSForm } from "../components/study/SUSForm.jsx";
 import { getStudySession } from "../services/studyService.js";
 import { submitSusResponse } from "../services/susService.js";
@@ -60,7 +59,7 @@ export function SUSPage() {
 
   if (resultMeta.error || !session || !condition) {
     return (
-      <section className="page-section narrow-page">
+      <section className="page-section">
         <Link className="inline-link" to={`/study/session/${sessionId}`}>
           <ArrowLeft aria-hidden="true" />
           {copy.susPage.back}
@@ -74,26 +73,17 @@ export function SUSPage() {
   }
 
   return (
-    <section className="page-section narrow-page">
+    <section className="page-section">
       <Link className="inline-link" to={`/study/session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
         {copy.susPage.back}
       </Link>
-      <div className="page-header">
-        <p className="eyebrow">{copy.susPage.eyebrow}</p>
+      <div className="page-header compact-header">
         <h1>{copy.susPage.title}</h1>
-        <p>{copy.susPage.description(formatMode(condition, language))}</p>
+        <span className="session-code">
+          {copy.shared.sessionCode}: {session.participantCode} | {formatMode(condition, language)}
+        </span>
       </div>
-      <GuidedProgress
-        steps={[
-          { id: "mode", label: copy.susPage.progress.modeTask(formatModeTitle(condition, language)), status: copy.susPage.progress.modeStatus },
-          { id: "questionnaire", label: copy.susPage.progress.questionnaireLabel, status: copy.susPage.progress.questionnaireStatus },
-          { id: "continue", label: copy.susPage.progress.continueLabel, status: copy.susPage.progress.continueStatus },
-        ]}
-        currentStepId="questionnaire"
-        title={copy.susPage.progressTitle}
-        eyebrow={copy.shared.progressEyebrow}
-      />
       <SUSForm condition={condition} isSubmitting={isSubmitting} onSubmit={handleSubmit} language={language} />
       {statusMessage ? (
         <div className={statusMessage === copy.susPage.savedStatus ? "result-panel" : "result-panel error"} role="status">

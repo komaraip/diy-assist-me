@@ -103,9 +103,9 @@ export function StudySessionPage() {
         {copy.sessionPage.back}
       </Link>
 
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
-        <h1 style={{ margin: 0 }}>{copy.sessionPage.title}</h1>
-        <span className="session-code" style={{ margin: 0 }}>
+      <div className="page-header compact-header">
+        <h1>{copy.sessionPage.title}</h1>
+        <span className="session-code">
           {copy.shared.sessionCode}: {session.participantCode || copy.shared.notRecorded}
         </span>
         {resultMeta.error ? <p className="data-source-note error" style={{ width: "100%", margin: "0.5rem 0 0" }}>{copy.sessionPage.loadError}</p> : null}
@@ -150,31 +150,129 @@ export function StudySessionPage() {
             );
           }
 
-          if (isComplete && !isExpanded) {
+          if (isComplete) {
+            const allTasksForConditionDone = condition.tasks.every(t => findLatestTrial(taskTrials, t.id)?.endedAt);
+            const conditionSusDone = susResponses.some(res => res.conditionId === condition.id);
+
             return (
               <section
-                className="study-panel mode-card collapsed completed"
+                className={`study-panel mode-card completed ${isExpanded ? "expanded" : "collapsed"}`}
                 key={condition.id}
-                style={{ cursor: "pointer" }}
-                onClick={() => toggleConditionExpand(condition.id)}
+                style={{
+                  background: "transparent",
+                  border: "2px solid var(--primary-dark)",
+                  cursor: !isExpanded ? "pointer" : "default"
+                }}
+                onClick={!isExpanded ? () => toggleConditionExpand(condition.id) : undefined}
               >
-                <div className="study-panel-heading" style={{ margin: 0, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p className="eyebrow" style={{ color: "var(--primary-dark)" }}>{copy.sessionPage.modeLabel(condition.conditionOrder)}</p>
-                    <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      {formatModality(condition.modality, language)}
-                      <span className="status-badge" style={{ background: "rgba(111, 144, 125, 0.12)", color: "var(--primary-dark)", borderColor: "rgba(111, 144, 125, 0.3)" }}>
-                        ✓ Completed
-                      </span>
-                    </h3>
+                {/* Collapsed centered view (only visible when collapsed) */}
+                <div 
+                  className="completed-card-collapsed-content" 
+                  style={{ display: isExpanded ? "none" : "flex" }}
+                >
+                  <div className="status-badge-container">
+                    <span className="status-badge" style={{ background: "rgba(111, 144, 125, 0.12)", color: "var(--primary-dark)", borderColor: "rgba(111, 144, 125, 0.3)" }}>
+                      {copy.sessionPage.modeLabel(condition.conditionOrder)}
+                    </span>
                   </div>
+                  <h3 className="completed-mode-title" style={{ margin: "0.25rem 0 0.5rem 0", fontSize: "1.3rem" }}>
+                    {formatModality(condition.modality, language)}
+                  </h3>
                   <button
                     type="button"
-                    className="button secondary-action"
-                    style={{ minHeight: "36px", padding: "0.4rem 0.8rem", fontSize: "0.85rem", margin: 0 }}
+                    className="button transparent-button"
+                    style={{ margin: 0 }}
                   >
                     Show Details
                   </button>
+                </div>
+
+                {/* Expanded view (always in DOM, visible when expanded) */}
+                <div style={{ display: isExpanded ? "block" : "none", width: "100%" }}>
+                  <div className="study-panel-heading" style={{ flexWrap: "wrap", gap: "1rem" }}>
+                    <div className="completed-header-flex" style={{ width: "100%" }}>
+                      <div className="completed-header-title">
+                        <p className="eyebrow">{copy.sessionPage.modeLabel(condition.conditionOrder)}</p>
+                        <h2 id={`${condition.id}-heading`} style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "inherit" }}>
+                          <ClipboardList aria-hidden="true" size={20} style={{ flexShrink: 0 }} />
+                          {formatModality(condition.modality, language)}
+                        </h2>
+                      </div>
+                      <div className="completed-header-action">
+                        <button
+                          type="button"
+                          className="button transparent-button"
+                          style={{ margin: 0 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleConditionExpand(condition.id);
+                          }}
+                        >
+                          Hide Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {isComplete && <p className="study-context-line" style={{ marginTop: "0.5rem" }}>{getModeHelper(condition.modality, copy)}</p>}
+
+                  <ol className="task-list">
+                    {(condition.tasks || []).map((task) => {
+                      const latestTrial = findLatestTrial(taskTrials, task.id);
+                      return (
+                        <li key={task.id}>
+                          <div>
+                            <strong>{task.trialType === "measured" ? copy.tasks.measuredLabel : copy.tasks.practiceLabel}</strong>
+                            <span>{copy.sessionPage.taskMeta(task.trialType, task.tutorialId)}</span>
+                            <small>{formatTaskStatus(latestTrial, copy)}</small>
+                          </div>
+                          <Link className="button secondary-action" to={`/study/session/${session.id}/task/${task.id}`}>
+                            {getTaskActionLabel(task, latestTrial, copy)}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ol>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1rem" }}>
+                    {allTasksForConditionDone ? (
+                      conditionSusDone ? (
+                        <button
+                          type="button"
+                          className="button secondary-action"
+                          disabled
+                          style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem", cursor: "not-allowed" }}
+                        >
+                          <FileText aria-hidden="true" />
+                          Questionnaire Submitted
+                        </button>
+                      ) : (
+                        <Link
+                          className="button primary-button"
+                          to={`/study/session/${session.id}/sus/${condition.id}`}
+                          style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem" }}
+                        >
+                          <FileText aria-hidden="true" />
+                          {copy.sessionPage.questionnaireButton}
+                        </Link>
+                      )
+                    ) : (
+                      <button
+                        type="button"
+                        className="button primary-button"
+                        disabled
+                        style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem", cursor: "not-allowed", opacity: 1, color: "#2d332f" }}
+                      >
+                        <span aria-hidden="true">🔒</span>
+                        {copy.sessionPage.questionnaireButton}
+                      </button>
+                    )}
+                    {conditionSusDone && (
+                      <span style={{ fontSize: "0.82rem", color: "var(--primary-dark)", fontWeight: "600", textAlign: "center" }}>
+                        ✓ SUS Questionnaire Completed
+                      </span>
+                    )}
+                  </div>
                 </div>
               </section>
             );
@@ -187,29 +285,9 @@ export function StudySessionPage() {
             <section className="study-panel mode-card" key={condition.id} aria-labelledby={`${condition.id}-heading`}>
               <div className="study-panel-heading">
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                    <p className="eyebrow">{copy.sessionPage.modeLabel(condition.conditionOrder)}</p>
-                    {isComplete && (
-                      <span className="status-badge" style={{ background: "rgba(111, 144, 125, 0.12)", color: "var(--primary-dark)", borderColor: "rgba(111, 144, 125, 0.3)" }}>
-                        ✓ Completed
-                      </span>
-                    )}
-                  </div>
-                  <h2 id={`${condition.id}-heading`} style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+                  <p className="eyebrow">{copy.sessionPage.modeLabel(condition.conditionOrder)}</p>
+                  <h2 id={`${condition.id}-heading`}>
                     {formatModality(condition.modality, language)}
-                    {isComplete && (
-                      <button
-                        type="button"
-                        className="inline-link"
-                        style={{ fontSize: "0.85rem", fontWeight: "normal", border: 0, background: "none", cursor: "pointer", padding: 0 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleConditionExpand(condition.id);
-                        }}
-                      >
-                        [Hide]
-                      </button>
-                    )}
                   </h2>
                   <p className="study-context-line">{getModeHelper(condition.modality, copy)}</p>
                 </div>
@@ -222,7 +300,7 @@ export function StudySessionPage() {
                   return (
                     <li key={task.id}>
                       <div>
-                        <strong>{task.label}</strong>
+                        <strong>{task.trialType === "measured" ? copy.tasks.measuredLabel : copy.tasks.practiceLabel}</strong>
                         <span>{copy.sessionPage.taskMeta(task.trialType, task.tutorialId)}</span>
                         <small>{formatTaskStatus(latestTrial, copy)}</small>
                       </div>

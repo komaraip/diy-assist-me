@@ -55,45 +55,52 @@ export function TaskTrialControls({
   }
 
   return (
-    <section className="study-panel" aria-labelledby="trial-controls-heading">
-      <div className="study-panel-heading">
-        <div>
-          <p className="eyebrow">{formatTaskType(task.trialType, copy)}</p>
-          <h2 id="trial-controls-heading">{task.label}</h2>
+    <form className="trial-completion-form" style={{ display: "grid", gap: "1.25rem" }} onSubmit={handleComplete}>
+      <section className="study-panel" style={{ margin: 0 }} aria-labelledby="trial-controls-heading">
+        <div className="study-panel-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+          <h2 id="trial-controls-heading" style={{ margin: 0, fontSize: "1.1rem" }}>Task Timer</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+            {taskTrial ? (
+              <span style={{ fontSize: "0.85rem", color: "var(--muted)", fontWeight: "normal" }}>
+                {isCompleted 
+                  ? `Started at ${formatTime(taskTrial.startedAt, copy)} and finished at ${formatTime(taskTrial.endedAt, copy)}`
+                  : `Started at ${formatTime(taskTrial.startedAt, copy)}`
+                }
+              </span>
+            ) : null}
+            <div className="timer-pill" aria-live="polite" style={{ margin: 0 }}>
+              <Clock aria-hidden="true" />
+              {taskTrial?.endedAt ? copy.taskTrial.recorded(taskTrial.durationSeconds) : copy.taskTrial.elapsed(elapsedSeconds)}
+            </div>
+          </div>
         </div>
-        <div className="timer-pill" aria-live="polite">
-          <Clock aria-hidden="true" />
-          {taskTrial?.endedAt ? copy.taskTrial.recorded(taskTrial.durationSeconds) : copy.taskTrial.elapsed(elapsedSeconds)}
-        </div>
-      </div>
 
-      <p className="study-context-line">
-        {copy.taskTrial.modeLine(formatMode(task.modality, normalizedLanguage), task.tutorialId)}
-      </p>
+        <p className="study-context-line">
+          {copy.taskTrial.modeLine(formatMode(task.modality, normalizedLanguage), task.tutorialId)}
+        </p>
 
-      {!taskTrial ? (
-        <button type="button" className="button primary-button" onClick={onStart} disabled={isStarting}>
-          <PlayCircle aria-hidden="true" />
-          {isStarting ? copy.taskTrial.starting : copy.taskTrial.start}
-        </button>
-      ) : (
-        <form className="trial-completion-form" onSubmit={handleComplete}>
-          <p className="status-note">
-            {copy.taskTrial.startedAt(formatTime(taskTrial.startedAt, copy), formatTime(taskTrial.endedAt, copy), isCompleted)}
-          </p>
-
+        {!taskTrial ? (
+          <button type="button" className="button primary-button" onClick={onStart} disabled={isStarting}>
+            <PlayCircle aria-hidden="true" />
+            {isStarting ? copy.taskTrial.starting : copy.taskTrial.start}
+          </button>
+        ) : !isCompleted ? (
           <button
             type="submit"
             className="button complete-button"
-            disabled={!canComplete || isCompleting || isCompleted}
+            disabled={!canComplete || isCompleting}
           >
             <Flag aria-hidden="true" />
-            {isCompleting ? copy.taskTrial.finishing : isCompleted ? copy.taskTrial.finished : copy.taskTrial.finish}
+            {isCompleting ? copy.taskTrial.finishing : copy.taskTrial.finish}
           </button>
+        ) : null}
+      </section>
 
-          <details className="facilitator-details">
-            <summary>{copy.taskTrial.facilitatorSummary}</summary>
-            <p className="study-context-line">{copy.taskTrial.facilitatorDescription}</p>
+      {taskTrial ? (
+        <details className="debrief-accordion" style={{ margin: 0 }}>
+          <summary>📝 {copy.taskTrial.facilitatorSummary}</summary>
+          <div className="accordion-content" style={{ background: "var(--surface-soft)" }}>
+            <p className="study-context-line" style={{ marginTop: 0 }}>{copy.taskTrial.facilitatorDescription}</p>
 
             <label className="field-label">
               {copy.taskTrial.outcomeLabel}
@@ -108,7 +115,7 @@ export function TaskTrialControls({
               </select>
             </label>
 
-            <label className="checkbox-row">
+            <label className="checkbox-row" style={{ marginTop: "0.5rem" }}>
               <input
                 type="checkbox"
                 checked={invalidTrial}
@@ -119,7 +126,7 @@ export function TaskTrialControls({
             </label>
 
             {invalidTrial ? (
-              <label className="field-label">
+              <label className="field-label" style={{ marginTop: "0.5rem" }}>
                 {copy.taskTrial.invalidReason}
                 <textarea
                   value={invalidTrialReason}
@@ -131,7 +138,7 @@ export function TaskTrialControls({
               </label>
             ) : null}
 
-            <label className="field-label">
+            <label className="field-label" style={{ marginTop: "0.5rem" }}>
               {copy.taskTrial.taskNote}
               <textarea
                 value={researcherNote}
@@ -140,10 +147,10 @@ export function TaskTrialControls({
                 disabled={isCompleted}
               />
             </label>
-          </details>
-        </form>
-      )}
-    </section>
+          </div>
+        </details>
+      ) : null}
+    </form>
   );
 }
 

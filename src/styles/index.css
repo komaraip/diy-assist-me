@@ -614,6 +614,26 @@ button:disabled {
   margin-bottom: 2rem;
 }
 
+.page-header.compact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  max-width: none;
+}
+
+.page-header.compact-header h1 {
+  margin: 0;
+}
+
+.page-header.compact-header .session-code {
+  margin: 0;
+  font-weight: 800;
+  color: var(--muted);
+}
+
 .page-header p {
   margin: 1rem 0 0;
   font-size: 1.02rem;
@@ -2451,6 +2471,7 @@ button:disabled {
   border-radius: 8px;
   background: var(--background);
   padding: 1rem;
+  align-content: start;
 }
 
 .note-form > svg {
@@ -3987,3 +4008,139 @@ details.facilitator-notes-panel .facilitator-console-content {
   background: var(--surface);
   border-style: dashed;
 }
+
+/* Completed Mode Card Header Redesign */
+.completed-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.completed-header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.completed-header-title h3,
+.completed-header-title h2 {
+  margin: 0;
+}
+
+/* Action button on the right */
+.completed-header-action {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Transparent action button */
+.button.transparent-button {
+  background: transparent !important;
+  color: var(--primary-dark) !important;
+  border: 1px solid var(--primary-dark) !important;
+  padding: 0.4rem 1rem !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+  min-height: 38px;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+.button.transparent-button:hover {
+  background: rgba(111, 144, 125, 0.08) !important;
+  color: var(--primary-dark) !important;
+}
+
+/* Responsive styles for mobile & tablet (below laptop size, e.g. 1024px) */
+@media (max-width: 1023px) {
+  .completed-header-flex {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .completed-header-title {
+    text-align: center;
+    align-items: center;
+  }
+  
+  .completed-header-action {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .button.transparent-button {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+  }
+}
+
+@media (min-width: 1024px) {
+  .completed-header-title {
+    flex: 1 1 0%;
+  }
+  .completed-header-action {
+    flex: 1 1 0%;
+    justify-content: flex-end;
+  }
+}
+
+/* Centered completed content style */
+.mode-card.completed.collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 220px;
+  background: transparent !important;
+  border: 2px solid var(--primary-dark) !important;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 2rem !important;
+}
+
+.mode-card.completed.expanded {
+  background: transparent !important;
+  border: 2px solid var(--primary-dark) !important;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.completed-card-collapsed-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.completed-card-collapsed-content .status-badge {
+  background: rgba(111, 144, 125, 0.12) !important;
+  color: var(--primary-dark) !important;
+  border: 1px solid rgba(111, 144, 125, 0.3) !important;
+  padding: 0.35rem 0.75rem;
+  font-weight: 600;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.completed-card-collapsed-content h3.completed-mode-title {
+  margin: 0.25rem 0 0.5rem 0;
+  font-size: 1.35rem;
+  color: var(--foreground);
+}
+
+

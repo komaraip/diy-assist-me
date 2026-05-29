@@ -132,11 +132,14 @@ function buildTask({ conditionId, conditionOrder, modality, trialType, tutorial,
     trialType,
     tutorialId,
     taskId: `${conditionId}_${trialType}_${taskIndex + 1}`,
-    taskGoal: isPractice ? copy.practiceGoal : copy.measuredGoal,
+    taskGoal: "",
     label: isPractice ? copy.practiceLabel : copy.measuredLabel,
     taskScript: isPractice
-      ? copy.practiceScript
-      : copy.measuredScript({ targetKeyword, targetStep: target.targetStep }),
+      ? (modality === "voice" ? copy.voicePracticeScript : copy.touchPracticeScript)
+      : (modality === "voice"
+          ? copy.voiceMeasuredScript({ targetKeyword, targetStep: target.targetStep })
+          : copy.touchMeasuredScript({ targetKeyword, targetStep: target.targetStep })
+        ),
     requiredActions: isPractice
       ? ["materials_open", "step_next", "repeat_instruction"]
       : ["materials_open", "step_next", "repeat_instruction", "tutorial_search", "step_jump", "step_previous"],
