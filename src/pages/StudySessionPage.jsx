@@ -1,7 +1,6 @@
 import { ArrowLeft, ClipboardList, FileText, Lock, MessageSquareText } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
 import { InfoPopover } from "../components/study/InfoPopover.jsx";
 import { listTaskTrialsBySession } from "../services/taskTrialService.js";
 import { getStudySession } from "../services/studyService.js";
@@ -112,20 +111,12 @@ export function StudySessionPage() {
         {resultMeta.error ? <p className="data-source-note error" style={{ width: "100%", margin: "0.5rem 0 0" }}>{copy.sessionPage.loadError}</p> : null}
       </div>
 
-      <div className="progress-header-grid" style={{ marginBottom: "1.25rem" }}>
-        <GuidedProgress
-          steps={buildSessionProgress(session, taskTrials, copy)}
-          currentStepId="tasks"
-          title={copy.sessionPage.progressTitle}
-          eyebrow={copy.shared.progressEyebrow}
-        />
-        <section className="study-panel" style={{ margin: 0 }}>
-          <h2>{copy.sessionPage.whatNextTitle}</h2>
-          <p className="study-context-line" style={{ marginTop: "0.5rem" }}>
-            {copy.sessionPage.whatNextDescription(tasks.length)}
-          </p>
-        </section>
-      </div>
+      <section className="study-panel" style={{ marginTop: 0, marginBottom: "1.25rem" }}>
+        <h2>{copy.sessionPage.whatNextTitle}</h2>
+        <p className="study-context-line" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+          {copy.sessionPage.whatNextDescription(tasks.length)}
+        </p>
+      </section>
 
       <div className="condition-grid">
         {(session.conditions || []).length ? (session.conditions || []).map((condition) => {

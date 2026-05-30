@@ -16,6 +16,8 @@ export function TaskTrialControls({
   const [invalidTrialReason, setInvalidTrialReason] = useState("");
   const [taskNote, setTaskNote] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [showFinishModal, setShowFinishModal] = useState(false);
   const normalizedLanguage = normalizeStudyLanguage(language);
   const copy = getStudyCopy(normalizedLanguage);
 
@@ -46,18 +48,15 @@ export function TaskTrialControls({
   const isCompleted = !!taskTrial?.endedAt;
   const canComplete = !!taskTrial && !isCompleted && (!invalidTrial || invalidTrialReason.trim());
 
-  function handleComplete(event) {
+  function handleFormSubmit(event) {
     event.preventDefault();
-    onComplete({
-      completionStatus,
-      invalidTrial,
-      invalidTrialReason,
-      participantTaskNote: taskNote,
-    });
+    if (canComplete && !isCompleting) {
+      setShowFinishModal(true);
+    }
   }
 
   return (
-    <form className="trial-completion-form" style={{ display: "grid", gap: "1.25rem" }} onSubmit={handleComplete}>
+    <form className="trial-completion-form" style={{ display: "grid", gap: "1.25rem" }} onSubmit={handleFormSubmit}>
       <section className="study-panel" style={{ margin: 0 }} aria-labelledby="trial-controls-heading">
         <div className="study-panel-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
           <h2 id="trial-controls-heading" style={{ margin: 0, fontSize: "1.1rem" }}>Task Timer</h2>
@@ -82,7 +81,7 @@ export function TaskTrialControls({
         </p>
 
         {!taskTrial ? (
-          <button type="button" className="button primary-button" onClick={onStart} disabled={isStarting}>
+          <button type="button" className="button primary-button" onClick={() => setShowStartModal(true)} disabled={isStarting}>
             <PlayCircle aria-hidden="true" />
             {isStarting ? copy.taskTrial.starting : copy.taskTrial.start}
           </button>
@@ -156,6 +155,71 @@ export function TaskTrialControls({
             </label>
           </div>
         </details>
+      ) : null}
+
+      {showStartModal ? (
+        <div className="admin-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="start-task-title">
+          <div className="admin-confirm-dialog">
+            <h3 id="start-task-title">Important: Task Instructions</h3>
+            <p>
+              Please read and follow the task script instructions on the screen carefully. 
+              To ensure complete research data, you must try all the controls listed in the script (opening materials, search, going next/previous, and jumping steps).
+            </p>
+            <p>
+              Click <strong>Start Task</strong> when you are ready to begin the task and start the timer.
+            </p>
+            <div className="admin-confirm-actions">
+              <button type="button" className="button secondary-action" onClick={() => setShowStartModal(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button primary-button"
+                onClick={() => {
+                  setShowStartModal(false);
+                  onStart();
+                }}
+              >
+                Start Task
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showFinishModal ? (
+        <div className="admin-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="finish-task-title">
+          <div className="admin-confirm-dialog">
+            <h3 id="finish-task-title">Confirm Task Completion</h3>
+            <p>
+              Have you followed all the instructions in the task script? 
+              Please ensure you have tried all the controls listed in the script before finishing.
+            </p>
+            <p>
+              Click <strong>Yes, Finish</strong> to complete the task, or <strong>Go Back</strong> to continue trying the controls.
+            </p>
+            <div className="admin-confirm-actions">
+              <button type="button" className="button secondary-action" onClick={() => setShowFinishModal(false)}>
+                Go Back
+              </button>
+              <button
+                type="button"
+                className="button primary-button"
+                onClick={() => {
+                  setShowFinishModal(false);
+                  onComplete({
+                    completionStatus,
+                    invalidTrial,
+                    invalidTrialReason,
+                    participantTaskNote: taskNote,
+                  });
+                }}
+              >
+                Yes, Finish
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </form>
   );

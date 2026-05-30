@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ClipboardList } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { StepCard } from "../components/tutorial/StepCard.jsx";
@@ -13,6 +13,7 @@ import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
 import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
 import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 import { localizeTutorial } from "../i18n/tutorialTranslations.js";
+import { TutorialPopover } from "../components/tutorial/TutorialPopover.jsx";
 
 const SCROLL_AMOUNT_RATIO = 0.6;
 const PAGE_AMOUNT_RATIO = 0.9;
@@ -577,6 +578,41 @@ export function TutorialDetailPage({
                   </div>
                 </div>
 
+                <div className="tutorial-mobile-tools-bar">
+                  <button
+                    type="button"
+                    className="button secondary-action"
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.45rem", fontSize: "0.88rem", padding: "0.55rem 0.75rem", borderRadius: "8px" }}
+                    onClick={() => setActiveMobilePanel("overview")}
+                  >
+                    <ClipboardList size={16} aria-hidden="true" />
+                    {copy.overview?.heading || "Overview"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button secondary-action"
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.45rem", fontSize: "0.88rem", padding: "0.55rem 0.75rem", borderRadius: "8px" }}
+                    onClick={() => setActiveMobilePanel("search")}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.3-4.3" />
+                    </svg>
+                    Search
+                  </button>
+                </div>
+
                 <StepCard step={currentStep} isCurrent instructionLabel={copy.instructionTitle} />
               </section>
 
@@ -663,6 +699,49 @@ export function TutorialDetailPage({
               commandsButtonRef={commandsButtonRef}
               materialsButtonRef={materialsButtonRef}
             />
+
+            <TutorialPopover
+              id="mobile-overview-popover"
+              title={copy.overview?.heading || "Overview"}
+              isOpen={activeMobilePanel === "overview"}
+              onClose={handleCloseMobilePanel}
+              closeLabel={copy.closePanel ? copy.closePanel(copy.overview?.heading || "Overview") : "Close Overview"}
+            >
+              <div className="mobile-overview-wrapper" style={{ padding: "0.25rem" }}>
+                <StepOverview
+                  steps={steps}
+                  activeStepIndex={activeStepIndex}
+                  onJumpToStep={(stepNumber) => {
+                    handleCloseMobilePanel();
+                    handleOverviewJump(stepNumber);
+                  }}
+                  isOpen={true}
+                  onToggle={() => {}}
+                  copy={copy}
+                />
+              </div>
+            </TutorialPopover>
+
+            <TutorialPopover
+              id="mobile-search-popover"
+              title={copy.search?.heading || "Search"}
+              isOpen={activeMobilePanel === "search"}
+              onClose={handleCloseMobilePanel}
+              closeLabel={copy.closePanel ? copy.closePanel(copy.search?.heading || "Search") : "Close Search"}
+            >
+              <div className="mobile-search-wrapper" style={{ padding: "0.25rem" }}>
+                <TutorialSearch
+                  query={tutorialSearchQuery}
+                  onQueryChange={handleTutorialSearchChange}
+                  results={searchResults}
+                  onJumpToStep={(stepNumber) => {
+                    handleCloseMobilePanel();
+                    handleSearchJump(stepNumber);
+                  }}
+                  copy={copy}
+                />
+              </div>
+            </TutorialPopover>
 
             <div className="tutorial-mobile-safe-space" aria-hidden="true" />
             <div className="sr-only" aria-live="polite" aria-atomic="true">

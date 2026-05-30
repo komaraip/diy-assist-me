@@ -1052,6 +1052,10 @@ button:disabled {
   grid-auto-rows: max-content;
 }
 
+.tutorial-mobile-tools-bar {
+  display: none;
+}
+
 .tutorial-tool-card {
   display: grid;
   gap: 0.75rem;
@@ -4207,6 +4211,13 @@ code {
 }
 
 @media (max-width: 900px) {
+  .tutorial-mobile-tools-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
   .tutorial-detail-shell.tutorial-runner {
     gap: 0.85rem;
   }
