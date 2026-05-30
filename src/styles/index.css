@@ -3134,6 +3134,11 @@ button:disabled {
   gap: 1rem;
 }
 
+.tutorial-manager .status-note {
+  max-width: none;
+  margin: 0 0 0;
+}
+
 .admin-toolbar,
 .admin-toolbar-actions {
   display: flex;
