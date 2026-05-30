@@ -120,10 +120,10 @@ export function StudySessionPage() {
           eyebrow={copy.shared.progressEyebrow}
         />
         <section className="study-panel" style={{ margin: 0 }}>
-          <div className="compact-heading-row">
-            <h2>{copy.sessionPage.whatNextTitle}</h2>
-            <InfoPopover title={copy.sessionPage.whatNextTitle} description={copy.sessionPage.whatNextDescription(tasks.length)} />
-          </div>
+          <h2>{copy.sessionPage.whatNextTitle}</h2>
+          <p className="study-context-line" style={{ marginTop: "0.5rem" }}>
+            {copy.sessionPage.whatNextDescription(tasks.length)}
+          </p>
         </section>
       </div>
 
@@ -196,10 +196,17 @@ export function StudySessionPage() {
                     <div className="completed-header-flex" style={{ width: "100%" }}>
                       <div className="completed-header-title">
                         <p className="eyebrow">{copy.sessionPage.modeLabel(condition.conditionOrder)}</p>
-                        <h2 id={`${condition.id}-heading`} style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "inherit" }}>
-                          <ClipboardList aria-hidden="true" size={20} style={{ flexShrink: 0 }} />
-                          {formatModality(condition.modality, language)}
-                        </h2>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <h2 id={`${condition.id}-heading`} style={{ display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
+                            <ClipboardList aria-hidden="true" size={20} style={{ flexShrink: 0 }} />
+                            {formatModality(condition.modality, language)}
+                          </h2>
+                          <InfoPopover
+                            title={formatModality(condition.modality, language)}
+                            description={getModeHelper(condition.modality, copy)}
+                            className="mode-info-popover"
+                          />
+                        </div>
                       </div>
                       <div className="completed-header-action">
                         <button
@@ -216,14 +223,6 @@ export function StudySessionPage() {
                       </div>
                     </div>
                   </div>
-
-                  {isComplete ? (
-                    <InfoPopover
-                      title={formatModality(condition.modality, language)}
-                      description={getModeHelper(condition.modality, copy)}
-                      className="mode-info-popover"
-                    />
-                  ) : null}
 
                   <ol className="task-list">
                     {(condition.tasks || []).map((task) => {
@@ -290,14 +289,16 @@ export function StudySessionPage() {
               <div className="study-panel-heading">
                 <div>
                   <p className="eyebrow">{copy.sessionPage.modeLabel(condition.conditionOrder)}</p>
-                  <h2 id={`${condition.id}-heading`}>
-                    {formatModality(condition.modality, language)}
-                  </h2>
-                  <InfoPopover
-                    title={formatModality(condition.modality, language)}
-                    description={getModeHelper(condition.modality, copy)}
-                    className="mode-info-popover"
-                  />
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <h2 id={`${condition.id}-heading`} style={{ margin: 0 }}>
+                      {formatModality(condition.modality, language)}
+                    </h2>
+                    <InfoPopover
+                      title={formatModality(condition.modality, language)}
+                      description={getModeHelper(condition.modality, copy)}
+                      className="mode-info-popover"
+                    />
+                  </div>
                 </div>
                 <ClipboardList aria-hidden="true" />
               </div>

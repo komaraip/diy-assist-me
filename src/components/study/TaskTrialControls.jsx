@@ -1,7 +1,6 @@
 import { Clock, Flag, PlayCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
-import { InfoPopover } from "./InfoPopover.jsx";
 
 export function TaskTrialControls({
   task,
@@ -103,21 +102,25 @@ export function TaskTrialControls({
         <details className="debrief-accordion" style={{ margin: 0 }}>
           <summary>
             <span>{copy.taskTrial.completionSummary}</span>
-            <InfoPopover title={copy.taskTrial.completionSummary} description={copy.taskTrial.completionDescription} />
           </summary>
           <div className="accordion-content" style={{ background: "var(--surface-soft)" }}>
-            <label className="field-label">
-              {copy.taskTrial.outcomeLabel}
-              <select
-                value={completionStatus}
-                onChange={(event) => setCompletionStatus(event.target.value)}
-                disabled={isCompleted}
-              >
-                <option value="successful">{copy.taskTrial.outcomes.successful}</option>
-                <option value="partially_successful">{copy.taskTrial.outcomes.partially_successful}</option>
-                <option value="unsuccessful">{copy.taskTrial.outcomes.unsuccessful}</option>
-              </select>
-            </label>
+            <div style={{ display: "grid", gap: "0.5rem" }}>
+              <p className="study-context-line" style={{ margin: 0 }}>
+                {copy.taskTrial.completionDescription}
+              </p>
+              <label className="field-label" style={{ marginTop: 0 }}>
+                {copy.taskTrial.outcomeLabel}
+                <select
+                  value={completionStatus}
+                  onChange={(event) => setCompletionStatus(event.target.value)}
+                  disabled={isCompleted}
+                >
+                  <option value="successful">{copy.taskTrial.outcomes.successful}</option>
+                  <option value="partially_successful">{copy.taskTrial.outcomes.partially_successful}</option>
+                  <option value="unsuccessful">{copy.taskTrial.outcomes.unsuccessful}</option>
+                </select>
+              </label>
+            </div>
 
             <label className="checkbox-row" style={{ marginTop: "0.5rem" }}>
               <input

@@ -1,9 +1,11 @@
 import { ClipboardPenLine, Wrench } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db, isFirebaseEnabled } from "../../services/firebase.js";
+import { listLocalRecords } from "../../services/localStore.js";
 import { createObserverNote } from "../../services/observerNoteService.js";
-import { appendTechnicalNote } from "../../services/sessionService.js";
+import { appendTechnicalNote, getSessionById } from "../../services/sessionService.js";
 import { getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
-import { InfoPopover } from "./InfoPopover.jsx";
 
 export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }) {
   const [observerNote, setObserverNote] = useState("");
@@ -12,8 +14,94 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
   const [technicalNote, setTechnicalNote] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // States to track the last saved values
+  const [lastSavedObserverNote, setLastSavedObserverNote] = useState("");
+  const [lastSavedSeverity, setLastSavedSeverity] = useState("note");
+  const [lastSavedTags, setLastSavedTags] = useState("");
+  const [lastSavedTechnicalNote, setLastSavedTechnicalNote] = useState("");
+
   const copy = getStudyCopy(normalizeStudyLanguage(language)).observerNotes;
   const recommendedTags = copy.recommendedTags || [];
+
+  useEffect(() => {
+    let isMounted = true;
+    setStatusMessage("");
+
+    async function loadSavedData() {
+      if (!session?.id) return;
+
+      // 1. Fetch latest technical note for the session
+      try {
+        const sessionRes = await getSessionById(session.id);
+        if (isMounted && sessionRes.data) {
+          const notes = sessionRes.data.technicalNotes || [];
+          const latestNote = notes[notes.length - 1]?.note || "";
+          setTechnicalNote(latestNote);
+          setLastSavedTechnicalNote(latestNote);
+        }
+      } catch (e) {
+        console.error("Failed to load technical notes:", e);
+      }
+
+      // 2. Fetch latest observer note for this session + task
+      if (!task?.id) return;
+      let notes = [];
+      if (!isFirebaseEnabled || !db) {
+        const localResult = listLocalRecords("observerNotes");
+        notes = (localResult.data || []).filter(
+          (item) => item.sessionId === session.id && item.taskId === task.id
+        );
+      } else {
+        try {
+          const q = query(
+            collection(db, "observerNotes"),
+            where("sessionId", "==", session.id),
+            where("taskId", "==", task.id)
+          );
+          const snapshot = await getDocs(q);
+          notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        } catch (e) {
+          console.error("Failed to load observer notes:", e);
+          const localResult = listLocalRecords("observerNotes");
+          notes = (localResult.data || []).filter(
+            (item) => item.sessionId === session.id && item.taskId === task.id
+          );
+        }
+      }
+
+      if (!isMounted) return;
+      if (notes.length > 0) {
+        notes.sort((a, b) => new Date(b.createdAt || b.timestamp || 0).getTime() - new Date(a.createdAt || a.timestamp || 0).getTime());
+        const latest = notes[0];
+        const latestNote = latest.note || "";
+        const latestSeverity = latest.severity || "note";
+        const latestTags = Array.isArray(latest.tags) ? latest.tags.join(", ") : latest.tags || "";
+
+        setObserverNote(latestNote);
+        setSeverity(latestSeverity);
+        setTags(latestTags);
+
+        setLastSavedObserverNote(latestNote);
+        setLastSavedSeverity(latestSeverity);
+        setLastSavedTags(latestTags);
+      } else {
+        setObserverNote("");
+        setSeverity("note");
+        setTags("");
+
+        setLastSavedObserverNote("");
+        setLastSavedSeverity("note");
+        setLastSavedTags("");
+      }
+    }
+
+    loadSavedData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [session?.id, task?.id]);
 
   async function handleSaveObserverNote(event) {
     event.preventDefault();
@@ -31,8 +119,9 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
     });
     setStatusMessage(result.error || copy.noteSaved);
     if (!result.error) {
-      setObserverNote("");
-      setTags("");
+      setLastSavedObserverNote(observerNote);
+      setLastSavedSeverity(severity);
+      setLastSavedTags(tags);
     }
     setIsSaving(false);
   }
@@ -43,17 +132,23 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
     const result = await appendTechnicalNote(session.id, technicalNote);
     setStatusMessage(result.error || copy.setupSaved);
     if (!result.error) {
-      setTechnicalNote("");
+      setLastSavedTechnicalNote(technicalNote);
     }
     setIsSaving(false);
   }
 
+  const isObserverNoteUnchanged =
+    observerNote.trim() === lastSavedObserverNote.trim() &&
+    severity === lastSavedSeverity &&
+    tags.trim() === lastSavedTags.trim();
+
+  const isTechnicalNoteUnchanged = technicalNote.trim() === lastSavedTechnicalNote.trim();
+
   return (
     <div className="observer-notes-panel-flat">
-      <div className="compact-heading-row notes-heading-row">
-        <strong>{copy.summary}</strong>
-        <InfoPopover title={copy.summary} description={`${copy.description} ${copy.rq3Reminder}`} />
-      </div>
+      <p className="study-context-line" style={{ marginTop: 0, marginBottom: "1rem" }}>
+        {copy.description} {copy.rq3Reminder}
+      </p>
 
       <div className="two-column-grid">
         <form className="note-form" onSubmit={handleSaveObserverNote}>
@@ -92,7 +187,7 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
             </datalist>
             <span className="field-hint">{copy.tagHint}</span>
           </label>
-          <button type="submit" className="button secondary-action" disabled={isSaving || !observerNote.trim()}>
+          <button type="submit" className="button secondary-action" disabled={isSaving || !observerNote.trim() || isObserverNoteUnchanged}>
             {copy.saveNote}
           </button>
         </form>
@@ -108,7 +203,7 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
               required
             />
           </label>
-          <button type="submit" className="button secondary-action" disabled={isSaving || !technicalNote.trim()}>
+          <button type="submit" className="button secondary-action" disabled={isSaving || !technicalNote.trim() || isTechnicalNoteUnchanged}>
             {copy.saveSetup}
           </button>
         </form>
@@ -118,3 +213,5 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
     </div>
   );
 }
+
+
