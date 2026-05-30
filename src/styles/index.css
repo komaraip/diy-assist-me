@@ -1858,6 +1858,17 @@ button:disabled {
   margin-bottom: 0.8rem;
 }
 
+.study-setup-page .page-header {
+  max-width: 760px;
+  margin: 0 auto 2.5rem;
+  text-align: center;
+}
+
+.study-setup-page .page-header p {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .guided-progress {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -5034,5 +5045,359 @@ details.task-notes-panel .task-notes-content {
   line-height: 1.35;
   color: var(--muted);
 }
+/* ==========================================================================
+   Support Page UI Redesign (Minimalist, Balanced & High-Contrast)
+   ========================================================================== */
+.support-page-section {
+  /* Inherit max-width and padding from .page-section for perfect alignment */
+}
 
+.support-page-header {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 2.5rem; /* Center the header container on the page */
+}
 
+.support-page-header h1 {
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  margin: 0 0 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: var(--foreground);
+}
+
+.support-page-header p {
+  font-size: 1.02rem;
+  line-height: 1.55;
+  margin: 1rem auto 0;
+  max-width: 700px;
+}
+
+.support-layout-wrapper {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.support-sidebar {
+  position: sticky;
+  top: 6.5rem; /* Account for the sticky header height (approx 4.75rem) plus spacing */
+  z-index: 40;
+}
+
+.support-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.support-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.support-tab-btn:hover {
+  color: var(--foreground);
+  background: rgba(136, 168, 150, 0.04);
+}
+
+.support-tab-btn.active {
+  color: var(--primary-dark);
+  background: rgba(136, 168, 150, 0.08);
+  border-left-color: var(--primary-dark);
+}
+
+@media (max-width: 768px) {
+  .support-layout-wrapper {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .support-sidebar {
+    position: sticky;
+    top: 4.75rem; /* Pin directly under the sticky site navbar on mobile */
+    z-index: 40;
+    background: var(--background);
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .support-tabs {
+    flex-direction: row;
+    border-bottom: 1px solid var(--border);
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .support-tab-btn {
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    border-radius: var(--radius) var(--radius) 0 0;
+    text-align: center;
+    justify-content: center;
+    padding: 0.6rem 1.25rem;
+  }
+
+  .support-tab-btn.active {
+    border-bottom-color: var(--primary-dark);
+    border-left-color: transparent;
+    background: transparent;
+  }
+}
+
+.section-intro {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.section-intro h2 {
+  font-size: 1.35rem;
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.section-intro p {
+  color: #4b5563; /* High contrast */
+  font-size: 0.92rem;
+}
+
+/* Voice Commands Row-based List Layout */
+.support-rows-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.support-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+
+.support-row:last-child {
+  border-bottom: none;
+}
+
+.support-row-info {
+  padding: 1.5rem;
+  background: rgba(136, 168, 150, 0.02);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.support-row-info-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-dark);
+}
+
+.support-row-info-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.support-row-info p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #4b5563;
+  line-height: 1.45;
+}
+
+.support-row-commands {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.support-row-command-item {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+
+.support-row-command-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.support-row-command-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.support-badge {
+  background: rgba(136, 168, 150, 0.04);
+  border: 1px solid var(--border);
+  color: var(--primary-dark);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .support-row {
+    grid-template-columns: 1fr;
+  }
+
+  .support-row-info {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem;
+  }
+
+  .support-row-commands {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .support-row-command-item {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 0.3rem;
+  }
+}
+
+/* FAQ Flat Accordion */
+.faq-panels-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .faq-panels-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.faq-main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.faq-main-column .section-intro {
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+
+.faq-main-column .section-intro p {
+  margin-bottom: 0;
+}
+
+.faq-accordion {
+  display: grid;
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  overflow: hidden;
+}
+
+.faq-question-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.95rem 0;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--text-color);
+  cursor: pointer;
+  gap: 1rem;
+}
+
+.faq-arrow {
+  color: #4b5563; /* High contrast */
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.faq-item.expanded .faq-arrow {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+.faq-answer-container {
+  overflow: hidden;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-answer {
+  padding: 0 0 0.95rem 0;
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #374151; /* High contrast FAQ answers */
+}
+
+/* Sidebar Info Cards */
+.faq-sidebar-column {
+  display: grid;
+  gap: 1rem;
+}
+
+.info-box-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.1rem;
+}
+
+.info-box-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary);
+}
+
+.info-box-header h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.info-box-card p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #4b5563; /* High contrast sidebar text */
+}

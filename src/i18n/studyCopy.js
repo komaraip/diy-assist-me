@@ -66,8 +66,7 @@ const en = {
     { id: "feedback", label: "Share feedback", status: "Answer quick questions at the end." },
   ],
   setupPage: {
-    eyebrow: "Guided mode",
-    title: "Start a guided session",
+    title: "Guided Session",
     description:
       "You will try a short tutorial flow with touch controls and voice commands. Start here, then follow each page for the next step.",
     progressTitle: "What happens next",

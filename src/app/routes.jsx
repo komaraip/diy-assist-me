@@ -12,7 +12,7 @@ import { DebriefPage } from "../pages/DebriefPage.jsx";
 import { AdminPage } from "../pages/AdminPage.jsx";
 import { AdminDataPage } from "../pages/AdminDataPage.jsx";
 import { AdminTutorialsPage } from "../pages/AdminTutorialsPage.jsx";
-import { HelpPage } from "../pages/HelpPage.jsx";
+import { SupportPage } from "../pages/SupportPage.jsx";
 import { NotFoundPage } from "../pages/NotFoundPage.jsx";
 import { ErrorPage } from "../pages/ErrorPage.jsx";
 
@@ -48,7 +48,7 @@ export const router = createBrowserRouter([
       { path: "study/session/:sessionId/task/:taskId", element: <StudyTaskPage /> },
       { path: "study/session/:sessionId/sus/:conditionId", element: <SUSPage /> },
       { path: "study/session/:sessionId/debrief", element: <DebriefPage /> },
-      { path: "help", element: <HelpPage /> },
+      { path: "support", element: <SupportPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

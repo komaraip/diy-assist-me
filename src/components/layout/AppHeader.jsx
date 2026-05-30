@@ -6,7 +6,7 @@ const navItems = [
   { to: "/", label: "Home", end: true },
   { to: "/tutorials", label: "Tutorials" },
   { to: "/study", label: "Guided Session" },
-  { to: "/help", label: "Help" }
+  { to: "/support", label: "Support" }
 ];
 
 export function AppHeader() {

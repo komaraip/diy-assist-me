@@ -146,7 +146,6 @@ export function StudyPage() {
   return (
     <section className="page-section study-setup-page">
       <div className="page-header">
-        <p className="eyebrow">{copy.setupPage.eyebrow}</p>
         <h1>{copy.setupPage.title}</h1>
         <p>{copy.setupPage.description}</p>
       </div>
