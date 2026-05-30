@@ -15,9 +15,13 @@ const initialResponses = {
   suggestions: "",
 };
 
+const REQUIRED_NARRATIVE_FIELDS = ["easiestPart", "hardestPart", "suggestions"];
+
 export function DebriefForm({ isSubmitting, onSubmit, language = "en" }) {
   const [responses, setResponses] = useState(initialResponses);
   const copy = getStudyCopy(normalizeStudyLanguage(language)).debriefForm;
+  const hasRequiredNarrativeResponses = REQUIRED_NARRATIVE_FIELDS.every((field) => responses[field].trim());
+  const canSubmit = responses.preferredModality && hasRequiredNarrativeResponses;
 
   function updateResponse(field, value) {
     setResponses((current) => ({
@@ -28,6 +32,7 @@ export function DebriefForm({ isSubmitting, onSubmit, language = "en" }) {
 
   function handleSubmit(event) {
     event.preventDefault();
+    if (!canSubmit) return;
     onSubmit(responses);
   }
 
@@ -55,6 +60,14 @@ export function DebriefForm({ isSubmitting, onSubmit, language = "en" }) {
         </select>
       </label>
 
+      <section className="study-panel">
+        <h3>{copy.requiredResponsesTitle}</h3>
+        <p className="study-context-line">{copy.requiredResponsesDescription}</p>
+        <Textarea required label={copy.fields.easiestPart} value={responses.easiestPart} onChange={(value) => updateResponse("easiestPart", value)} />
+        <Textarea required label={copy.fields.hardestPart} value={responses.hardestPart} onChange={(value) => updateResponse("hardestPart", value)} />
+        <Textarea required label={copy.fields.suggestions} value={responses.suggestions} onChange={(value) => updateResponse("suggestions", value)} />
+      </section>
+
       <details className="debrief-accordion">
         <summary>Usability & Modality Problems (Optional)</summary>
         <div className="accordion-content">
@@ -66,28 +79,31 @@ export function DebriefForm({ isSubmitting, onSubmit, language = "en" }) {
       </details>
 
       <details className="debrief-accordion">
-        <summary>Suggestions & Design Implications (Optional)</summary>
+        <summary>Additional Design Feedback (Optional)</summary>
         <div className="accordion-content">
-          <Textarea label={copy.fields.easiestPart} value={responses.easiestPart} onChange={(value) => updateResponse("easiestPart", value)} />
-          <Textarea label={copy.fields.hardestPart} value={responses.hardestPart} onChange={(value) => updateResponse("hardestPart", value)} />
           <Textarea label={copy.fields.designImplications} value={responses.designImplications} onChange={(value) => updateResponse("designImplications", value)} />
-          <Textarea label={copy.fields.suggestions} value={responses.suggestions} onChange={(value) => updateResponse("suggestions", value)} />
           <Textarea label={copy.fields.fallbackComments} value={responses.fallbackComments} onChange={(value) => updateResponse("fallbackComments", value)} />
         </div>
       </details>
 
-      <button type="submit" className="button primary-button form-action" disabled={isSubmitting}>
+      {!hasRequiredNarrativeResponses ? (
+        <p className="status-note" role="status">
+          {copy.requiredResponsesWarning}
+        </p>
+      ) : null}
+
+      <button type="submit" className="button primary-button form-action" disabled={isSubmitting || !canSubmit}>
         {isSubmitting ? copy.submitting : copy.submit}
       </button>
     </form>
   );
 }
 
-function Textarea({ label, value, onChange }) {
+function Textarea({ label, value, onChange, required = false }) {
   return (
     <label className="field-label">
-      {label}
-      <textarea value={value} onChange={(event) => onChange(event.target.value)} rows="3" />
+      {label}{required ? " *" : ""}
+      <textarea value={value} onChange={(event) => onChange(event.target.value)} rows="3" required={required} />
     </label>
   );
 }

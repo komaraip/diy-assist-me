@@ -5,11 +5,10 @@ export function EvidenceChecklist({ adminData }) {
   const items = buildEvidenceChecklist(adminData);
 
   return (
-    <section className="admin-panel" aria-labelledby="evidence-checklist-heading">
+    <section className="admin-panel analysis-panel evidence-checklist-panel" aria-labelledby="evidence-checklist-heading">
       <div className="admin-panel-heading">
         <div>
-          <p className="eyebrow">Chapter 4 evidence</p>
-          <h2 id="evidence-checklist-heading">Evidence checklist</h2>
+          <h2 id="evidence-checklist-heading">Evidence</h2>
         </div>
         <ClipboardCheck aria-hidden="true" />
       </div>
@@ -17,10 +16,14 @@ export function EvidenceChecklist({ adminData }) {
       <ul className="evidence-list">
         {items.map((item) => (
           <li key={item.id} className={item.complete ? "complete" : "missing"}>
-            {item.complete ? <CheckCircle2 aria-hidden="true" /> : <CircleAlert aria-hidden="true" />}
-            <div>
-              <strong>{item.id}: {item.label}</strong>
-              <span>{item.complete ? "Evidence available" : "Evidence missing or incomplete"}</span>
+            <span className="evidence-icon" aria-hidden="true">
+              {item.complete ? <CheckCircle2 /> : <CircleAlert />}
+            </span>
+            <div className="evidence-content">
+              <div className="evidence-title-row">
+                <strong>{item.id}: {item.label}</strong>
+                <span>{item.statusLabel || (item.complete ? "Evidence available" : "Evidence missing or incomplete")}</span>
+              </div>
               <p>{item.detail}</p>
             </div>
           </li>

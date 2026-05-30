@@ -1,5 +1,6 @@
 const VOICE_RECOGNITION_ERROR_THRESHOLD = 3;
 const FALLBACK_COMPLETED_RATIO = 0.5;
+const FALLBACK_TOUCH_WINDOW_MS = 30000;
 const SYSTEM_VOICE_EVENTS = new Set(["tutorial_open"]);
 const NON_ISSUE_TECHNICAL_NOTES = new Set([
   "no note",
@@ -11,6 +12,30 @@ const NON_ISSUE_TECHNICAL_NOTES = new Set([
   "no issue",
   "no issues",
 ]);
+const TOUCH_USE_CONTEXTS = {
+  voiceConditionTouchUse: "voice_condition_touch_use",
+  fallbackAfterVoiceFailure: "fallback_after_voice_failure",
+};
+const REQUIRED_DEBRIEF_NARRATIVE_FIELDS = ["easiestPart", "hardestPart", "suggestions"];
+
+export function getRequiredActionCoverage({ data = {}, trial = {}, task = null, interactionLogs = [] } = {}) {
+  const trialLogs = getLogsForTrial(interactionLogs, trial).sort(compareLogsByTime);
+  const requiredActions = getTrialRequiredActions(data, trial, task);
+  const metRequiredActions = requiredActions.filter((action) =>
+    isRequiredActionMet(trialLogs, action, trial)
+  );
+  const missingRequiredActions = requiredActions.filter((action) => !metRequiredActions.includes(action));
+
+  return {
+    requiredActions,
+    metRequiredActions,
+    missingRequiredActions,
+    requiredActionsMet: missingRequiredActions.length === 0,
+    requiredActionCompletionRate: requiredActions.length
+      ? ratio(metRequiredActions.length, requiredActions.length)
+      : null,
+  };
+}
 
 export function calculateChapter4Metrics(data = {}) {
   const taskTrials = data.taskTrials || [];
@@ -31,10 +56,16 @@ export function calculateChapter4Metrics(data = {}) {
   const measuredVoiceCommandLogs = voiceCommandLogs.filter((log) => log.trialType === "measured");
   const failedMeasuredVoiceLogs = measuredVoiceCommandLogs.filter((log) => log.commandSuccess === false);
   const failedVoiceLogs = voiceCommandLogs.filter((log) => log.commandSuccess === false);
-  const measuredFallbackLogs = sessionLinkedLogs.filter((log) => log.trialType === "measured" && log.fallbackUsed);
+  const measuredVoiceTouchLogs = sessionLinkedLogs.filter((log) =>
+    log.trialType === "measured" && log.modality === "touch" && log.fallbackUsed
+  );
+  const measuredFallbackAfterFailureLogs = measuredVoiceTouchLogs.filter((log) =>
+    isFallbackAfterVoiceFailure(log, getRelatedLogsForLog(sessionLinkedLogs, log))
+  );
   const technicalNotes = getTechnicalNotes(sessions);
   const technicalNoteSummary = summarizeTechnicalNotes(technicalNotes);
   const validationSummary = summarizeTaskTrialValidation(trialValidations);
+  const environmentWarnings = buildEnvironmentWarnings(sessions);
   const analysisRows = buildAnalysisReadyRows(data);
 
   return {
@@ -56,11 +87,13 @@ export function calculateChapter4Metrics(data = {}) {
             measuredVoiceCommandLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined),
             "commandSuccess"
           ),
-          recoveryEffort: summarizeRecoveryEffort(measuredVoiceCommandLogs),
+          recoveryEffort: summarizeRecoveryEffort(measuredVoiceCommandLogs, measuredFallbackAfterFailureLogs),
           failureReasons: countBy(failedMeasuredVoiceLogs, "failureReason"),
           fallbackUse: {
-            voiceFallbackCount: measuredVoiceCommandLogs.filter((log) => log.fallbackUsed).length + validationSummary.voiceFallbackTouchActionCount,
-            totalFallbackCount: measuredFallbackLogs.length,
+            voiceFallbackCount: measuredVoiceCommandLogs.filter((log) => log.fallbackUsed).length + measuredFallbackAfterFailureLogs.length,
+            totalFallbackCount: measuredVoiceTouchLogs.length,
+            fallbackTouchUseCount: measuredVoiceTouchLogs.length,
+            fallbackTouchAfterFailureCount: measuredFallbackAfterFailureLogs.length,
           },
           noMatchCount: measuredVoiceCommandLogs.filter((log) => log.eventType === "voice_no_match").length,
           recognitionErrors: countBy(measuredVoiceCommandLogs.filter((log) => log.recognitionErrorCode), "recognitionErrorCode"),
@@ -87,7 +120,7 @@ export function calculateChapter4Metrics(data = {}) {
               failureReason: log.failureReason || "",
               recoveryType: log.recoveryType || "",
             })),
-          fallbackUseCount: measuredFallbackLogs.length,
+          fallbackUseCount: measuredFallbackAfterFailureLogs.length,
         },
       },
     },
@@ -105,11 +138,14 @@ export function calculateChapter4Metrics(data = {}) {
       voiceTechnicalIssueCount: validationSummary.voiceTechnicalIssueCount,
       voiceFallbackCompletedCount: validationSummary.voiceFallbackCompletedCount,
       voiceFallbackTouchActionCount: validationSummary.voiceFallbackTouchActionCount,
+      voiceFallbackTouchUseCount: validationSummary.voiceFallbackTouchUseCount,
       invalidVoiceTrialCount: validationSummary.invalidVoiceTrialCount,
       requiredActionWarningCount: validationSummary.requiredActionWarningCount,
+      environmentWarningCount: environmentWarnings.length,
       validationWarningCount: validationSummary.validationWarningCount,
       invalidVoiceTrialWarnings: validationSummary.invalidVoiceTrialWarnings,
       requiredActionWarnings: validationSummary.requiredActionWarnings,
+      environmentWarnings: environmentWarnings.slice(0, 10),
     },
   };
 }
@@ -123,6 +159,8 @@ export function buildEvidenceChecklist(data = {}) {
   const sessions = data.sessions || [];
   const measuredTrials = taskTrials.filter((trial) => trial.trialType === "measured");
   const voiceLogs = interactionLogs.filter((log) => log.sessionId && log.modality === "voice" && isVoiceCommandLog(log));
+  const measuredVoiceLogs = voiceLogs.filter((log) => log.trialType === "measured");
+  const contentfulDebriefResponses = debriefResponses.filter(hasContentfulDebriefResponse);
   const technicalNoteCount = getTechnicalNotes(sessions).length;
   const validationSummary = summarizeTaskTrialValidation(buildTaskTrialValidation(data));
   const firstRequiredActionWarning = validationSummary.requiredActionWarnings[0];
@@ -151,7 +189,7 @@ export function buildEvidenceChecklist(data = {}) {
     {
       id: "RQ2",
       label: "Browser-based voice reliability",
-      complete: voiceLogs.some((log) =>
+      complete: measuredVoiceLogs.some((log) =>
         log.rawTranscript !== undefined &&
         log.normalizedTranscript !== undefined &&
         log.matchedIntent !== undefined &&
@@ -164,10 +202,15 @@ export function buildEvidenceChecklist(data = {}) {
       id: "RQ3",
       label: "Usability problems and design implications",
       complete: observerNotes.length > 0 ||
-        debriefResponses.length > 0 ||
+        contentfulDebriefResponses.length > 0 ||
         voiceLogs.some((log) => log.commandSuccess === false) ||
         technicalNoteCount > 0,
-      detail: "Uses observer notes, debrief responses, failed or repeated commands, fallback use, and technical notes. Observer notes are recommended evidence for RQ3.",
+      statusLabel: observerNotes.length > 0 || contentfulDebriefResponses.length > 0
+        ? "Evidence available"
+        : voiceLogs.some((log) => log.commandSuccess === false) || technicalNoteCount > 0
+          ? "Only diagnostic evidence available"
+          : "",
+      detail: `Direct evidence: ${observerNotes.length} observer note(s), ${contentfulDebriefResponses.length} core-complete debrief response(s). Diagnostic signals: ${voiceLogs.filter((log) => log.commandSuccess === false).length} failed command(s), ${technicalNoteCount} technical note(s).`,
     },
     {
       id: "Validation",
@@ -183,28 +226,163 @@ export function buildEvidenceChecklist(data = {}) {
   ];
 }
 
+export function buildAnalysisIssueCards(data = {}) {
+  const metrics = calculateChapter4Metrics(data);
+  const rows = buildAnalysisReadyRows(data);
+  const interactionLogs = data.interactionLogs || [];
+  const debriefResponses = data.debriefResponses || [];
+  const sessions = data.sessions || [];
+  const sessionLinkedLogs = interactionLogs.filter((log) => log.sessionId);
+  const failedVoiceLogs = sessionLinkedLogs.filter((log) =>
+    log.modality === "voice" && isVoiceCommandLog(log) && log.commandSuccess === false
+  );
+  const measuredVoiceTouchLogs = sessionLinkedLogs.filter((log) =>
+    log.trialType === "measured" && log.modality === "touch" && log.fallbackUsed
+  );
+  const nonRecoveryTouchUses = measuredVoiceTouchLogs.filter((log) =>
+    !isFallbackAfterVoiceFailure(log, getRelatedLogsForLog(sessionLinkedLogs, log))
+  );
+  const invalidRows = rows.filter((row) => row.invalid_pair);
+  const dataQuality = metrics.dataQuality;
+  const debriefGaps = buildDebriefCoreGaps(debriefResponses);
+  const sessionsMissingDebrief = sessions.filter((session) =>
+    !debriefResponses.some((response) => response.sessionId === session.id)
+  );
+  const technicalIssues = metrics.researchQuestions.RQ3.metrics.technicalIssues;
+
+  return [
+    {
+      id: "invalid-pairs",
+      severity: invalidRows.length ? "critical" : "ok",
+      eyebrow: "Analysis-ready dataset",
+      title: "Invalid or incomplete paired rows",
+      count: invalidRows.length,
+      summary: invalidRows.length
+        ? "These rows are excluded from primary paired analysis until the exclusion reasons are resolved."
+        : "No invalid paired rows detected.",
+      details: invalidRows.slice(0, 5).map((row) =>
+        `${formatParticipantSession(row)}: ${row.exclusion_reason || "invalid_pair=true"}`
+      ),
+      action: "Review the listed session/task evidence before using the row for Chapter 4 paired statistics.",
+    },
+    {
+      id: "required-actions",
+      severity: dataQuality.requiredActionWarningCount ? "critical" : "ok",
+      eyebrow: "Task script coverage",
+      title: "Missing required task actions",
+      count: dataQuality.requiredActionWarningCount || 0,
+      summary: dataQuality.requiredActionWarningCount
+        ? "A measured task was finished, but the logged actions do not cover the full task script."
+        : "All measured task scripts are covered by logged actions.",
+      details: (dataQuality.requiredActionWarnings || []).slice(0, 5).map((warning) =>
+        `${formatWarningLocation(warning)}: missing ${formatRequiredActionList(warning.missingRequiredActions)} (${formatPercentValue(warning.requiredActionCompletionRate)} complete)`
+      ),
+      action: "Retest or mark the trial invalid if the participant did not complete the scripted action.",
+    },
+    {
+      id: "voice-validity",
+      severity: dataQuality.invalidVoiceTrialCount ? "critical" : "ok",
+      eyebrow: "Voice validity",
+      title: "Voice trials needing exclusion review",
+      count: dataQuality.invalidVoiceTrialCount || 0,
+      summary: dataQuality.invalidVoiceTrialCount
+        ? "At least one voice measured trial has validity problems such as technical issues or heavy touch fallback."
+        : "No measured voice validity exclusions detected.",
+      details: (dataQuality.invalidVoiceTrialWarnings || []).slice(0, 5).map((warning) =>
+        `${formatWarningLocation(warning)}: ${warning.voiceTrialValidity} (${warning.exclusionReason || "no reason"})`
+      ),
+      action: "Use the exclusion reason when deciding whether the trial can support RQ2 and paired analysis.",
+    },
+    {
+      id: "environment",
+      severity: dataQuality.environmentWarningCount ? "warning" : "ok",
+      eyebrow: "Setup consistency",
+      title: "Environment mismatch warnings",
+      count: dataQuality.environmentWarningCount || 0,
+      summary: dataQuality.environmentWarningCount
+        ? "Manual setup metadata does not match detected browser/device metadata."
+        : "No setup mismatch detected.",
+      details: (dataQuality.environmentWarnings || []).slice(0, 5).map((warning) =>
+        `${formatWarningLocation(warning)}: ${warning.message}`
+      ),
+      action: "Confirm whether the researcher selected the correct device/browser setup before interpreting device-specific results.",
+    },
+    {
+      id: "debrief",
+      severity: debriefGaps.length || sessionsMissingDebrief.length ? "warning" : "ok",
+      eyebrow: "RQ3 direct evidence",
+      title: "Core feedback completeness",
+      count: debriefGaps.length + sessionsMissingDebrief.length,
+      summary: `${metrics.researchQuestions.RQ3.metrics.debriefThemes.contentfulResponseCount}/${debriefResponses.length} submitted debrief response(s) have the three required narrative answers.`,
+      details: [
+        ...debriefGaps.slice(0, 5).map((gap) =>
+          `${formatWarningLocation(gap)}: missing ${gap.missingFields.join(", ")}`
+        ),
+        ...sessionsMissingDebrief.slice(0, Math.max(0, 5 - debriefGaps.length)).map((session) =>
+          `${formatSessionLocation(session)}: no final feedback submitted`
+        ),
+      ],
+      action: "Collect the required final feedback prompts: easiest part, hardest part, and improvement suggestion.",
+    },
+    {
+      id: "fallback-semantics",
+      severity: nonRecoveryTouchUses.length ? "info" : "ok",
+      eyebrow: "RQ2 recovery semantics",
+      title: "Touch use that is not recovery fallback",
+      count: nonRecoveryTouchUses.length,
+      summary: nonRecoveryTouchUses.length
+        ? "These touch actions happened in a voice condition, but not after a voice failure, so they are diagnostic touch use rather than recovery fallback."
+        : "All voice-condition touch fallback logs are tied to a prior voice failure.",
+      details: nonRecoveryTouchUses.slice(0, 5).map((log) =>
+        `${formatLogLocation(log)}: ${log.eventType || "touch interaction"}`
+      ),
+      action: "Keep these in touch-use diagnostics, but do not interpret them as recovery effort after a failed command.",
+    },
+    {
+      id: "voice-failures",
+      severity: failedVoiceLogs.length ? "warning" : "ok",
+      eyebrow: "Voice command diagnostics",
+      title: "Failed voice command examples",
+      count: failedVoiceLogs.length,
+      summary: failedVoiceLogs.length
+        ? "Failed commands support RQ3 diagnostics, but they do not replace direct observer notes or core-complete debrief responses."
+        : "No failed voice commands detected.",
+      details: failedVoiceLogs.slice(0, 5).map((log) =>
+        `${formatLogLocation(log)}: ${formatVoiceFailure(log)}`
+      ),
+      action: "Use examples to explain command clarity, recognition errors, and recovery effort in qualitative findings.",
+    },
+    {
+      id: "technical-notes",
+      severity: technicalIssues.count ? "warning" : "ok",
+      eyebrow: "Technical disruptions",
+      title: "Technical notes affecting interpretation",
+      count: technicalIssues.count || 0,
+      summary: technicalIssues.count
+        ? "Technical disruptions were recorded and should be discussed separately from normal usability problems."
+        : "No meaningful technical disruptions recorded.",
+      details: (technicalIssues.examples || []).slice(0, 5),
+      action: "Check whether technical disruptions affected measured trials before final Chapter 4 interpretation.",
+    },
+  ];
+}
+
 export function buildTaskTrialValidation(data = {}) {
   const taskTrials = data.taskTrials || [];
   const interactionLogs = data.interactionLogs || [];
 
   return taskTrials.map((trial) => {
-    const trialLogs = getLogsForTrial(interactionLogs, trial);
+    const trialLogs = getLogsForTrial(interactionLogs, trial).sort(compareLogsByTime);
     const voiceLogs = trialLogs.filter((log) => log.modality === "voice" && isVoiceCommandLog(log));
     const voiceCommandLogs = voiceLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined);
-    const fallbackTouchLogs = trialLogs.filter((log) => log.modality === "touch" && log.fallbackUsed);
+    const fallbackTouchUseLogs = trialLogs.filter((log) => log.modality === "touch" && log.fallbackUsed);
+    const fallbackTouchLogs = fallbackTouchUseLogs.filter((log) => isFallbackAfterVoiceFailure(log, trialLogs));
     const voiceCommandSuccessCount = voiceCommandLogs.filter((log) => log.commandSuccess === true).length;
     const voiceRecognitionErrorCount = voiceLogs.filter((log) =>
       log.eventType === "voice_recognition_error" || log.eventType === "voice_unsupported" || log.recognitionErrorCode
     ).length;
     const fallbackTouchActionCount = fallbackTouchLogs.length;
-    const requiredActions = getTrialRequiredActions(data, trial);
-    const metRequiredActions = requiredActions.filter((action) =>
-      trialLogs.some((log) => doesLogMatchRequiredAction(log, action))
-    );
-    const missingRequiredActions = requiredActions.filter((action) => !metRequiredActions.includes(action));
-    const requiredActionCompletionRate = requiredActions.length
-      ? ratio(metRequiredActions.length, requiredActions.length)
-      : null;
+    const requiredActionCoverage = getRequiredActionCoverage({ data, trial, interactionLogs: trialLogs });
     const voiceValidity = getVoiceTrialValidity({
       trial,
       voiceCommandSuccessCount,
@@ -224,11 +402,12 @@ export function buildTaskTrialValidation(data = {}) {
       voiceCommandSuccessCount,
       voiceRecognitionErrorCount,
       fallbackTouchActionCount,
+      fallbackTouchUseCount: fallbackTouchUseLogs.length,
       voiceTrialValidity: voiceValidity.voiceTrialValidity,
       exclusionReason: voiceValidity.exclusionReason,
-      requiredActionsMet: missingRequiredActions.length === 0,
-      missingRequiredActions,
-      requiredActionCompletionRate,
+      requiredActionsMet: requiredActionCoverage.requiredActionsMet,
+      missingRequiredActions: requiredActionCoverage.missingRequiredActions,
+      requiredActionCompletionRate: requiredActionCoverage.requiredActionCompletionRate,
     };
   });
 }
@@ -329,6 +508,7 @@ export function buildAnalysisReadyRows(data = {}) {
       voice_repeated_command_count: repeatedCommandCount,
       voice_rephrased_command_count: rephrasedCommandCount,
       voice_fallback_count: voiceLogs.filter((log) => log.fallbackUsed).length + voiceFallbackTouchCount,
+      voice_touch_use_count: voiceValidation?.fallbackTouchUseCount ?? "",
       voice_no_match_count: voiceLogs.filter((log) => log.eventType === "voice_no_match").length,
       voice_command_failed_count: voiceCommandLogs.filter((log) => log.commandSuccess === false).length,
       voice_trial_validity: voiceValidation?.voiceTrialValidity || "missing_voice_trial",
@@ -336,6 +516,7 @@ export function buildAnalysisReadyRows(data = {}) {
       voiceCommandSuccessCount: voiceValidation?.voiceCommandSuccessCount ?? "",
       voiceRecognitionErrorCount: voiceValidation?.voiceRecognitionErrorCount ?? "",
       fallbackTouchActionCount: voiceValidation?.fallbackTouchActionCount ?? "",
+      fallbackTouchUseCount: voiceValidation?.fallbackTouchUseCount ?? "",
       touch_requiredActionsMet: touchValidation?.requiredActionsMet ?? "",
       touch_missingRequiredActions: (touchValidation?.missingRequiredActions || []).join(" | "),
       touch_requiredActionCompletionRate: touchValidation?.requiredActionCompletionRate ?? "",
@@ -366,6 +547,9 @@ function summarizeTaskTrialValidation(validations) {
     voiceFallbackTouchActionCount: validations
       .filter((validation) => validation.trialType === "measured" && validation.modality === "voice")
       .reduce((total, validation) => total + validation.fallbackTouchActionCount, 0),
+    voiceFallbackTouchUseCount: validations
+      .filter((validation) => validation.trialType === "measured" && validation.modality === "voice")
+      .reduce((total, validation) => total + (validation.fallbackTouchUseCount || 0), 0),
     requiredActionWarningCount: requiredActionWarnings.length,
     validationWarningCount: invalidVoiceValidations.length + requiredActionWarnings.length,
     invalidVoiceTrialWarnings: invalidVoiceValidations.slice(0, 10).map((validation) => ({
@@ -391,6 +575,94 @@ function summarizeTaskTrialValidation(validations) {
   };
 }
 
+function buildDebriefCoreGaps(debriefResponses = []) {
+  return debriefResponses
+    .map((response) => {
+      const responses = response.responses || {};
+      const missingFields = REQUIRED_DEBRIEF_NARRATIVE_FIELDS
+        .filter((field) => !String(responses[field] || "").trim())
+        .map(formatDebriefField);
+      return {
+        participantId: response.participantId || "",
+        participantCode: response.participantCode || "",
+        sessionId: response.sessionId || "",
+        missingFields,
+      };
+    })
+    .filter((gap) => gap.missingFields.length > 0);
+}
+
+function formatParticipantSession(row = {}) {
+  return `Participant ${row.participantCode || row.participantId || "unknown"} / Session ${shortId(row.sessionId)}`;
+}
+
+function formatWarningLocation(item = {}) {
+  const participant = item.participantCode || item.participantId || "unknown participant";
+  const session = item.sessionId ? `Session ${shortId(item.sessionId)}` : "No session";
+  const task = item.taskId ? ` / ${item.taskId}` : "";
+  const modality = item.modality ? ` (${item.modality})` : "";
+  return `${participant} / ${session}${task}${modality}`;
+}
+
+function formatSessionLocation(session = {}) {
+  return `${session.participantCode || session.participantId || "unknown participant"} / Session ${shortId(session.id)}`;
+}
+
+function formatLogLocation(log = {}) {
+  const task = log.taskId ? ` / ${log.taskId}` : "";
+  const elapsed = Number.isFinite(Number(log.elapsedMsFromTaskStart))
+    ? ` @ ${Math.round(Number(log.elapsedMsFromTaskStart) / 1000)}s`
+    : "";
+  return `${log.participantCode || log.participantId || "unknown participant"} / Session ${shortId(log.sessionId)}${task}${elapsed}`;
+}
+
+function formatVoiceFailure(log = {}) {
+  const transcript = log.rawTranscript ? `"${log.rawTranscript}"` : "no transcript";
+  const reason = log.failureReason || log.recognitionErrorCode || "failed command";
+  return `${transcript} - ${reason}`;
+}
+
+function formatRequiredActionList(actions = []) {
+  return actions.map(formatRequiredActionName).join(", ");
+}
+
+function formatRequiredActionName(action = "") {
+  const labels = {
+    materials_open: "open materials",
+    step_next: "next step",
+    repeat_instruction: "repeat instruction",
+    tutorial_search: "tutorial search",
+    tutorial_search_target: "target keyword search",
+    step_jump: "step jump",
+    step_jump_target: "target step jump",
+    step_previous: "previous step",
+    return_target_step: "return to target step",
+    scroll_down: "scroll down",
+    scroll_down_after_target: "scroll down after target step",
+  };
+  return labels[action] || String(action).replace(/_/g, " ");
+}
+
+function formatDebriefField(field = "") {
+  const labels = {
+    easiestPart: "what was easiest",
+    hardestPart: "what was hardest",
+    suggestions: "what would make this better",
+  };
+  return labels[field] || field;
+}
+
+function shortId(value = "") {
+  const text = String(value || "");
+  return text.length > 10 ? `${text.slice(0, 8)}...` : text || "unknown";
+}
+
+function formatPercentValue(value) {
+  if (value === null || value === undefined || value === "") return "n/a";
+  const number = Number(value);
+  return Number.isFinite(number) ? `${Math.round(number * 100)}%` : "n/a";
+}
+
 function mapValidationsByTrialKey(validations) {
   return new Map(validations.map((validation) => [validation.trialKey, validation]));
 }
@@ -412,8 +684,9 @@ function getLogsForTrial(interactionLogs, trial) {
   });
 }
 
-function getTrialRequiredActions(data, trial) {
+function getTrialRequiredActions(data, trial, explicitTask = null) {
   if (Array.isArray(trial.requiredActions) && trial.requiredActions.length) return trial.requiredActions;
+  if (Array.isArray(explicitTask?.requiredActions) && explicitTask.requiredActions.length) return explicitTask.requiredActions;
   const session = (data.sessions || []).find((item) => item.id === trial.sessionId);
   const task = (session?.conditions || [])
     .flatMap((condition) => condition.tasks || [])
@@ -421,7 +694,22 @@ function getTrialRequiredActions(data, trial) {
   return Array.isArray(task?.requiredActions) ? task.requiredActions : [];
 }
 
-function doesLogMatchRequiredAction(log, action) {
+function isRequiredActionMet(trialLogs, action, trial = {}) {
+  switch (action) {
+    case "tutorial_search_target":
+      return trialLogs.some((log) => doesLogMatchRequiredAction(log, action, trial));
+    case "step_jump_target":
+      return trialLogs.some((log) => doesLogMatchRequiredAction(log, action, trial));
+    case "return_target_step":
+      return hasReturnedToTargetStep(trialLogs, trial);
+    case "scroll_down_after_target":
+      return hasScrolledDownAfterTarget(trialLogs, trial);
+    default:
+      return trialLogs.some((log) => doesLogMatchRequiredAction(log, action, trial));
+  }
+}
+
+function doesLogMatchRequiredAction(log, action, trial = {}) {
   if (log.modality === "voice" && log.commandSuccess !== true) return false;
 
   const eventType = normalizeLogValue(log.eventType);
@@ -442,10 +730,19 @@ function doesLogMatchRequiredAction(log, action) {
       return includesAny(eventType, ["tutorial_search", "search"]) ||
         matchedIntent === "search" ||
         !!log.query;
+    case "tutorial_search_target":
+      return (includesAny(eventType, ["tutorial_search", "search"]) || matchedIntent === "search" || !!getLogQuery(log)) &&
+        isTargetKeywordQuery(getLogQuery(log), trial.targetKeyword);
     case "step_jump":
       return includesAny(eventType, ["step_jump", "overview_step_jump", "search_result_jump", "go_to_step"]) ||
         matchedIntent === "go_to_step" ||
         (log.stepNumber !== null && log.stepNumber !== undefined && Number.isFinite(Number(log.stepNumber)));
+    case "step_jump_target":
+      return (
+        includesAny(eventType, ["step_jump", "overview_step_jump", "search_result_jump", "go_to_step"]) ||
+        matchedIntent === "go_to_step" ||
+        (log.stepNumber !== null && log.stepNumber !== undefined && Number.isFinite(Number(log.stepNumber)))
+      ) && isAtTargetStep(log, trial.targetStep);
     case "step_previous":
       return includesAny(eventType, ["step_previous", "previous_step"]) ||
         matchedIntent === "previous_step";
@@ -462,6 +759,57 @@ function doesLogMatchRequiredAction(log, action) {
     default:
       return eventType === normalizeLogValue(action) || matchedIntent === normalizeLogValue(action);
   }
+}
+
+function hasReturnedToTargetStep(trialLogs, trial = {}) {
+  const targetStep = Number(trial.targetStep);
+  if (!Number.isFinite(targetStep)) return false;
+
+  const previousIndex = trialLogs.findIndex((log) => doesLogMatchRequiredAction(log, "step_previous", trial));
+  if (previousIndex < 0) return false;
+
+  return trialLogs.slice(previousIndex + 1).some((log) => isAtTargetStep(log, targetStep));
+}
+
+function hasScrolledDownAfterTarget(trialLogs, trial = {}) {
+  const targetIndex = trialLogs.findIndex((log) =>
+    isAtTargetStep(log, trial.targetStep) ||
+    doesLogMatchRequiredAction(log, "tutorial_search_target", trial) ||
+    doesLogMatchRequiredAction(log, "step_jump_target", trial)
+  );
+  if (targetIndex < 0) return false;
+
+  return trialLogs.slice(targetIndex + 1).some((log) => doesLogMatchRequiredAction(log, "scroll_down", trial));
+}
+
+function isTargetKeywordQuery(query, targetKeyword) {
+  const normalizedQuery = normalizeSearchText(query);
+  const normalizedTarget = normalizeSearchText(targetKeyword);
+  if (!normalizedTarget) return Boolean(normalizedQuery);
+  return normalizedQuery.includes(normalizedTarget);
+}
+
+function getLogQuery(log = {}) {
+  return log.query || log.metadata?.query || "";
+}
+
+function isAtTargetStep(log = {}, targetStep) {
+  const expectedStep = Number(targetStep);
+  if (!Number.isFinite(expectedStep)) return false;
+
+  const stepNumber = Number(log.stepNumber ?? log.metadata?.stepNumber);
+  if (Number.isFinite(stepNumber) && stepNumber === expectedStep) return true;
+
+  const stepIndexAfter = Number(log.stepIndexAfter);
+  return Number.isFinite(stepIndexAfter) && stepIndexAfter + 1 === expectedStep;
+}
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function getVoiceTrialValidity({
@@ -537,6 +885,49 @@ function includesAny(value, candidates) {
 
 function normalizeLogValue(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function compareLogsByTime(a = {}, b = {}) {
+  return getLogSortTime(a) - getLogSortTime(b);
+}
+
+function getLogSortTime(log = {}) {
+  const elapsed = Number(log.elapsedMsFromTaskStart);
+  if (Number.isFinite(elapsed)) return elapsed;
+  const created = new Date(log.createdAt || log.timestamp || log.clientTimestamp || 0).getTime();
+  return Number.isFinite(created) ? created : 0;
+}
+
+function isFallbackAfterVoiceFailure(log = {}, candidateLogs = []) {
+  if (log.modality !== "touch" || !log.fallbackUsed) return false;
+
+  const touchUseContext = normalizeLogValue(log.touchUseContext || log.metadata?.touchUseContext);
+  if (touchUseContext === TOUCH_USE_CONTEXTS.fallbackAfterVoiceFailure) return true;
+  if (touchUseContext === TOUCH_USE_CONTEXTS.voiceConditionTouchUse) return false;
+
+  const logTime = getLogSortTime(log);
+  return candidateLogs.some((candidate) => {
+    if (candidate.modality !== "voice" || !isVoiceFailureLog(candidate)) return false;
+    const candidateTime = getLogSortTime(candidate);
+    return candidateTime <= logTime && logTime - candidateTime <= FALLBACK_TOUCH_WINDOW_MS;
+  });
+}
+
+function getRelatedLogsForLog(logs = [], targetLog = {}) {
+  return logs.filter((log) =>
+    (!targetLog.sessionId || log.sessionId === targetLog.sessionId) &&
+    (!targetLog.conditionId || log.conditionId === targetLog.conditionId) &&
+    (!targetLog.taskId || log.taskId === targetLog.taskId) &&
+    (!targetLog.trialType || log.trialType === targetLog.trialType)
+  );
+}
+
+function isVoiceFailureLog(log = {}) {
+  return log.commandSuccess === false ||
+    log.eventType === "voice_no_match" ||
+    log.eventType === "voice_recognition_error" ||
+    log.eventType === "voice_unsupported" ||
+    Boolean(log.recognitionErrorCode);
 }
 
 function isVoiceCommandLog(log = {}) {
@@ -652,7 +1043,7 @@ function summarizeBooleanRate(records, field) {
   };
 }
 
-function summarizeRecoveryEffort(voiceLogs) {
+function summarizeRecoveryEffort(voiceLogs, fallbackTouchLogs = []) {
   const recoveryLogs = voiceLogs.filter((log) =>
     log.recoveryType ||
     log.isRecoveryAttempt ||
@@ -661,11 +1052,12 @@ function summarizeRecoveryEffort(voiceLogs) {
     log.eventType === "voice_no_match"
   );
   return {
-    totalCount: recoveryLogs.length,
+    totalCount: recoveryLogs.length + fallbackTouchLogs.length,
     byRecoveryType: countBy(recoveryLogs, "recoveryType"),
     repeatedCommandCount: voiceLogs.filter((log) => log.recoveryAttemptType === "repeated_command").length,
     rephrasedCommandCount: voiceLogs.filter((log) => log.recoveryAttemptType === "rephrased_command").length,
-    fallbackTouchCount: voiceLogs.filter((log) => log.fallbackUsed).length,
+    fallbackTouchCount: voiceLogs.filter((log) => log.fallbackUsed).length + fallbackTouchLogs.length,
+    fallbackTouchAfterFailureCount: fallbackTouchLogs.length,
   };
 }
 
@@ -685,6 +1077,7 @@ function summarizeObserverNotes(observerNotes) {
 }
 
 function summarizeDebriefThemes(debriefResponses) {
+  const contentfulResponses = debriefResponses.filter(hasContentfulDebriefResponse);
   const fields = [
     "easiestPart",
     "hardestPart",
@@ -697,9 +1090,22 @@ function summarizeDebriefThemes(debriefResponses) {
     "suggestions",
   ];
   return fields.reduce((summary, field) => {
-    summary[field] = debriefResponses.filter((response) => response.responses?.[field]).length;
+    summary[field] = debriefResponses.filter((response) =>
+      String(response.responses?.[field] || "").trim().length > 0
+    ).length;
     return summary;
-  }, { responseCount: debriefResponses.length });
+  }, {
+    responseCount: contentfulResponses.length,
+    submittedCount: debriefResponses.length,
+    contentfulResponseCount: contentfulResponses.length,
+  });
+}
+
+function hasContentfulDebriefResponse(response = {}) {
+  const responses = response.responses || {};
+  return REQUIRED_DEBRIEF_NARRATIVE_FIELDS.every((field) =>
+    String(responses[field] || "").trim().length > 0
+  );
 }
 
 function getTechnicalNotes(sessions) {
@@ -717,6 +1123,64 @@ function getTechnicalNotes(sessions) {
 function isMeaningfulTechnicalNote(note) {
   const value = normalizeLogValue(note?.note);
   return Boolean(value) && !NON_ISSUE_TECHNICAL_NOTES.has(value);
+}
+
+function buildEnvironmentWarnings(sessions = []) {
+  return sessions.flatMap((session) => {
+    const environment = session.environment || {};
+    const browserInfo = session.browserInfo || {};
+    const userAgent = String(browserInfo.userAgent || "").toLowerCase();
+    const manualDevice = normalizeLogValue(environment.deviceType);
+    const manualBrowser = normalizeLogValue(environment.browserName);
+    const detectedBrowser = normalizeLogValue(browserInfo.detectedBrowserName);
+    const warnings = [];
+    const isMobile = /mobile|android|iphone|ipod/.test(userAgent);
+    const isTablet = /ipad|tablet/.test(userAgent) || (/android/.test(userAgent) && !/mobile/.test(userAgent));
+    const isDesktopLike = userAgent && !isMobile && !isTablet;
+
+    if (manualDevice === "laptop" && (isMobile || isTablet)) {
+      warnings.push({
+        field: "deviceType",
+        expected: environment.deviceType,
+        detected: browserInfo.userAgent || browserInfo.platform || "",
+        message: "Manual device type is Laptop, but detected browser looks mobile/tablet.",
+      });
+    }
+
+    if (manualDevice === "smartphone" && isDesktopLike) {
+      warnings.push({
+        field: "deviceType",
+        expected: environment.deviceType,
+        detected: browserInfo.userAgent || browserInfo.platform || "",
+        message: "Manual device type is Smartphone, but detected browser does not look mobile.",
+      });
+    }
+
+    if (manualBrowser.includes("desktop") && isMobile) {
+      warnings.push({
+        field: "browserName",
+        expected: environment.browserName,
+        detected: browserInfo.userAgent || detectedBrowser,
+        message: "Manual browser says desktop, but detected browser looks mobile.",
+      });
+    }
+
+    if (manualBrowser.includes("mobile") && isDesktopLike) {
+      warnings.push({
+        field: "browserName",
+        expected: environment.browserName,
+        detected: browserInfo.userAgent || detectedBrowser,
+        message: "Manual browser says mobile, but detected browser looks desktop.",
+      });
+    }
+
+    return warnings.map((warning) => ({
+      sessionId: session.id || "",
+      participantId: session.participantId || "",
+      participantCode: session.participantCode || "",
+      ...warning,
+    }));
+  });
 }
 
 function countMissingSusByCondition(sessions, susResponses) {

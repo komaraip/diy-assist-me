@@ -312,7 +312,7 @@ const en = {
   debriefForm: {
     eyebrow: "Final feedback",
     title: "Tell us about your experience",
-    description: "Short answers are fine. Feel free to leave fields blank if you do not have any feedback for them.",
+    description: "Short answers are fine. Complete the three required prompts and leave optional fields blank if you do not have additional feedback.",
     preferredMode: "Preferred mode",
     selectOne: "Select one",
     touch: "Touch",
@@ -331,6 +331,9 @@ const en = {
     },
     submit: "Submit feedback",
     submitting: "Submitting...",
+    requiredResponsesTitle: "Required feedback",
+    requiredResponsesDescription: "Answer these three short prompts so the final feedback can support RQ3 evidence.",
+    requiredResponsesWarning: "Complete the three required feedback prompts before submitting.",
   },
   taskTrial: {
     practiceEyebrow: "Practice task",
@@ -348,6 +351,7 @@ const en = {
     completionSummary: "Task Completion Report",
     completionDescription: "Report whether you completed the task and whether any technical issue made the trial invalid.",
     outcomeLabel: "Task completion result",
+    outcomePlaceholder: "Select task outcome",
     outcomes: {
       successful: "Successful (completed all steps)",
       partially_successful: "Partially successful (completed with minor issues)",
@@ -357,6 +361,13 @@ const en = {
     invalidReason: "Reason for invalid trial",
     taskNote: "Additional task note",
     notRecorded: "not recorded",
+    requiredActionsTitle: "Required action coverage",
+    requiredActionsDescription:
+      "This checklist supports data validity. It does not replace the task completion result selected above.",
+    requiredActionsWarning: (actions) =>
+      `Missing required action coverage: ${actions}. You may continue recording the trial, but the analysis export will flag this pair as incomplete.`,
+    finishMissingActionsWarning: (actions) =>
+      `Required actions still missing: ${actions}. If you finish now, consider marking the outcome as partially successful unless the researcher has a reason to code it differently.`,
   },
   observerNotes: {
     summary: "Report Issues or Notes (Optional)",

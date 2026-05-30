@@ -16,6 +16,7 @@ import { TutorialPopover } from "../components/tutorial/TutorialPopover.jsx";
 
 const SCROLL_AMOUNT_RATIO = 0.6;
 const PAGE_AMOUNT_RATIO = 0.9;
+const FALLBACK_TOUCH_WINDOW_MS = 30000;
 
 export function TutorialDetailPage({
   tutorialIdOverride = null,
@@ -49,6 +50,7 @@ export function TutorialDetailPage({
   const commandsButtonRef = useRef(null);
   const materialsButtonRef = useRef(null);
   const desktopCommandsButtonRef = useRef(null);
+  const lastVoiceFailureRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -81,6 +83,7 @@ export function TutorialDetailPage({
     [tutorial, tutorialSearchQuery]
   );
   function logTutorialTouch(eventType, details = {}) {
+    const voiceTouchMetadata = getVoiceConditionTouchMetadata(isVoiceCondition, lastVoiceFailureRef);
     void logTouchInteraction({
       participantId: studyContext?.participantId || null,
       participantCode: studyContext?.participantCode || "",
@@ -95,9 +98,12 @@ export function TutorialDetailPage({
       stepIndexBefore: details.stepIndexBefore ?? activeStepIndex,
       stepIndexAfter: details.stepIndexAfter ?? activeStepIndex,
       fallbackUsed: isVoiceCondition,
+      touchUseContext: voiceTouchMetadata.touchUseContext,
+      previousVoiceFailureEventId: voiceTouchMetadata.previousVoiceFailureEventId,
       metadata: {
         taskTrialId: studyContext?.taskTrialId || null,
         allowedModality,
+        ...voiceTouchMetadata,
         ...(details.metadata || {}),
       },
     });
@@ -529,6 +535,12 @@ export function TutorialDetailPage({
     language: normalizedLanguage,
     getStepIndex: () => activeStepIndex,
     onCommand: executeVoiceCommand,
+    onVoiceFailure: (failure) => {
+      lastVoiceFailureRef.current = failure;
+    },
+    onVoiceSuccess: () => {
+      lastVoiceFailureRef.current = null;
+    },
   });
   const isVoiceOn =
     voiceCommands.isVoiceEnabled ||
@@ -798,6 +810,25 @@ export function TutorialDetailPage({
 function isCompactTutorialViewport() {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
   return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function getVoiceConditionTouchMetadata(isVoiceCondition, lastVoiceFailureRef) {
+  if (!isVoiceCondition) return {};
+
+  const failure = lastVoiceFailureRef.current;
+  const isRecentFailure = failure?.timestamp && Date.now() - failure.timestamp <= FALLBACK_TOUCH_WINDOW_MS;
+  if (isRecentFailure) {
+    lastVoiceFailureRef.current = null;
+    return {
+      touchUseContext: "fallback_after_voice_failure",
+      previousVoiceFailureEventId: failure.eventId || "",
+      previousVoiceFailureEventType: failure.eventType || "",
+    };
+  }
+
+  return {
+    touchUseContext: "voice_condition_touch_use",
+  };
 }
 
 function getTutorialSearchResults(tutorial, query) {

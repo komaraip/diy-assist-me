@@ -9,9 +9,10 @@ export function TaskTrialControls({
   isCompleting,
   onStart,
   onComplete,
+  requiredActionStatus = null,
   language = "en",
 }) {
-  const [completionStatus, setCompletionStatus] = useState("successful");
+  const [completionStatus, setCompletionStatus] = useState("");
   const [invalidTrial, setInvalidTrial] = useState(false);
   const [invalidTrialReason, setInvalidTrialReason] = useState("");
   const [taskNote, setTaskNote] = useState("");
@@ -22,14 +23,12 @@ export function TaskTrialControls({
   const copy = getStudyCopy(normalizedLanguage);
 
   useEffect(() => {
-    if (!taskTrial) return;
-    if (taskTrial.completionStatus) setCompletionStatus(taskTrial.completionStatus);
-    if (taskTrial.invalidTrial) setInvalidTrial(true);
-    if (taskTrial.invalidTrialReason) setInvalidTrialReason(taskTrial.invalidTrialReason);
-    if (taskTrial.participantTaskNote || taskTrial.researcherNote) {
-      setTaskNote(taskTrial.participantTaskNote || taskTrial.researcherNote);
-    }
-  }, [taskTrial]);
+    setCompletionStatus(taskTrial?.completionStatus || "");
+    setInvalidTrial(taskTrial?.invalidTrial === true);
+    setInvalidTrialReason(taskTrial?.invalidTrialReason || "");
+    setTaskNote(taskTrial?.participantTaskNote || taskTrial?.researcherNote || "");
+    setShowFinishModal(false);
+  }, [taskTrial?.id]);
 
   useEffect(() => {
     if (!taskTrial?.startedAt || taskTrial.endedAt) return undefined;
@@ -46,7 +45,9 @@ export function TaskTrialControls({
   }, [taskTrial?.endedAt, taskTrial?.startedAt]);
 
   const isCompleted = !!taskTrial?.endedAt;
-  const canComplete = !!taskTrial && !isCompleted && (!invalidTrial || invalidTrialReason.trim());
+  const missingRequiredActions = requiredActionStatus?.missingRequiredActions || [];
+  const hasMissingRequiredActions = missingRequiredActions.length > 0;
+  const canComplete = !!taskTrial && !isCompleted && completionStatus && (!invalidTrial || invalidTrialReason.trim());
 
   function handleFormSubmit(event) {
     event.preventDefault();
@@ -113,7 +114,9 @@ export function TaskTrialControls({
                   value={completionStatus}
                   onChange={(event) => setCompletionStatus(event.target.value)}
                   disabled={isCompleted}
+                  required
                 >
+                  <option value="" disabled>{copy.taskTrial.outcomePlaceholder}</option>
                   <option value="successful">{copy.taskTrial.outcomes.successful}</option>
                   <option value="partially_successful">{copy.taskTrial.outcomes.partially_successful}</option>
                   <option value="unsuccessful">{copy.taskTrial.outcomes.unsuccessful}</option>
@@ -157,6 +160,37 @@ export function TaskTrialControls({
         </details>
       ) : null}
 
+      {requiredActionStatus?.requiredActions?.length ? (
+        <section className="study-panel" style={{ margin: 0 }} aria-labelledby="required-action-heading">
+          <div className="study-panel-heading" style={{ alignItems: "flex-start" }}>
+            <div>
+              <h2 id="required-action-heading" style={{ margin: 0, fontSize: "1.05rem" }}>{copy.taskTrial.requiredActionsTitle}</h2>
+              <p className="study-context-line" style={{ margin: "0.35rem 0 0" }}>
+                {copy.taskTrial.requiredActionsDescription}
+              </p>
+            </div>
+            <span className={hasMissingRequiredActions ? "status-badge warning" : "status-badge"}>
+              {requiredActionStatus.metRequiredActions.length}/{requiredActionStatus.requiredActions.length}
+            </span>
+          </div>
+          <ul className="plain-list" style={{ marginTop: "0.85rem" }}>
+            {requiredActionStatus.requiredActions.map((action) => {
+              const isMet = requiredActionStatus.metRequiredActions.includes(action);
+              return (
+                <li key={action} style={{ color: isMet ? "var(--primary-dark)" : "var(--muted)" }}>
+                  {isMet ? "Done:" : "Missing:"} {formatRequiredAction(action)}
+                </li>
+              );
+            })}
+          </ul>
+          {hasMissingRequiredActions ? (
+            <p className="status-note" role="status" style={{ marginTop: "0.75rem" }}>
+              {copy.taskTrial.requiredActionsWarning(formatRequiredActionList(missingRequiredActions))}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
       {showStartModal ? (
         <div className="admin-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="start-task-title">
           <div className="admin-confirm-dialog">
@@ -195,6 +229,11 @@ export function TaskTrialControls({
               Have you followed all the instructions in the task script? 
               Please ensure you have tried all the controls listed in the script before finishing.
             </p>
+            {hasMissingRequiredActions ? (
+              <p className="status-note error-note" role="alert">
+                {copy.taskTrial.finishMissingActionsWarning(formatRequiredActionList(missingRequiredActions))}
+              </p>
+            ) : null}
             <p>
               Click <strong>Yes, Finish</strong> to complete the task, or <strong>Go Back</strong> to continue trying the controls.
             </p>
@@ -236,4 +275,25 @@ function formatTaskType(trialType, copy) {
 
 function formatMode(modality, language) {
   return formatStudyMode(modality, language);
+}
+
+function formatRequiredAction(action) {
+  const labels = {
+    materials_open: "Open materials",
+    step_next: "Go to next step",
+    repeat_instruction: "Repeat instruction",
+    tutorial_search: "Search tutorial",
+    tutorial_search_target: "Search target keyword",
+    step_jump: "Jump to a step",
+    step_jump_target: "Jump to target step",
+    step_previous: "Go to previous step",
+    return_target_step: "Return to target step",
+    scroll_down: "Scroll down",
+    scroll_down_after_target: "Scroll down after target step",
+  };
+  return labels[action] || action.replace(/_/g, " ");
+}
+
+function formatRequiredActionList(actions) {
+  return actions.map(formatRequiredAction).join(", ");
 }

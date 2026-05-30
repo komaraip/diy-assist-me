@@ -1,7 +1,7 @@
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
-import { createLocalRecord } from "./localStore.js";
-import { serviceSuccess } from "../utils/serviceResult.js";
+import { createLocalRecord, listLocalRecords } from "./localStore.js";
+import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 
 const LOCAL_CONFIG_WARNING = "Interaction was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Interaction was saved on this device.";
@@ -21,6 +21,36 @@ export async function logVoiceInteraction(event = {}) {
     localWarning: LOCAL_VOICE_WARNING,
     firebaseFallbackWarning: FIREBASE_VOICE_FALLBACK_WARNING,
   });
+}
+
+export async function listInteractionLogsBySession(sessionId) {
+  const source = isFirebaseEnabled && db ? "firebase" : "local";
+
+  if (!sessionId) {
+    return serviceFailure("Session id is required.", source, []);
+  }
+
+  if (!isFirebaseEnabled || !db) {
+    const localResult = listLocalRecords("interactionLogs");
+    if (localResult.error) return localResult;
+    return serviceSuccess(
+      (localResult.data || []).filter((log) => log.sessionId === sessionId),
+      "local",
+      LOCAL_CONFIG_WARNING
+    );
+  }
+
+  try {
+    const snapshot = await getDocs(query(collection(db, "interactionLogs"), where("sessionId", "==", sessionId)));
+    return serviceSuccess(snapshot.docs.map((logDoc) => ({ id: logDoc.id, ...logDoc.data() })), "firebase");
+  } catch {
+    const localResult = listLocalRecords("interactionLogs");
+    return serviceSuccess(
+      (localResult.data || []).filter((log) => log.sessionId === sessionId),
+      "local",
+      FIREBASE_FALLBACK_WARNING
+    );
+  }
 }
 
 function buildInteractionLogRecord(event = {}) {
@@ -56,6 +86,8 @@ function buildInteractionLogRecord(event = {}) {
     isRecoveryAttempt: event.isRecoveryAttempt ?? false,
     recoveryAttemptType: event.recoveryAttemptType ?? "",
     fallbackUsed: event.fallbackUsed ?? false,
+    touchUseContext: event.touchUseContext ?? event.metadata?.touchUseContext ?? "",
+    previousVoiceFailureEventId: event.previousVoiceFailureEventId ?? event.metadata?.previousVoiceFailureEventId ?? "",
     speechConfidence: event.speechConfidence ?? event.metadata?.speechConfidence ?? null,
     matchedPhrase: event.matchedPhrase ?? event.metadata?.matchedPhrase ?? "",
     query: event.query ?? event.metadata?.query ?? "",

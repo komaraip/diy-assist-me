@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { AdminDataToolbar } from "../components/admin/AdminDataToolbar.jsx";
 import { AdminTabs } from "../components/admin/AdminTabs.jsx";
+import { AnalysisIssues } from "../components/admin/AnalysisIssues.jsx";
 import { EvidenceChecklist } from "../components/admin/EvidenceChecklist.jsx";
 import { ExportControls } from "../components/admin/ExportControls.jsx";
 import { InteractionLogViewer } from "../components/admin/InteractionLogViewer.jsx";
@@ -92,6 +93,7 @@ function DataDashboard({ activeTab }) {
         <div className="admin-thesis-overview-grid">
           <MetricsSummary adminData={adminData} />
           <EvidenceChecklist adminData={adminData} />
+          <AnalysisIssues adminData={adminData} />
         </div>
       )}
       

@@ -5,16 +5,18 @@ import { ObserverNotesPanel } from "../components/guided-session/ObserverNotesPa
 import { TaskTrialControls } from "../components/guided-session/TaskTrialControls.jsx";
 import { TutorialDetailPage } from "./TutorialDetailPage.jsx";
 import { getStudySession } from "../services/studyService.js";
-import { logTouchInteraction, logVoiceInteraction } from "../services/logService.js";
+import { listInteractionLogsBySession, logTouchInteraction, logVoiceInteraction } from "../services/logService.js";
 import { completeTaskTrial, listTaskTrialsBySession, startTaskTrial } from "../services/taskTrialService.js";
 import { findStudyTask } from "../utils/studyAssignments.js";
 import { buildStudyLogContext } from "../utils/studyContext.js";
+import { getRequiredActionCoverage } from "../utils/chapter4Metrics.js";
 import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
 export function GuidedSessionTaskPage() {
   const { sessionId, taskId } = useParams();
   const [session, setSession] = useState(null);
   const [taskTrials, setTaskTrials] = useState([]);
+  const [interactionLogs, setInteractionLogs] = useState([]);
   const [resultMeta, setResultMeta] = useState({ source: "local", warning: null, error: null });
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -29,16 +31,18 @@ export function GuidedSessionTaskPage() {
 
     async function loadTask() {
       setIsLoading(true);
-      const [sessionResult, trialsResult] = await Promise.all([
+      const [sessionResult, trialsResult, logsResult] = await Promise.all([
         getStudySession(sessionId),
         listTaskTrialsBySession(sessionId),
+        listInteractionLogsBySession(sessionId),
       ]);
       if (!isMounted) return;
       setSession(sessionResult.data);
       setTaskTrials(trialsResult.data || []);
+      setInteractionLogs(logsResult.data || []);
       setResultMeta({
         source: sessionResult.source,
-        warning: [sessionResult.warning, trialsResult.warning].filter(Boolean).join(" ") || null,
+        warning: [sessionResult.warning, trialsResult.warning, logsResult.warning].filter(Boolean).join(" ") || null,
         error: sessionResult.error,
       });
       setIsLoading(false);
@@ -58,6 +62,38 @@ export function GuidedSessionTaskPage() {
     () => buildStudyLogContext({ session, task, taskTrial: activeTrial }),
     [activeTrial, session, task]
   );
+  const requiredActionStatus = useMemo(() => {
+    if (!activeTrial || !task) return null;
+    return getRequiredActionCoverage({
+      data: { sessions: session ? [session] : [] },
+      trial: {
+        ...activeTrial,
+        requiredActions: task.requiredActions,
+        targetKeyword: task.targetKeyword,
+        targetStep: task.targetStep,
+      },
+      task,
+      interactionLogs,
+    });
+  }, [activeTrial, interactionLogs, session, task]);
+
+  useEffect(() => {
+    if (!activeTrial || activeTrial.endedAt) return undefined;
+
+    let isMounted = true;
+    async function refreshLogs() {
+      const result = await listInteractionLogsBySession(sessionId);
+      if (isMounted && !result.error) {
+        setInteractionLogs(result.data || []);
+      }
+    }
+
+    const timer = window.setInterval(refreshLogs, 3000);
+    return () => {
+      isMounted = false;
+      window.clearInterval(timer);
+    };
+  }, [activeTrial, sessionId]);
 
   useEffect(() => {
     if (!session || !task || !activeTrial || activeTrial.endedAt || !activeTrial.id) return;
@@ -200,6 +236,7 @@ export function GuidedSessionTaskPage() {
         isCompleting={isCompleting}
         onStart={handleStartTrial}
         onComplete={handleCompleteTrial}
+        requiredActionStatus={requiredActionStatus}
         language={language}
       />
       {statusMessage ? <p className="status-note" role="status" style={{ marginTop: "0.5rem", marginBottom: "1.25rem" }}>{statusMessage}</p> : null}

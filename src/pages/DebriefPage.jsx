@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { DebriefForm } from "../components/guided-session/DebriefForm.jsx";
 import { GuidedProgress } from "../components/guided-session/GuidedProgress.jsx";
 import { submitDebriefResponse } from "../services/debriefService.js";
+import { updateSession } from "../services/sessionService.js";
 import { getStudySession } from "../services/studyService.js";
 import { getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
@@ -45,6 +46,22 @@ export function DebriefPage() {
       responses,
     });
     setStatusMessage(result.error || copy.debriefPage.completeStatus);
+    if (!result.error) {
+      const completedAt = new Date().toISOString();
+      const sessionUpdateResult = await updateSession(session.id, {
+        status: "completed",
+        endedAt: completedAt,
+        completedAt,
+      });
+      if (!sessionUpdateResult.error) {
+        setSession((current) => current ? { ...current, status: "completed", endedAt: completedAt, completedAt } : current);
+      } else {
+        setResultMeta((current) => ({
+          ...current,
+          warning: [current.warning, sessionUpdateResult.error].filter(Boolean).join(" ") || null,
+        }));
+      }
+    }
     setIsSubmitting(false);
   }
 
@@ -79,6 +96,7 @@ export function DebriefPage() {
           {copy.shared.sessionCode}: {session.participantCode}
         </span>
       </div>
+      {resultMeta.warning ? <p className="status-note" role="status">{resultMeta.warning}</p> : null}
       <DebriefForm isSubmitting={isSubmitting} onSubmit={handleSubmit} language={language} />
       {statusMessage ? (
         <div className={statusMessage === copy.debriefPage.completeStatus ? "result-panel" : "result-panel error"} role="status">

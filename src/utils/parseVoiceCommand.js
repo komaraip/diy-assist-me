@@ -29,15 +29,23 @@ export function parseVoiceCommand(transcript = "", language = "en") {
   for (const pattern of searchPatterns) {
     const match = normalizedTranscript.match(pattern);
     if (match?.[1]) {
+      const query = match[1].trim();
+      if (!isMeaningfulSearchQuery(query)) {
+        return unknownResult(normalizedTranscript);
+      }
       return {
         intent: VOICE_INTENTS.SEARCH,
-        query: match[1].trim(),
+        query,
         stepNumber: null,
         normalizedTranscript,
         matchedPhrase: pattern.source,
         confidenceType: "pattern",
       };
     }
+  }
+
+  if (looksLikeIncompleteSearch(normalizedTranscript)) {
+    return unknownResult(normalizedTranscript);
   }
 
   for (const pattern of stepPatterns) {
@@ -72,6 +80,17 @@ export function parseVoiceCommand(transcript = "", language = "en") {
   }
 
   return unknownResult(normalizedTranscript);
+}
+
+const LOW_VALUE_SEARCH_QUERIES = new Set(["a", "an", "the", "for", "to", "in", "on", "of"]);
+
+function isMeaningfulSearchQuery(query) {
+  const normalizedQuery = normalizeTranscript(query);
+  return normalizedQuery.length >= 2 && !LOW_VALUE_SEARCH_QUERIES.has(normalizedQuery);
+}
+
+function looksLikeIncompleteSearch(normalizedTranscript) {
+  return /^(?:search for|search|find|look for|look up)(?:\s+\S*)?$/.test(normalizedTranscript);
 }
 
 function unknownResult(normalizedTranscript) {

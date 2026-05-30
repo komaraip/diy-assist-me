@@ -78,7 +78,7 @@ const ENGLISH_COMMAND_DICTIONARY = [
 
 const ENGLISH_SEARCH_PATTERNS = [
   /^(?:search for|find|look for)\s+(.+)$/,
-  /^(?:search|find|look up)\s+(.+)$/,
+  /^(?:search|find|look up)\s+(?!for$)(.+)$/,
 ];
 
 const ENGLISH_STEP_PATTERNS = [

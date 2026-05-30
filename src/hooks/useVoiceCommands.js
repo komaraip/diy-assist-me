@@ -25,6 +25,8 @@ export function useVoiceCommands({
   language = "en",
   getStepIndex,
   onCommand,
+  onVoiceFailure,
+  onVoiceSuccess,
 }) {
   const normalizedLanguage = normalizeStudyLanguage(language);
   const copy = getStudyCopy(normalizedLanguage).voice;
@@ -32,6 +34,8 @@ export function useVoiceCommands({
   const [lastParse, setLastParse] = useState(null);
   const [showCommandHints, setShowCommandHints] = useState(false);
   const onCommandRef = useRef(onCommand);
+  const onVoiceFailureRef = useRef(onVoiceFailure);
+  const onVoiceSuccessRef = useRef(onVoiceSuccess);
   const getStepIndexRef = useRef(getStepIndex);
   const unsupportedLoggedRef = useRef(false);
   const stopListeningRef = useRef(null);
@@ -41,6 +45,14 @@ export function useVoiceCommands({
   useEffect(() => {
     onCommandRef.current = onCommand;
   }, [onCommand]);
+
+  useEffect(() => {
+    onVoiceFailureRef.current = onVoiceFailure;
+  }, [onVoiceFailure]);
+
+  useEffect(() => {
+    onVoiceSuccessRef.current = onVoiceSuccess;
+  }, [onVoiceSuccess]);
 
   useEffect(() => {
     getStepIndexRef.current = getStepIndex;
@@ -65,7 +77,7 @@ export function useVoiceCommands({
           await appendTechnicalNote(sessionId, technicalNote);
         }
       }
-      await logVoiceInteraction({
+      const logResult = await logVoiceInteraction({
         participantId,
         participantCode,
         sessionId,
@@ -88,6 +100,12 @@ export function useVoiceCommands({
         elapsedMsFromTaskStart: getElapsedMsFromStartedAt(taskStartedAt),
         stepIndexBefore: getStepIndexRef.current?.() ?? null,
         stepIndexAfter: getStepIndexRef.current?.() ?? null,
+      });
+      onVoiceFailureRef.current?.({
+        eventId: logResult.data?.id || "",
+        eventType: recognitionErrorCode === "unsupported-browser" ? "voice_unsupported" : "voice_recognition_error",
+        timestamp: Date.now(),
+        failureReason: message,
       });
       lastFailureRef.current = {
         normalizedTranscript: "",
@@ -115,7 +133,7 @@ export function useVoiceCommands({
       if (parsed.intent === VOICE_INTENTS.UNKNOWN) {
         const message = copy.unknownCommand(rawTranscript);
         setVoiceFeedback(message);
-        await logVoiceInteraction({
+        const logResult = await logVoiceInteraction({
           participantId,
           participantCode,
           sessionId,
@@ -142,6 +160,12 @@ export function useVoiceCommands({
           speechConfidence: confidence,
           metadata: { speechConfidence: confidence },
         });
+        onVoiceFailureRef.current?.({
+          eventId: logResult.data?.id || "",
+          eventType: "voice_no_match",
+          timestamp: Date.now(),
+          failureReason: "no_matching_intent",
+        });
         lastFailureRef.current = {
           normalizedTranscript: parsed.normalizedTranscript,
           matchedIntent: parsed.intent,
@@ -159,7 +183,7 @@ export function useVoiceCommands({
         setShowCommandHints(true);
       }
 
-      await logVoiceInteraction({
+      const logResult = await logVoiceInteraction({
         participantId,
         participantCode,
         sessionId,
@@ -199,12 +223,23 @@ export function useVoiceCommands({
 
       if (success) {
         lastFailureRef.current = null;
+        onVoiceSuccessRef.current?.({
+          eventId: logResult.data?.id || "",
+          eventType: dispatchResult?.eventType || "voice_command",
+          timestamp: Date.now(),
+        });
       } else {
         lastFailureRef.current = {
           normalizedTranscript: parsed.normalizedTranscript,
           matchedIntent: parsed.intent,
           timestamp: Date.now(),
         };
+        onVoiceFailureRef.current?.({
+          eventId: logResult.data?.id || "",
+          eventType: dispatchResult?.eventType || "voice_command_failed",
+          timestamp: Date.now(),
+          failureReason: dispatchResult?.failureReason || null,
+        });
       }
 
       if (parsed.intent === VOICE_INTENTS.STOP_LISTENING) {

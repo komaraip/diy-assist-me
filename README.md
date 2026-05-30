@@ -149,7 +149,7 @@ The Web Speech API is browser-dependent and may require network support. Guided 
 8. Run practice and measured task trials separately.
 9. Complete each task trial with a respondent task completion report.
 10. Submit SUS after each condition.
-11. Submit final debrief responses.
+11. Submit final debrief responses. The final feedback requires preferred modality plus short answers for what was easiest, what was hardest, and what would make the experience better; additional diagnostic fields remain optional.
 12. Add issue, feedback, or technical notes as needed.
 
 Condition IDs are `condition_1` and `condition_2`; modality is stored separately as `touch` or `voice`. Practice trials are stored with `trialType: "practice"` and measured trials with `trialType: "measured"`. Guided sessions and participants store `language` as `en`; old sessions with another language value render in English.
@@ -157,6 +157,8 @@ Condition IDs are `condition_1` and `condition_2`; modality is stored separately
 Measured task records include `taskScript`, `requiredActions`, `targetKeyword`, `targetStep`, and `successCriteria` so Chapter 4 can describe the exact navigation actions participants performed. Measured actions cover materials, next, repeat, search, overview/jump, previous, return-to-target-step behavior, and scrolling.
 
 The four guided-session core tutorials are `tutorial_001`, `tutorial_002`, `tutorial_005`, and `tutorial_009`. Rotation A uses `tutorial_001` for practice and `tutorial_002` for measured tasks. Rotation B uses `tutorial_005` for practice and `tutorial_009` for measured tasks.
+
+`tutorial_open` is recorded as a system/open event when a guided task renders the tutorial. It is not counted as a spoken command in RQ2 speech-recognition accuracy, command success rate, or recovery-effort metrics.
 
 ## Privacy Rules
 
@@ -211,6 +213,6 @@ The evidence checklist maps data availability to research questions:
 
 - RQ1: touch vs voice task performance and perceived usability from measured task timing, task success, and SUS scores.
 - RQ2: browser-based voice reliability from recognition accuracy, command success rate, recovery effort, failures, repeated/rephrased commands, and fallback use.
-- RQ3: usability problems and design implications from observer notes, debrief responses, failed/repeated commands, fallback use, and technical notes.
+- RQ3: usability problems and design implications from observer notes, core-complete debrief responses, failed/repeated commands, fallback use, and technical notes.
 
 Invalid measured trials remain exportable and are counted separately in summary metrics. The analysis-ready CSV includes paired duration and SUS differences, numeric completion values, sequence/rotation metadata, validity flags, and exclusion reasons for external statistical analysis such as Shapiro-Wilk, paired t-test, Wilcoxon signed-rank test, confidence intervals, and effect sizes.
