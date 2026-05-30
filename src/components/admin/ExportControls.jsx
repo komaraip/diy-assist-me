@@ -112,13 +112,11 @@ export function ExportControls() {
         </button>
       </div>
 
-      {statusMessage ? (
-        <p className={exportResult?.error ? "status-note error-note" : "status-note"} role="status">
+      {exportResult?.error && statusMessage ? (
+        <p className="status-note error-note" role="status">
           {statusMessage}
         </p>
-      ) : (
-        <p className="empty-state">Generate exports to enable downloads.</p>
-      )}
+      ) : null}
 
       {(exportResult?.data?.excludedSessionCount ?? 0) > 0 ? (
         <p className="status-note exclude-notice" role="status">
@@ -139,29 +137,33 @@ export function ExportControls() {
         </dl>
       ) : null}
 
-      <div className="export-card-grid">
+      <div className="compact-export-card-grid">
         {exportCards.map((card) => {
           const Icon = card.icon;
           const generatedFile = findGeneratedFile(card.fileName);
           return (
-            <article className="export-card" key={card.fileName}>
-              <span className="export-card-icon">
-                <Icon aria-hidden="true" />
-              </span>
-              <div>
-                <h3>{card.title}</h3>
-                <code>{card.fileName}</code>
-                <p>{card.description}</p>
+            <article className="compact-export-card" key={card.fileName}>
+              <div className="compact-export-card-header">
+                <div className="compact-export-card-title-group">
+                  <span className="compact-export-card-icon-wrap">
+                    <Icon size={15} aria-hidden="true" />
+                  </span>
+                  <h3 className="compact-export-card-title" title={card.title}>{card.title}</h3>
+                </div>
+                <button
+                  type="button"
+                  className={`compact-export-download-btn ${generatedFile ? "active" : ""}`}
+                  onClick={() => handleDownload(generatedFile)}
+                  disabled={!generatedFile}
+                  title={generatedFile ? "Download file" : "Generate exports first to download"}
+                >
+                  <Download size={13} aria-hidden="true" />
+                </button>
               </div>
-              <button
-                type="button"
-                className="button secondary-action"
-                onClick={() => handleDownload(generatedFile)}
-                disabled={!generatedFile}
-              >
-                <Download aria-hidden="true" />
-                Download
-              </button>
+              <div className="compact-export-card-body">
+                <code className="compact-export-filename" title={card.fileName}>{card.fileName}</code>
+                <p className="compact-export-desc">{card.description}</p>
+              </div>
             </article>
           );
         })}

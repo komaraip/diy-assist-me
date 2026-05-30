@@ -3139,12 +3139,12 @@ button:disabled {
 }
 
 .admin-summary-grid {
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 0.65rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
 .admin-quick-link-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .admin-summary-card,
@@ -3157,15 +3157,42 @@ button:disabled {
 }
 
 .admin-summary-card {
-  padding: 0.85rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.95rem 0.8rem !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.admin-summary-card {
-  display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 0.6rem;
-  text-align: center;
+.admin-summary-card:hover {
+  border-color: rgba(136, 168, 150, 0.4) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(51, 56, 54, 0.05);
+}
+
+.admin-summary-card .summary-card-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-transform: uppercase;
+  background: #333836 !important;
+  color: var(--secondary) !important;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.03em;
+}
+
+.admin-summary-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--muted);
 }
 
 .admin-summary-card .admin-summary-icon {
@@ -4670,6 +4697,331 @@ details.task-notes-panel .task-notes-content {
   margin: 0.25rem 0 0.5rem 0;
   font-size: 1.35rem;
   color: var(--foreground);
+}
+
+/* Compact Log Viewer Filters and Badge Styles */
+.log-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.log-viewer-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.compact-log-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(136, 168, 150, 0.12);
+  border: 1px solid rgba(136, 168, 150, 0.25);
+  color: var(--primary-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  height: 1.6rem;
+  line-height: 1;
+}
+
+.compact-log-badge strong {
+  font-weight: 800;
+  margin-right: 0.15rem;
+}
+
+.log-viewer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.compact-clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.compact-clear-btn:hover {
+  color: #a3402e;
+  background: rgba(220, 38, 38, 0.06);
+}
+
+.compact-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 2.1rem;
+}
+
+.compact-filter-toggle:hover {
+  background: var(--surface-soft);
+  border-color: rgba(51, 56, 54, 0.25);
+}
+
+.compact-filter-toggle.active {
+  background: #333836;
+  color: white;
+  border-color: #333836;
+}
+
+.compact-filter-toggle.active svg {
+  color: white;
+}
+
+.compact-filter-toggle svg {
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+
+.compact-filter-toggle.active svg {
+  color: var(--secondary);
+}
+
+.compact-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--secondary);
+  color: #2d332f;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border-radius: 50%;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.2rem;
+  line-height: 1;
+}
+
+.compact-filter-toggle.active .compact-filter-count {
+  background: white;
+  color: #333836;
+}
+
+.compact-filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  animation: compactFilterFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes compactFilterFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.compact-filter-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+  height: 2rem;
+  transition: all 0.15s ease;
+}
+
+.compact-filter-field:focus-within {
+  border-color: var(--primary-dark);
+  box-shadow: 0 0 0 2px rgba(111, 144, 125, 0.15);
+}
+
+.compact-filter-label {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.compact-filter-select {
+  border: none;
+  background: transparent;
+  padding: 0 1.25rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--foreground);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7a6f' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 0.65rem;
+}
+
+/* Compact Export Cards Styles */
+.compact-export-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+  .compact-export-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .compact-export-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.compact-export-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 0.9rem;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  justify-content: flex-start;
+  min-height: 105px;
+}
+
+.compact-export-card:hover {
+  border-color: rgba(136, 168, 150, 0.6);
+  box-shadow: 0 4px 12px rgba(51, 56, 54, 0.05);
+}
+
+.compact-export-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.compact-export-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.compact-export-card-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  color: var(--primary-dark);
+  flex: 0 0 auto;
+}
+
+.compact-export-card-icon-wrap svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.compact-export-card-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-export-download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex: 0 0 auto;
+}
+
+.compact-export-download-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: var(--background);
+}
+
+.compact-export-download-btn.active {
+  background: var(--primary);
+  color: #2d332f;
+  border-color: var(--primary);
+}
+
+.compact-export-download-btn.active:hover {
+  background: var(--primary-dark);
+  color: white;
+  border-color: var(--primary-dark);
+  box-shadow: 0 2px 6px rgba(111, 144, 125, 0.25);
+}
+
+.compact-export-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.compact-export-filename {
+  font-size: 0.7rem;
+  color: var(--primary-dark);
+  background: rgba(136, 168, 150, 0.08);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  align-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-export-desc {
+  margin: 0.15rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--muted);
 }
 
 

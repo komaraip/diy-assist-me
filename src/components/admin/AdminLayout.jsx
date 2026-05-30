@@ -1,4 +1,4 @@
-import { BookOpenText, ClipboardList, FileText, Home, LogOut, TableProperties } from "lucide-react";
+import { BookOpenText, Database, Home, LogOut, TableProperties } from "lucide-react";
 import { useEffect } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { logoutAdmin } from "../../services/adminAuthService.js";
@@ -7,9 +7,8 @@ import { useAdminAuth } from "./AdminAuthContext.jsx";
 
 const adminNavItems = [
   { to: "/admin", label: "Overview", icon: TableProperties, end: true },
-  { to: "/admin/guided-sessions", label: "Guided Sessions", icon: ClipboardList },
-  { to: "/admin/thesis", label: "Thesis", icon: FileText },
   { to: "/admin/tutorials", label: "Tutorials", icon: BookOpenText },
+  { to: "/admin/data", label: "Data", icon: Database },
 ];
 
 export function AdminLayout() {

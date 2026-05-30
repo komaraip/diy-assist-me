@@ -1,9 +1,12 @@
-import { ClipboardList, ListFilter } from "lucide-react";
+import { ClipboardList, Database, Download, ListFilter, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { AdminDataToolbar } from "../components/admin/AdminDataToolbar.jsx";
 import { AdminTabs } from "../components/admin/AdminTabs.jsx";
+import { EvidenceChecklist } from "../components/admin/EvidenceChecklist.jsx";
+import { ExportControls } from "../components/admin/ExportControls.jsx";
 import { InteractionLogViewer } from "../components/admin/InteractionLogViewer.jsx";
+import { MetricsSummary } from "../components/admin/MetricsSummary.jsx";
 import { PurgeButton } from "../components/admin/PurgeButton.jsx";
 import { SessionReview } from "../components/admin/SessionReview.jsx";
 import { loadAdminData } from "../services/adminDataService.js";
@@ -11,30 +14,32 @@ import { loadAdminData } from "../services/adminDataService.js";
 const tabs = [
   { id: "sessions", label: "Sessions", icon: ClipboardList },
   { id: "logs", label: "Logs", icon: ListFilter },
+  { id: "analysis", label: "Analysis", icon: TrendingUp },
+  { id: "exports", label: "Exports", icon: Download },
 ];
 
-export function AdminGuidedSessionsPage() {
+export function AdminDataPage() {
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab") || "sessions";
   const activeTab = tabs.some((tab) => tab.id === requestedTab) ? requestedTab : "sessions";
 
   if (requestedTab !== activeTab) {
-    return <Navigate to={`/admin/guided-sessions?tab=${activeTab}`} replace />;
+    return <Navigate to={`/admin/data?tab=${activeTab}`} replace />;
   }
 
   return (
     <section className="admin-page">
       <div className="admin-page-header">
-        <p className="eyebrow">Guided sessions</p>
-        <p>Review guided session bundles and interaction logs in one focused workspace.</p>
+        <p className="eyebrow">Database & Metrics</p>
+        <p>Manage study records, inspect interaction logs, review statistical metrics, and download CSV/JSON exports.</p>
       </div>
 
-      <GuidedSessionsDashboard activeTab={activeTab} />
+      <DataDashboard activeTab={activeTab} />
     </section>
   );
 }
 
-function GuidedSessionsDashboard({ activeTab }) {
+function DataDashboard({ activeTab }) {
   const [adminData, setAdminData] = useState(null);
   const [resultMeta, setResultMeta] = useState({ source: "local", warning: null, error: null });
   const [isLoading, setIsLoading] = useState(true);
@@ -52,11 +57,11 @@ function GuidedSessionsDashboard({ activeTab }) {
   }, []);
 
   if (isLoading) {
-    return <p className="status-note">Loading guided session data...</p>;
+    return <p className="status-note">Loading study data...</p>;
   }
 
   if (resultMeta.error || !adminData) {
-    return <p className="status-note error-note">{resultMeta.error || "Guided session data could not be loaded."}</p>;
+    return <p className="status-note error-note">{resultMeta.error || "Study data could not be loaded."}</p>;
   }
 
   return (
@@ -65,13 +70,33 @@ function GuidedSessionsDashboard({ activeTab }) {
         source={resultMeta.source}
         warning={resultMeta.warning}
         onRefresh={loadData}
-        actions={<PurgeButton onPurged={loadData} />}
+        refreshLabel="Refresh data"
+        actions={
+          (activeTab === "sessions" || activeTab === "logs") ? (
+            <PurgeButton onPurged={loadData} />
+          ) : null
+        }
       />
-      <AdminTabs tabs={tabs} activeTab={activeTab} basePath="/admin/guided-sessions" />
-      {activeTab === "sessions" ? (
+      
+      <AdminTabs tabs={tabs} activeTab={activeTab} basePath="/admin/data" />
+      
+      {activeTab === "sessions" && (
         <SessionReview adminData={adminData} dataSource={resultMeta.source} />
-      ) : (
+      )}
+      
+      {activeTab === "logs" && (
         <InteractionLogViewer logs={adminData.interactionLogs || []} />
+      )}
+      
+      {activeTab === "analysis" && (
+        <div className="admin-thesis-overview-grid">
+          <MetricsSummary adminData={adminData} />
+          <EvidenceChecklist adminData={adminData} />
+        </div>
+      )}
+      
+      {activeTab === "exports" && (
+        <ExportControls />
       )}
     </div>
   );

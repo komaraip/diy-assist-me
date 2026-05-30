@@ -1,4 +1,4 @@
-import { CheckCircle2, CircleAlert } from "lucide-react";
+import { CheckCircle2, CircleAlert, ClipboardCheck } from "lucide-react";
 import { buildEvidenceChecklist } from "../../utils/chapter4Metrics.js";
 
 export function EvidenceChecklist({ adminData }) {
@@ -11,6 +11,7 @@ export function EvidenceChecklist({ adminData }) {
           <p className="eyebrow">Chapter 4 evidence</p>
           <h2 id="evidence-checklist-heading">Evidence checklist</h2>
         </div>
+        <ClipboardCheck aria-hidden="true" />
       </div>
 
       <ul className="evidence-list">

@@ -1,65 +1,68 @@
-import { ClipboardCheck, FileText, ListFilter, MessageSquareText, Mic, TableProperties, Users } from "lucide-react";
-
 export function AdminSummaryCards({ adminData }) {
   const cards = [
     {
-      label: "Total sessions",
+      label: "Sessions",
       value: (adminData.sessions || []).length,
-      icon: Users,
+      description: "Total recorded study sessions",
     },
     {
-      label: "AB / BA balance",
+      label: "Sequence",
       value: `${countSessions(adminData, "sequenceAssignment", "AB")} / ${countSessions(adminData, "sequenceAssignment", "BA")}`,
-      icon: TableProperties,
+      description: "Sequence balance (AB vs BA)",
     },
     {
-      label: "Rotation A / B",
+      label: "Rotation",
       value: `${countSessions(adminData, "tutorialRotation", "rotation_a")} / ${countSessions(adminData, "tutorialRotation", "rotation_b")}`,
-      icon: ClipboardCheck,
+      description: "Rotation balance (A vs B)",
     },
     {
-      label: "Task trials",
+      label: "Trials",
       value: (adminData.taskTrials || []).length,
-      icon: ClipboardCheck,
+      description: "Completed user task trials",
     },
     {
-      label: "Interaction logs",
+      label: "Logs",
       value: (adminData.interactionLogs || []).length,
-      icon: ListFilter,
+      description: "Total interaction events recorded",
     },
     {
-      label: "Voice logs",
+      label: "Voice Logs",
       value: (adminData.interactionLogs || []).filter((log) => log.modality === "voice").length,
-      icon: Mic,
+      description: "Total voice commands logged",
     },
     {
-      label: "SUS responses",
+      label: "SUS",
       value: (adminData.susResponses || []).length,
-      icon: FileText,
+      description: "Completed SUS usability surveys",
     },
     {
-      label: "Debrief responses",
+      label: "Debrief",
       value: (adminData.debriefResponses || []).length,
-      icon: MessageSquareText,
+      description: "Completed debrief feedback surveys",
+    },
+    {
+      label: "Participants",
+      value: (adminData.participants || []).length,
+      description: "Total unique study participants",
+    },
+    {
+      label: "Notes",
+      value: (adminData.observerNotes || []).length,
+      description: "Total researcher observer notes",
     },
   ];
 
   return (
     <section className="admin-summary-grid" aria-label="Admin data summary">
-      {cards.map((card) => {
-        const Icon = card.icon;
-        return (
-          <article className="admin-summary-card" key={card.label}>
-            <span className="admin-summary-icon">
-              <Icon aria-hidden="true" />
-            </span>
-            <div>
-              <span>{card.label}</span>
-              <strong>{card.value}</strong>
-            </div>
-          </article>
-        );
-      })}
+      {cards.map((card) => (
+        <article className="admin-summary-card" key={card.label}>
+          <div>
+            <span className="summary-card-badge">{card.label}</span>
+            <strong>{card.value}</strong>
+            <p className="admin-summary-desc">{card.description}</p>
+          </div>
+        </article>
+      ))}
     </section>
   );
 }

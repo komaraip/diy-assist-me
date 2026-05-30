@@ -1,4 +1,4 @@
-import { BookOpenText, ClipboardList, FileText, TableProperties } from "lucide-react";
+import { BookOpenText, Database, TableProperties } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AdminDataToolbar } from "../components/admin/AdminDataToolbar.jsx";
@@ -7,22 +7,16 @@ import { loadAdminData } from "../services/adminDataService.js";
 
 const quickLinks = [
   {
-    to: "/admin/guided-sessions",
-    title: "Guided Sessions",
-    description: "Review guided session bundles and interaction logs.",
-    icon: ClipboardList,
-  },
-  {
-    to: "/admin/thesis",
-    title: "Thesis",
-    description: "Open Chapter 4 metrics, evidence readiness, and export files.",
-    icon: FileText,
-  },
-  {
     to: "/admin/tutorials",
     title: "Tutorials",
     description: "Manage the tutorial catalog used by public and guided flows.",
     icon: BookOpenText,
+  },
+  {
+    to: "/admin/data",
+    title: "Data",
+    description: "Review guided sessions, interaction logs, thesis summary metrics, evidence readiness, and export files.",
+    icon: Database,
   },
 ];
 
