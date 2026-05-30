@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getSpeechRecognitionLocale, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { getSpeechRecognitionLocale, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 import { VOICE_STATES } from "../utils/voiceIntents.js";
 
 const RESTART_DELAY_MS = 350;

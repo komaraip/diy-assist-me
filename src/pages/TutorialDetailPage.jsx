@@ -11,8 +11,7 @@ import { logTouchInteraction } from "../services/logService.js";
 import { getTutorialById } from "../services/tutorialService.js";
 import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
 import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
-import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
-import { localizeTutorial } from "../i18n/tutorialTranslations.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 import { TutorialPopover } from "../components/tutorial/TutorialPopover.jsx";
 
 const SCROLL_AMOUNT_RATIO = 0.6;
@@ -58,7 +57,7 @@ export function TutorialDetailPage({
       setIsLoading(true);
       const result = await getTutorialById(tutorialId);
       if (!isMounted) return;
-      setTutorial(localizeTutorial(result.data, normalizedLanguage));
+      setTutorial(result.data);
       setResultMeta({ source: result.source, warning: result.warning, error: result.error });
       setIsLoading(false);
     }

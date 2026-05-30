@@ -2,7 +2,7 @@ import { addDoc, collection, getDocs } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
 import { createLocalRecord, listLocalRecords } from "./localStore.js";
 import { serviceSuccess } from "../utils/serviceResult.js";
-import { DEFAULT_STUDY_LANGUAGE, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { DEFAULT_STUDY_LANGUAGE, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
 const LOCAL_CONFIG_WARNING = "User record was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "User record was saved on this device.";

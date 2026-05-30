@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../../config/guidedSessionContent.js";
 import { InfoPopover } from "./InfoPopover.jsx";
 
 const initialResponses = {

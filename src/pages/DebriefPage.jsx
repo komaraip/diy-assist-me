@@ -5,7 +5,7 @@ import { DebriefForm } from "../components/guided-session/DebriefForm.jsx";
 import { GuidedProgress } from "../components/guided-session/GuidedProgress.jsx";
 import { submitDebriefResponse } from "../services/debriefService.js";
 import { getStudySession } from "../services/studyService.js";
-import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
 export function DebriefPage() {
   const { sessionId } = useParams();

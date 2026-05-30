@@ -1,6 +1,6 @@
 import { Clock, Flag, PlayCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
+import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../config/guidedSessionContent.js";
 
 export function TaskTrialControls({
   task,

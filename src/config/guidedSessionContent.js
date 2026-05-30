@@ -560,14 +560,14 @@ const en = {
   },
 };
 
-export const studyCopy = { en };
+export const guidedSessionContent = { en };
 
 export function normalizeStudyLanguage(value) {
   return SUPPORTED_STUDY_LANGUAGES.includes(value) ? value : DEFAULT_STUDY_LANGUAGE;
 }
 
 export function getStudyCopy(language = DEFAULT_STUDY_LANGUAGE) {
-  return studyCopy[normalizeStudyLanguage(language)] || studyCopy[DEFAULT_STUDY_LANGUAGE];
+  return guidedSessionContent[normalizeStudyLanguage(language)] || guidedSessionContent[DEFAULT_STUDY_LANGUAGE];
 }
 
 export function getSpeechRecognitionLocale(language = DEFAULT_STUDY_LANGUAGE) {

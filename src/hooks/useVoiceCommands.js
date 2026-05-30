@@ -6,7 +6,7 @@ import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
 import { parseVoiceCommand } from "../utils/parseVoiceCommand.js";
 import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
 import { useSpeechRecognition } from "./useSpeechRecognition.js";
-import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
 const RECOGNITION_ERROR_NOTE_THRESHOLD = 3;
 const RECOGNITION_ERROR_NOTE_INTERVAL = 10;

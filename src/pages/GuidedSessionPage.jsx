@@ -6,7 +6,7 @@ import { listTaskTrialsBySession } from "../services/taskTrialService.js";
 import { getStudySession } from "../services/studyService.js";
 import { listSusResponsesBySession } from "../services/susService.js";
 import { getAllStudyTasks } from "../utils/studyAssignments.js";
-import { getStudyCopy, normalizeStudyLanguage, formatStudyMode } from "../i18n/studyCopy.js";
+import { getStudyCopy, normalizeStudyLanguage, formatStudyMode } from "../config/guidedSessionContent.js";
 
 export function GuidedSessionPage() {
   const { sessionId } = useParams();

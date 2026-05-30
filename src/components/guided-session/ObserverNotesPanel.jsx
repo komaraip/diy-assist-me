@@ -5,7 +5,7 @@ import { db, isFirebaseEnabled } from "../../services/firebase.js";
 import { listLocalRecords } from "../../services/localStore.js";
 import { createObserverNote } from "../../services/observerNoteService.js";
 import { appendTechnicalNote, getSessionById } from "../../services/sessionService.js";
-import { getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
+import { getStudyCopy, normalizeStudyLanguage } from "../../config/guidedSessionContent.js";
 
 export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }) {
   const [observerNote, setObserverNote] = useState("");

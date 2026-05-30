@@ -5,7 +5,7 @@ import { SUSForm } from "../components/guided-session/SUSForm.jsx";
 import { getStudySession } from "../services/studyService.js";
 import { submitSusResponse } from "../services/susService.js";
 import { findStudyCondition } from "../utils/studyAssignments.js";
-import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
 export function SUSPage() {
   const { sessionId, conditionId } = useParams();

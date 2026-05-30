@@ -1,5 +1,5 @@
 import { VOICE_INTENTS } from "./voiceIntents.js";
-import { getStudyCopy } from "../i18n/studyCopy.js";
+import { getStudyCopy } from "../config/guidedSessionContent.js";
 
 const ENGLISH_COMMAND_DICTIONARY = [
   {

@@ -2,7 +2,7 @@ import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, updateDoc } from 
 import { db, isFirebaseEnabled } from "./firebase.js";
 import { createLocalRecord, getLocalRecord, listLocalRecords, updateLocalRecord } from "./localStore.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
-import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
 const LOCAL_CONFIG_WARNING = "Session was saved on this device.";
 const FIREBASE_FALLBACK_WARNING = "Session was saved on this device.";

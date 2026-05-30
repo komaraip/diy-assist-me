@@ -6,7 +6,7 @@ import { InfoPopover } from "../components/guided-session/InfoPopover.jsx";
 import { createStudySession } from "../services/studyService.js";
 import { getSessionBalanceSummary } from "../services/sessionService.js";
 import { SEQUENCE_ASSIGNMENTS, TUTORIAL_ROTATIONS } from "../utils/studyAssignments.js";
-import { DEFAULT_STUDY_LANGUAGE, getStudyCopy } from "../i18n/studyCopy.js";
+import { DEFAULT_STUDY_LANGUAGE, getStudyCopy } from "../config/guidedSessionContent.js";
 
 const initialParticipantProfile = {
   fullName: "",

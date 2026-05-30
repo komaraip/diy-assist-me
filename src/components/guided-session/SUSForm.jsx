@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Lock } from "lucide-react";
 import { hasCompleteSusResponses } from "../../utils/susScoring.js";
-import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
+import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../config/guidedSessionContent.js";
 import { InfoPopover } from "./InfoPopover.jsx";
 
 export function SUSForm({ condition, isSubmitting, onSubmit, language = "en" }) {

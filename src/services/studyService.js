@@ -3,7 +3,7 @@ import { createSession, getSessionById } from "./sessionService.js";
 import { listTutorials } from "./tutorialService.js";
 import { buildStudyPlan } from "../utils/studyAssignments.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
-import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
 export async function createStudySession({
   participantProfile = {},

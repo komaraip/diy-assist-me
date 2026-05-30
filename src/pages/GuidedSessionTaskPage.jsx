@@ -9,7 +9,7 @@ import { logTouchInteraction, logVoiceInteraction } from "../services/logService
 import { completeTaskTrial, listTaskTrialsBySession, startTaskTrial } from "../services/taskTrialService.js";
 import { findStudyTask } from "../utils/studyAssignments.js";
 import { buildStudyLogContext } from "../utils/studyContext.js";
-import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
+import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
 export function GuidedSessionTaskPage() {
   const { sessionId, taskId } = useParams();
