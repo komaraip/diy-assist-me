@@ -14,11 +14,13 @@ import { AdminDataPage } from "../pages/AdminDataPage.jsx";
 import { AdminTutorialsPage } from "../pages/AdminTutorialsPage.jsx";
 import { HelpPage } from "../pages/HelpPage.jsx";
 import { NotFoundPage } from "../pages/NotFoundPage.jsx";
+import { ErrorPage } from "../pages/ErrorPage.jsx";
 
 export const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <AdminPage /> },
       { path: "guided-sessions", element: <Navigate to="/admin/data?tab=sessions" replace /> },
@@ -36,6 +38,7 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <LandingPage /> },
       { path: "tutorials", element: <TutorialsPage /> },
