@@ -245,6 +245,7 @@ export function TutorialDetailPage({
   }
 
   function getScrollableTutorialTarget() {
+    if (isCompactTutorialViewport()) return null;
     const target = tutorialMainRef.current;
     if (!target) return null;
     return target.scrollHeight > target.clientHeight + 8 ? target : null;
@@ -385,8 +386,20 @@ export function TutorialDetailPage({
       }
       case VOICE_INTENTS.SHOW_OVERVIEW: {
         setIsOverviewOpen(true);
+        openMobilePanelIfCompact("overview");
         setFeedbackMessage(copy.overviewShown);
         return voiceSuccess("voice_command", copy.overviewShown, {
+          stepIndexBefore,
+          stepIndexAfter: stepIndexBefore,
+        });
+      }
+      case VOICE_INTENTS.CLOSE_OVERVIEW: {
+        setIsOverviewOpen(false);
+        if (activeMobilePanel === "overview") {
+          setActiveMobilePanel(null);
+        }
+        setFeedbackMessage(copy.overviewHidden);
+        return voiceSuccess("voice_command", copy.overviewHidden, {
           stepIndexBefore,
           stepIndexAfter: stepIndexBefore,
         });
@@ -394,11 +407,32 @@ export function TutorialDetailPage({
       case VOICE_INTENTS.SEARCH: {
         if (!parsed.query) return voiceFailure(copy.missingSearchError, "missing_search_query", stepIndexBefore);
         setTutorialSearchQuery(parsed.query);
+        openMobilePanelIfCompact("search");
         setFeedbackMessage(copy.searchingTutorial(parsed.query));
         return voiceSuccess("voice_command", copy.searchingFor(parsed.query), {
           stepIndexBefore,
           stepIndexAfter: stepIndexBefore,
           metadata: { query: parsed.query },
+        });
+      }
+      case VOICE_INTENTS.SHOW_SEARCH: {
+        openMobilePanelIfCompact("search");
+        const titleText = copy.search?.heading || "Search";
+        setFeedbackMessage(titleText);
+        return voiceSuccess("voice_command", titleText, {
+          stepIndexBefore,
+          stepIndexAfter: stepIndexBefore,
+        });
+      }
+      case VOICE_INTENTS.CLOSE_SEARCH: {
+        if (activeMobilePanel === "search") {
+          setActiveMobilePanel(null);
+        }
+        const hiddenText = "Search hidden.";
+        setFeedbackMessage(hiddenText);
+        return voiceSuccess("voice_command", hiddenText, {
+          stepIndexBefore,
+          stepIndexAfter: stepIndexBefore,
         });
       }
       case VOICE_INTENTS.HELP: {
@@ -416,6 +450,14 @@ export function TutorialDetailPage({
         const message = copy.listeningStopped;
         setFeedbackMessage(message);
         return voiceSuccess("voice_stop_listening", message, {
+          stepIndexBefore,
+          stepIndexAfter: stepIndexBefore,
+        });
+      }
+      case VOICE_INTENTS.START_LISTENING: {
+        const message = "I am already listening and ready for your commands.";
+        setFeedbackMessage(message);
+        return voiceSuccess("voice_command", message, {
           stepIndexBefore,
           stepIndexAfter: stepIndexBefore,
         });
@@ -716,7 +758,7 @@ export function TutorialDetailPage({
                     handleOverviewJump(stepNumber);
                   }}
                   isOpen={true}
-                  onToggle={() => {}}
+                  onToggle={handleCloseMobilePanel}
                   copy={copy}
                 />
               </div>

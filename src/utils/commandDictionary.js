@@ -27,12 +27,28 @@ const ENGLISH_COMMAND_DICTIONARY = [
     exact: ["go to overview", "back to overview", "show tutorial overview", "overview"],
   },
   {
+    intent: VOICE_INTENTS.CLOSE_OVERVIEW,
+    exact: ["close overview", "hide overview"],
+  },
+  {
+    intent: VOICE_INTENTS.SHOW_SEARCH,
+    exact: ["show search", "open search", "search"],
+  },
+  {
+    intent: VOICE_INTENTS.CLOSE_SEARCH,
+    exact: ["close search", "hide search"],
+  },
+  {
     intent: VOICE_INTENTS.HELP,
     exact: ["help", "what can i say", "show commands", "commands"],
   },
   {
     intent: VOICE_INTENTS.STOP_LISTENING,
     exact: ["stop listening", "turn off voice", "stop voice", "stop"],
+  },
+  {
+    intent: VOICE_INTENTS.START_LISTENING,
+    exact: ["start listening", "start voice", "listen"],
   },
   {
     intent: VOICE_INTENTS.SCROLL_DOWN,
@@ -66,7 +82,7 @@ const ENGLISH_SEARCH_PATTERNS = [
 ];
 
 const ENGLISH_STEP_PATTERNS = [
-  /^(?:go to step|open step|jump to step|step)\s+(\d+)$/,
+  /^(?:go to step|open step|jump to step|step)(?:\s+number)?\s+(\d+)$/,
 ];
 
 export const COMMAND_DICTIONARY = ENGLISH_COMMAND_DICTIONARY;
