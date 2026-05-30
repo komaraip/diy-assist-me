@@ -1,14 +1,14 @@
 import { ArrowLeft, ClipboardList, FileText, Lock, MessageSquareText } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { InfoPopover } from "../components/study/InfoPopover.jsx";
+import { InfoPopover } from "../components/guided-session/InfoPopover.jsx";
 import { listTaskTrialsBySession } from "../services/taskTrialService.js";
 import { getStudySession } from "../services/studyService.js";
 import { listSusResponsesBySession } from "../services/susService.js";
 import { getAllStudyTasks } from "../utils/studyAssignments.js";
 import { getStudyCopy, normalizeStudyLanguage, formatStudyMode } from "../i18n/studyCopy.js";
 
-export function StudySessionPage() {
+export function GuidedSessionPage() {
   const { sessionId } = useParams();
   const [session, setSession] = useState(null);
   const [taskTrials, setTaskTrials] = useState([]);
@@ -84,7 +84,7 @@ export function StudySessionPage() {
   if (resultMeta.error || !session) {
     return (
       <section className="page-section narrow-page">
-        <Link className="inline-link" to="/study">
+        <Link className="inline-link" to="/guided-session">
           <ArrowLeft aria-hidden="true" />
           {copy.sessionPage.back}
         </Link>
@@ -98,7 +98,7 @@ export function StudySessionPage() {
 
   return (
     <section className="page-section">
-      <Link className="inline-link" to="/study">
+      <Link className="inline-link" to="/guided-session">
         <ArrowLeft aria-hidden="true" />
         {copy.sessionPage.back}
       </Link>
@@ -225,7 +225,7 @@ export function StudySessionPage() {
                             <span>{copy.sessionPage.taskMeta(task.trialType, task.tutorialId)}</span>
                             <small>{formatTaskStatus(latestTrial, copy)}</small>
                           </div>
-                          <Link className="button secondary-action" to={`/study/session/${session.id}/task/${task.id}`}>
+                          <Link className="button secondary-action" to={`/guided-session/${session.id}/task/${task.id}`}>
                             {getTaskActionLabel(task, latestTrial, copy)}
                           </Link>
                         </li>
@@ -248,7 +248,7 @@ export function StudySessionPage() {
                       ) : (
                         <Link
                           className="button primary-button"
-                          to={`/study/session/${session.id}/sus/${condition.id}`}
+                          to={`/guided-session/${session.id}/sus/${condition.id}`}
                           style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem" }}
                         >
                           <FileText aria-hidden="true" />
@@ -304,7 +304,7 @@ export function StudySessionPage() {
                         <span>{copy.sessionPage.taskMeta(task.trialType, task.tutorialId)}</span>
                         <small>{formatTaskStatus(latestTrial, copy)}</small>
                       </div>
-                      <Link className="button secondary-action" to={`/study/session/${session.id}/task/${task.id}`}>
+                      <Link className="button secondary-action" to={`/guided-session/${session.id}/task/${task.id}`}>
                         {getTaskActionLabel(task, latestTrial, copy)}
                       </Link>
                     </li>
@@ -327,7 +327,7 @@ export function StudySessionPage() {
                   ) : (
                     <Link
                       className="button primary-button"
-                      to={`/study/session/${session.id}/sus/${condition.id}`}
+                      to={`/guided-session/${session.id}/sus/${condition.id}`}
                       style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem" }}
                     >
                       <FileText aria-hidden="true" />
@@ -364,7 +364,7 @@ export function StudySessionPage() {
               {allConditionsComplete ? (
                 <Link
                   className="button complete-button"
-                  to={`/study/session/${session.id}/debrief`}
+                  to={`/guided-session/${session.id}/debrief`}
                   style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem" }}
                 >
                   <MessageSquareText aria-hidden="true" />

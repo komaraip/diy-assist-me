@@ -4,9 +4,9 @@ import { RootLayout } from "../components/layout/RootLayout.jsx";
 import { LandingPage } from "../pages/LandingPage.jsx";
 import { TutorialsPage } from "../pages/TutorialsPage.jsx";
 import { TutorialDetailPage } from "../pages/TutorialDetailPage.jsx";
-import { StudyPage } from "../pages/StudyPage.jsx";
-import { StudySessionPage } from "../pages/StudySessionPage.jsx";
-import { StudyTaskPage } from "../pages/StudyTaskPage.jsx";
+import { GuidedSessionSetupPage } from "../pages/GuidedSessionSetupPage.jsx";
+import { GuidedSessionPage } from "../pages/GuidedSessionPage.jsx";
+import { GuidedSessionTaskPage } from "../pages/GuidedSessionTaskPage.jsx";
 import { SUSPage } from "../pages/SUSPage.jsx";
 import { DebriefPage } from "../pages/DebriefPage.jsx";
 import { AdminPage } from "../pages/AdminPage.jsx";
@@ -43,11 +43,11 @@ export const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       { path: "tutorials", element: <TutorialsPage /> },
       { path: "tutorials/:tutorialId", element: <TutorialDetailPage /> },
-      { path: "study", element: <StudyPage /> },
-      { path: "study/session/:sessionId", element: <StudySessionPage /> },
-      { path: "study/session/:sessionId/task/:taskId", element: <StudyTaskPage /> },
-      { path: "study/session/:sessionId/sus/:conditionId", element: <SUSPage /> },
-      { path: "study/session/:sessionId/debrief", element: <DebriefPage /> },
+      { path: "guided-session", element: <GuidedSessionSetupPage /> },
+      { path: "guided-session/:sessionId", element: <GuidedSessionPage /> },
+      { path: "guided-session/:sessionId/task/:taskId", element: <GuidedSessionTaskPage /> },
+      { path: "guided-session/:sessionId/sus/:conditionId", element: <SUSPage /> },
+      { path: "guided-session/:sessionId/debrief", element: <DebriefPage /> },
       { path: "support", element: <SupportPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],

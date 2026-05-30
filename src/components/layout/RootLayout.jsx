@@ -6,7 +6,7 @@ export function RootLayout() {
   const location = useLocation();
   const isFocusedTutorialRunner =
     /^\/tutorials\/[^/]+\/?$/.test(location.pathname) ||
-    /^\/study\/session\/[^/]+\/task\/[^/]+\/?$/.test(location.pathname);
+    /^\/guided-session\/[^/]+\/task\/[^/]+\/?$/.test(location.pathname);
 
   return (
     <div className={isFocusedTutorialRunner ? "app-shell tutorial-runner-route" : "app-shell"}>

@@ -137,9 +137,9 @@ Voice testing should use a documented device and browser for the whole session. 
 
 The Web Speech API is browser-dependent and may require network support. Guided sessions use `en-US` speech recognition only. If voice recognition is unavailable, the app shows an unsupported-browser warning and touch controls remain available as fallback. Microphone and browser errors are logged as technical notes during study sessions when a session context exists.
 
-## Study Flow
+## Guided Session Flow
 
-1. Open `/study`.
+1. Open `/guided-session`.
 2. Complete the participant profile with full name, email, age range, English ability, and tutorial app usage.
 3. Confirm eligibility: age 18-35, familiar with web tutorials, able to perform simple simulated DIY tasks, not involved in prototype development, not expert in selected tasks, and no temporary voice/hearing/visual issue that prevents participation.
 4. Confirm participant consent.

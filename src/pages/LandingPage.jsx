@@ -66,7 +66,7 @@ export function LandingPage() {
                 Browse Tutorials
                 <ArrowRight aria-hidden="true" />
               </Link>
-              <Link className="button secondary-button" to="/study">
+              <Link className="button secondary-button" to="/guided-session">
                 Try Guided Session
               </Link>
             </div>
@@ -239,7 +239,7 @@ export function LandingPage() {
             <p>
               Experience the hands-free tutorial flow in a guided environment. Learn how voice commands, material lists, and search work in a complete.
             </p>
-            <Link className="button primary-button" to="/study">
+            <Link className="button primary-button" to="/guided-session">
               Start Guided Session
               <ArrowRight aria-hidden="true" />
             </Link>

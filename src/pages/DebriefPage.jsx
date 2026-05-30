@@ -1,8 +1,8 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { DebriefForm } from "../components/study/DebriefForm.jsx";
-import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
+import { DebriefForm } from "../components/guided-session/DebriefForm.jsx";
+import { GuidedProgress } from "../components/guided-session/GuidedProgress.jsx";
 import { submitDebriefResponse } from "../services/debriefService.js";
 import { getStudySession } from "../services/studyService.js";
 import { getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
@@ -55,7 +55,7 @@ export function DebriefPage() {
   if (resultMeta.error || !session) {
     return (
       <section className="page-section">
-        <Link className="inline-link" to={`/study/session/${sessionId}`}>
+        <Link className="inline-link" to={`/guided-session/${sessionId}`}>
           <ArrowLeft aria-hidden="true" />
           {copy.debriefPage.back}
         </Link>
@@ -69,7 +69,7 @@ export function DebriefPage() {
 
   return (
     <section className="page-section">
-      <Link className="inline-link" to={`/study/session/${session.id}`}>
+      <Link className="inline-link" to={`/guided-session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
         {copy.debriefPage.back}
       </Link>

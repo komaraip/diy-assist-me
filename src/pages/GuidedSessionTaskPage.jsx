@@ -1,8 +1,8 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ObserverNotesPanel } from "../components/study/ObserverNotesPanel.jsx";
-import { TaskTrialControls } from "../components/study/TaskTrialControls.jsx";
+import { ObserverNotesPanel } from "../components/guided-session/ObserverNotesPanel.jsx";
+import { TaskTrialControls } from "../components/guided-session/TaskTrialControls.jsx";
 import { TutorialDetailPage } from "./TutorialDetailPage.jsx";
 import { getStudySession } from "../services/studyService.js";
 import { logTouchInteraction, logVoiceInteraction } from "../services/logService.js";
@@ -11,7 +11,7 @@ import { findStudyTask } from "../utils/studyAssignments.js";
 import { buildStudyLogContext } from "../utils/studyContext.js";
 import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
-export function StudyTaskPage() {
+export function GuidedSessionTaskPage() {
   const { sessionId, taskId } = useParams();
   const [session, setSession] = useState(null);
   const [taskTrials, setTaskTrials] = useState([]);
@@ -133,7 +133,7 @@ export function StudyTaskPage() {
   if (resultMeta.error || !session || !task) {
     return (
       <section className="page-section narrow-page">
-        <Link className="inline-link" to={`/study/session/${sessionId}`}>
+        <Link className="inline-link" to={`/guided-session/${sessionId}`}>
           <ArrowLeft aria-hidden="true" />
           {copy.taskPage.back}
         </Link>
@@ -149,7 +149,7 @@ export function StudyTaskPage() {
 
   return (
     <section className="page-section">
-      <Link className="inline-link" to={`/study/session/${session.id}`}>
+      <Link className="inline-link" to={`/guided-session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
         {copy.taskPage.back}
       </Link>
@@ -216,7 +216,7 @@ export function StudyTaskPage() {
           tutorialIdOverride={task.tutorialId}
           studyContext={studyContext}
           allowedModality={task.modality}
-          backLink={`/study/session/${session.id}`}
+          backLink={`/guided-session/${session.id}`}
           backLabel={copy.taskPage.embeddedBackLabel}
           language={language}
           embedded

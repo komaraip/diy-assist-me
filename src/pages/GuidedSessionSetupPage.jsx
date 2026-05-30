@@ -1,8 +1,8 @@
 import { GitBranch, MonitorCheck, ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
-import { InfoPopover } from "../components/study/InfoPopover.jsx";
+import { GuidedProgress } from "../components/guided-session/GuidedProgress.jsx";
+import { InfoPopover } from "../components/guided-session/InfoPopover.jsx";
 import { createStudySession } from "../services/studyService.js";
 import { getSessionBalanceSummary } from "../services/sessionService.js";
 import { SEQUENCE_ASSIGNMENTS, TUTORIAL_ROTATIONS } from "../utils/studyAssignments.js";
@@ -38,7 +38,7 @@ const initialEligibility = {
   noUncorrectedHearingVisualLimit: false,
 };
 
-export function StudyPage() {
+export function GuidedSessionSetupPage() {
   const [participantProfile, setParticipantProfile] = useState(initialParticipantProfile);
   const [eligibility, setEligibility] = useState(initialEligibility);
   const [consentConfirmed, setConsentConfirmed] = useState(false);
@@ -380,7 +380,7 @@ export function StudyPage() {
           <p>{statusMessage}</p>
           {sessionResult?.data?.participantCode && <p>{copy.shared.sessionCode}: {sessionResult.data.participantCode}</p>}
           {sessionResult?.data?.id && (
-            <Link className="button primary-button result-action" to={`/study/session/${sessionResult.data.id}`}>
+            <Link className="button primary-button result-action" to={`/guided-session/${sessionResult.data.id}`}>
               {copy.setupPage.continueButton}
             </Link>
           )}

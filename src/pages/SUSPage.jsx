@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { SUSForm } from "../components/study/SUSForm.jsx";
+import { SUSForm } from "../components/guided-session/SUSForm.jsx";
 import { getStudySession } from "../services/studyService.js";
 import { submitSusResponse } from "../services/susService.js";
 import { findStudyCondition } from "../utils/studyAssignments.js";
@@ -60,7 +60,7 @@ export function SUSPage() {
   if (resultMeta.error || !session || !condition) {
     return (
       <section className="page-section">
-        <Link className="inline-link" to={`/study/session/${sessionId}`}>
+        <Link className="inline-link" to={`/guided-session/${sessionId}`}>
           <ArrowLeft aria-hidden="true" />
           {copy.susPage.back}
         </Link>
@@ -74,7 +74,7 @@ export function SUSPage() {
 
   return (
     <section className="page-section">
-      <Link className="inline-link" to={`/study/session/${session.id}`}>
+      <Link className="inline-link" to={`/guided-session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
         {copy.susPage.back}
       </Link>
@@ -90,7 +90,7 @@ export function SUSPage() {
           <h2>{statusMessage === copy.susPage.savedStatus ? copy.susPage.savedTitle : copy.susPage.notSavedTitle}</h2>
           <p>{statusMessage}</p>
           {statusMessage === copy.susPage.savedStatus ? (
-            <Link className="button primary-button result-action" to={`/study/session/${session.id}`}>
+            <Link className="button primary-button result-action" to={`/guided-session/${session.id}`}>
               {copy.susPage.backButton}
             </Link>
           ) : null}

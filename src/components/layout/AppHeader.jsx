@@ -5,7 +5,7 @@ import { NavLink, useLocation } from "react-router-dom";
 const navItems = [
   { to: "/", label: "Home", end: true },
   { to: "/tutorials", label: "Tutorials" },
-  { to: "/study", label: "Guided Session" },
+  { to: "/guided-session", label: "Guided Session" },
   { to: "/support", label: "Support" }
 ];
 
