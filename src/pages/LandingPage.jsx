@@ -1,69 +1,65 @@
-import { ArrowRight, ClipboardList, Hand, ListChecks, Mic, PackageCheck } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Check, ClipboardList, Hand, ListChecks, Mic, PackageCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ImageWithFallback } from "../components/common/ImageWithFallback.jsx";
-
-const heroImage =
-  "https://images.unsplash.com/photo-1666356011542-0acf82fb16a1?auto=format&fit=crop&w=1200&q=80";
-const workshopImage =
-  "https://images.unsplash.com/photo-1602856805912-5dab4ce4b618?auto=format&fit=crop&w=800&q=80";
 
 const featureItems = [
   {
     icon: ListChecks,
-    title: "Structured tutorial website",
-    text: "Shared step cards, materials, search, and overview controls keep both study conditions comparable.",
+    title: "Voice-Guided Navigation",
+    text: "Follow along hands-free. Navigate between tutorial steps, repeat instructions, or ask for details using simple English commands.",
   },
   {
     icon: Mic,
-    title: "Fixed English voice commands",
-    text: "A constrained command set triggers the same tutorial actions as touch controls on a documented study device.",
+    title: "Interactive Workspace Prep",
+    text: "Prepare your tools and checklist before starting. View required materials and check off completed items in real time.",
   },
   {
     icon: ClipboardList,
-    title: "Chapter 4 study flow",
-    text: "AB/BA sessions collect task timing, task success, SUS, voice reliability, and debrief evidence.",
+    title: "Flexible Guided Sessions",
+    text: "Walk through step-by-step tutorials with structured guidance, showing you how controls adjust to different environments.",
   },
   {
     icon: Hand,
-    title: "Touch fallback",
-    text: "Buttons remain available during voice mode and fallback use is logged for analysis.",
+    title: "Seamless Touch Fallback",
+    text: "Ditch voice controls anytime. Interactive on-screen buttons remain fully functional for quick manual navigation.",
   },
 ];
 
-const howItWorksItems = [
+const voiceCommandsDetails = [
   {
-    title: "Create a study session",
-    text: "Confirm consent, assign AB or BA order, choose tutorial rotation, and record setup notes.",
+    phrase: "next step",
+    action: "Navigates forward",
+    desc: "Moves the tutorial to the next step card and resets focus to the top of the new instructions."
   },
   {
-    title: "Run matched tasks",
-    text: "Participants complete practice and measured task scripts in touch and voice mode.",
+    phrase: "repeat instruction",
+    action: "Reads step aloud",
+    desc: "Triggers voice narration to read the current step instruction aloud so you don't have to look at the screen."
   },
   {
-    title: "Export evidence",
-    text: "Task trials, SUS, logs, observer notes, and debrief responses support Chapter 4 analysis.",
+    phrase: "show materials",
+    action: "Opens materials list",
+    desc: "Slides open the required tools and materials list panel from the side for quick verification."
   },
+  {
+    phrase: "scroll down",
+    action: "Scrolls instructions",
+    desc: "Scrolls the browser page downward by a portion of the screen, helping you see further instructions."
+  }
 ];
-
-const voiceCommands = ["next step", "repeat", "show materials", "search for tape"];
 
 export function LandingPage() {
+  const [activeCommand, setActiveCommand] = useState("next step");
+
   return (
     <div className="landing-page">
       <section className="hero-section">
-        <ImageWithFallback
-          src={heroImage}
-          alt="Hands preparing a DIY project on a work surface"
-          className="hero-background-image"
-        />
-        <div className="hero-overlay" aria-hidden="true" />
         <div className="hero-grid">
-          <div className="hero-copy">
-            <p className="eyebrow">Practical DIY help</p>
-            <h1>DIY tutorials for hands-busy moments</h1>
+          <div className="hero-copy animate-fade-in-up">
+            <p className="eyebrow">Smart DIY Companion</p>
+            <h1>Build hands-free with voice assistance</h1>
             <p className="hero-text">
-              Choose a tutorial, prepare your materials, and follow each step with touch controls or
-              simple voice commands.
+              Ditch the touch screen when your hands are full of paint, glue, or dust. Follow step-by-step tutorials with simple, responsive voice commands.
             </p>
             <div className="hero-actions">
               <Link className="button primary-button" to="/tutorials">
@@ -75,25 +71,48 @@ export function LandingPage() {
               </Link>
             </div>
           </div>
-          <div className="hero-media" aria-label="DIY project preview">
-            <div className="hero-image-small">
-              <ImageWithFallback src={workshopImage} alt="Hands working with wood in a workshop" />
+
+          <div className="hero-media animate-float" aria-label="DIY Voice Assistant Preview">
+            <div className="hero-mockup-card">
+              <div className="mockup-badge">
+                <span className="mockup-indicator-dot pulse-animation" />
+                <span>Voice Active</span>
+              </div>
+              <div className="mockup-card-header">
+                <span className="mockup-step-count">Step 3 of 6</span>
+                <span className="mockup-time">Prep Time: 5 min</span>
+              </div>
+              <div className="mockup-card-body">
+                <h3>Applying Painter's Tape</h3>
+                <p>
+                  Press the tape firmly along the baseboard to ensure a sharp, clean paint line. Keep your alignment straight.
+                </p>
+              </div>
+              <div className="mockup-card-footer">
+                <div className="mockup-status-group">
+                  <Mic className="pulse-mic-icon" size={14} aria-hidden="true" />
+                  <span className="mockup-status-text">Listening...</span>
+                </div>
+                <div className="mockup-tip">
+                  Say <code className="mockup-code">"next step"</code> to advance
+                </div>
+              </div>
             </div>
-            <div className="floating-status">Documented device, low-noise room, no raw audio</div>
+            <div className="hero-blur-blob" />
           </div>
         </div>
       </section>
 
-      <section className="content-band">
+      <section className="content-band feature-section">
         <div className="section-heading">
-          <p className="eyebrow">What you can do</p>
-          <h2>Helpful tools for following DIY steps without losing your place.</h2>
+          <p className="eyebrow">Core Features</p>
+          <h2>Designed for hands-busy moments</h2>
         </div>
         <div className="landing-feature-grid">
-          {featureItems.map((item) => {
+          {featureItems.map((item, idx) => {
             const Icon = item.icon;
             return (
-              <article className="landing-card" key={item.title}>
+              <article className={`landing-card feature-card-${idx}`} key={item.title}>
                 <span className="feature-icon">
                   <Icon aria-hidden="true" />
                 </span>
@@ -101,62 +120,130 @@ export function LandingPage() {
                   <h3>{item.title}</h3>
                   <p>{item.text}</p>
                 </div>
+                <div className="feature-card-accent" />
               </article>
             );
           })}
         </div>
       </section>
 
-      <section className="content-band landing-section">
-        <div className="section-heading">
-          <p className="eyebrow">How it works</p>
-          <h2>Start a project and move through each instruction at your own pace.</h2>
-        </div>
-        <div className="how-steps">
-          {howItWorksItems.map((item, index) => (
-            <article className="how-step" key={item.title}>
-              <span className="step-number" aria-hidden="true">
-                {index + 1}
-              </span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="content-band voice-preview-section">
-        <div className="voice-preview-copy">
-          <p className="eyebrow">Voice command preview</p>
-          <h2>Keep going with simple spoken shortcuts.</h2>
-          <p>
-            Voice commands are there when your hands are full. You can still use the on-screen
-            buttons anytime.
-          </p>
-        </div>
-        <div className="command-preview-list" aria-label="Example voice commands">
-          {voiceCommands.map((command) => (
-            <span className="command-chip" key={command}>
-              <Mic aria-hidden="true" />
-              {command}
-            </span>
-          ))}
+        <div className="voice-preview-grid">
+          <div className="voice-preview-copy">
+            <p className="eyebrow">Hands-Free Control</p>
+            <h2>Control steps with simple voice commands</h2>
+            <p>
+              Turn on your microphone and navigate your guides using simple English phrases. No screen touching required, ideal for when your hands are full of paint, tools, or grease.
+            </p>
+            <div className="voice-status-mock">
+              <div className="status-mic-badge">
+                <Mic size={16} className="pulse-mic-icon" />
+                <span>Microphone Mode Active</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="voice-commands-showcase" aria-label="Voice commands reference guide">
+            {voiceCommandsDetails.map((cmd) => {
+              const isSelected = activeCommand === cmd.phrase;
+              return (
+                <button
+                  type="button"
+                  key={cmd.phrase}
+                  className={isSelected ? "voice-cmd-card active" : "voice-cmd-card"}
+                  onClick={() => setActiveCommand(cmd.phrase)}
+                  aria-expanded={isSelected}
+                  aria-controls={`voice-command-${cmd.phrase.replaceAll(" ", "-")}`}
+                >
+                  <div className="voice-cmd-header">
+                    <span className="voice-cmd-phrase">"{cmd.phrase}"</span>
+                    <span className="voice-cmd-action">{cmd.action}</span>
+                  </div>
+                  <div
+                    className="voice-cmd-body"
+                    id={`voice-command-${cmd.phrase.replaceAll(" ", "-")}`}
+                    aria-hidden={!isSelected}
+                  >
+                    <div className="voice-cmd-body-inner">
+                      <p>{cmd.desc}</p>
+                      <div className="voice-cmd-pulse-line">
+                        <span className="pulse-dot" />
+                        <span className="pulse-wave" />
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
       <section className="content-band guided-session-section">
-        <div className="guided-session-panel">
-          <div>
-            <p className="eyebrow">Guided session</p>
-            <h2>Try a more structured way to explore the tutorial experience.</h2>
-            <p>
-              A guided session walks you through a tutorial flow so you can try touch controls,
-              voice commands, materials, and step navigation in one place.
-            </p>
+        <div className="guided-session-split">
+          <div className="guided-session-visual">
+            <div className="guided-tour-card">
+              <div className="guided-tour-card-header">
+                <div>
+                  <h3>Your guided journey</h3>
+                </div>
+                <span className="guided-tour-status">
+                  <span className="guided-tour-status-dot" />
+                  In progress
+                </span>
+              </div>
+
+              <div className="guided-tour-progress">
+                <div className="guided-tour-progress-line" aria-hidden="true" />
+                <div className="guided-tour-step completed">
+                  <span className="guided-tour-step-marker">
+                    <Check size={14} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <span className="guided-tour-step-state">Completed</span>
+                    <strong>Set up workspace</strong>
+                  </div>
+                </div>
+                <div className="guided-tour-step active">
+                  <span className="guided-tour-step-marker">2</span>
+                  <div>
+                    <span className="guided-tour-step-state">Current step</span>
+                    <strong>Practice voice commands</strong>
+                  </div>
+                </div>
+                <div className="guided-tour-step">
+                  <span className="guided-tour-step-marker">3</span>
+                  <div>
+                    <span className="guided-tour-step-state">Up next</span>
+                    <strong>Complete DIY steps</strong>
+                  </div>
+                </div>
+                <div className="guided-tour-step">
+                  <span className="guided-tour-step-marker">4</span>
+                  <div>
+                    <span className="guided-tour-step-state">Final step</span>
+                    <strong>Submit feedback survey</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="guided-tour-card-footer">
+                <Mic size={15} aria-hidden="true" />
+                <span>Voice guidance stays available throughout the tour.</span>
+              </div>
+            </div>
           </div>
-          <Link className="button secondary-action" to="/study">
-            Start guided study session
-          </Link>
+          <div className="guided-session-info">
+            <p className="eyebrow">Guided Tour</p>
+            <h2>Try a structured Guided Session</h2>
+            <p>
+              Experience the hands-free tutorial flow in a guided environment. Learn how voice commands, material lists, and search work in a complete.
+            </p>
+            <Link className="button primary-button" to="/study">
+              Start Guided Session
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -164,11 +251,11 @@ export function LandingPage() {
         <div className="final-cta-panel">
           <PackageCheck aria-hidden="true" />
           <div>
-            <h2>Ready to start learning?</h2>
-            <p>Browse tutorials, gather your materials, and follow each step with the controls that fit the moment.</p>
+            <h2>Ready to start building?</h2>
+            <p>Browse our catalog of interactive tutorials, prepare your tools, and follow along with the controls that fit your space.</p>
           </div>
           <Link className="button primary-button" to="/tutorials">
-            Browse Tutorials
+            Explore Tutorials
             <ArrowRight aria-hidden="true" />
           </Link>
         </div>
