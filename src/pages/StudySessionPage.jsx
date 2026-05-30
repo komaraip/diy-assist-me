@@ -1,7 +1,8 @@
-import { ArrowLeft, ClipboardList, FileText, MessageSquareText } from "lucide-react";
+import { ArrowLeft, ClipboardList, FileText, Lock, MessageSquareText } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
+import { InfoPopover } from "../components/study/InfoPopover.jsx";
 import { listTaskTrialsBySession } from "../services/taskTrialService.js";
 import { getStudySession } from "../services/studyService.js";
 import { listSusResponsesBySession } from "../services/susService.js";
@@ -119,8 +120,10 @@ export function StudySessionPage() {
           eyebrow={copy.shared.progressEyebrow}
         />
         <section className="study-panel" style={{ margin: 0 }}>
-          <h2>{copy.sessionPage.whatNextTitle}</h2>
-          <p className="study-context-line" style={{ margin: "0.5rem 0 0" }}>{copy.sessionPage.whatNextDescription(tasks.length)}</p>
+          <div className="compact-heading-row">
+            <h2>{copy.sessionPage.whatNextTitle}</h2>
+            <InfoPopover title={copy.sessionPage.whatNextTitle} description={copy.sessionPage.whatNextDescription(tasks.length)} />
+          </div>
         </section>
       </div>
 
@@ -141,7 +144,7 @@ export function StudySessionPage() {
                     <h3 style={{ margin: 0, opacity: 0.6, display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       {formatModality(condition.modality, language)}
                       <span className="status-badge" style={{ background: "rgba(51, 56, 54, 0.08)", border: "1px solid var(--border)", color: "var(--muted)" }}>
-                        🔒 Locked
+                        <Lock aria-hidden="true" size={13} /> Locked
                       </span>
                     </h3>
                   </div>
@@ -214,7 +217,13 @@ export function StudySessionPage() {
                     </div>
                   </div>
 
-                  {isComplete && <p className="study-context-line" style={{ marginTop: "0.5rem" }}>{getModeHelper(condition.modality, copy)}</p>}
+                  {isComplete ? (
+                    <InfoPopover
+                      title={formatModality(condition.modality, language)}
+                      description={getModeHelper(condition.modality, copy)}
+                      className="mode-info-popover"
+                    />
+                  ) : null}
 
                   <ol className="task-list">
                     {(condition.tasks || []).map((task) => {
@@ -263,7 +272,7 @@ export function StudySessionPage() {
                         disabled
                         style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem", cursor: "not-allowed", opacity: 1, color: "#2d332f" }}
                       >
-                        <span aria-hidden="true">🔒</span>
+                        <Lock aria-hidden="true" />
                         {copy.sessionPage.questionnaireButton}
                       </button>
                     )}
@@ -284,7 +293,11 @@ export function StudySessionPage() {
                   <h2 id={`${condition.id}-heading`}>
                     {formatModality(condition.modality, language)}
                   </h2>
-                  <p className="study-context-line">{getModeHelper(condition.modality, copy)}</p>
+                  <InfoPopover
+                    title={formatModality(condition.modality, language)}
+                    description={getModeHelper(condition.modality, copy)}
+                    className="mode-info-popover"
+                  />
                 </div>
                 <ClipboardList aria-hidden="true" />
               </div>
@@ -336,7 +349,7 @@ export function StudySessionPage() {
                     disabled
                     style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem", cursor: "not-allowed", opacity: 1, color: "#2d332f" }}
                   >
-                    <span aria-hidden="true">🔒</span>
+                    <Lock aria-hidden="true" />
                     {copy.sessionPage.questionnaireButton}
                   </button>
                 )}
@@ -372,7 +385,7 @@ export function StudySessionPage() {
                   disabled
                   style={{ width: "100%", justifyContent: "center", display: "flex", gap: "0.5rem", cursor: "not-allowed", opacity: 1, color: "white" }}
                 >
-                  <span aria-hidden="true">🔒</span>
+                  <Lock aria-hidden="true" />
                   {copy.sessionPage.finalFeedbackButton}
                 </button>
               )}

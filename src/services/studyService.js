@@ -9,6 +9,7 @@ export async function createStudySession({
   participantProfile = {},
   consentConfirmed,
   environment = {},
+  eligibility = {},
   sequenceAssignment = "AB",
   tutorialRotation = "rotation_a",
   language = DEFAULT_STUDY_LANGUAGE,
@@ -19,6 +20,10 @@ export async function createStudySession({
 
   if (!hasCompleteParticipantProfile(normalizedParticipantProfile)) {
     return serviceFailure(copy.participantError, "local");
+  }
+
+  if (!isEligibleStudyParticipant(normalizedParticipantProfile, eligibility)) {
+    return serviceFailure(copy.screeningError, "local");
   }
 
   if (!consentConfirmed) {
@@ -42,6 +47,7 @@ export async function createStudySession({
     tutorialRotation,
     language: normalizedLanguage,
     participantProfile: normalizedParticipantProfile,
+    eligibility: normalizeEligibility(eligibility),
   });
 
   if (participantResult.error) {
@@ -53,6 +59,7 @@ export async function createStudySession({
     participantId: participant.id,
     participantCode: participant.participantCode,
     participantProfile: normalizedParticipantProfile,
+    eligibility: normalizeEligibility(eligibility),
     consentConfirmed,
     environment,
     sequenceAssignment,
@@ -98,6 +105,26 @@ function hasCompleteParticipantProfile(participantProfile) {
     participantProfile.englishAbility,
     participantProfile.tutorialAppUsage,
   ].every(Boolean);
+}
+
+function normalizeEligibility(eligibility = {}) {
+  return {
+    familiarWithWebTutorials: eligibility.familiarWithWebTutorials === true,
+    canPerformSimulatedDiy: eligibility.canPerformSimulatedDiy === true,
+    notPrototypeDeveloper: eligibility.notPrototypeDeveloper === true,
+    notExpertInSelectedTasks: eligibility.notExpertInSelectedTasks === true,
+    noTemporaryVoiceCondition: eligibility.noTemporaryVoiceCondition === true,
+    noUncorrectedHearingVisualLimit: eligibility.noUncorrectedHearingVisualLimit === true,
+  };
+}
+
+function isEligibleStudyParticipant(participantProfile, eligibility) {
+  const normalizedEligibility = normalizeEligibility(eligibility);
+  const requiredScreeningPasses = Object.values(normalizedEligibility).every(Boolean);
+  const ageEligible = participantProfile.ageRange === "18-24" || participantProfile.ageRange === "25-35";
+  const englishEligible = participantProfile.englishAbility === "can_understand" ||
+    participantProfile.englishAbility === "comfortable_commands";
+  return requiredScreeningPasses && ageEligible && englishEligible;
 }
 
 function combineWarnings(warnings) {

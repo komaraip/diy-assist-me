@@ -59,6 +59,7 @@ export async function startTaskTrial({
     completionStatus: "",
     invalidTrial: false,
     invalidTrialReason: "",
+    participantTaskNote: "",
     researcherNote: "",
     status: "in_progress",
     createdAt: startedAt,
@@ -85,6 +86,7 @@ export async function completeTaskTrial(taskTrial, {
   completionStatus,
   invalidTrial = false,
   invalidTrialReason = "",
+  participantTaskNote = "",
   researcherNote = "",
 } = {}) {
   const source = isFirebaseEnabled && db ? "firebase" : "local";
@@ -110,7 +112,8 @@ export async function completeTaskTrial(taskTrial, {
     completionStatus,
     invalidTrial,
     invalidTrialReason: invalidTrial ? invalidTrialReason.trim() : "",
-    researcherNote: researcherNote.trim(),
+    participantTaskNote: (participantTaskNote || researcherNote).trim(),
+    researcherNote: (researcherNote || participantTaskNote).trim(),
     status: "completed",
     updatedAt: endedAt,
   };

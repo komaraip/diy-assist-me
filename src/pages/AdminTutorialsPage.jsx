@@ -5,10 +5,7 @@ export function AdminTutorialsPage() {
     <section className="admin-page">
       <div className="admin-page-header">
         <p className="eyebrow">Tutorial content</p>
-        <h1>Tutorials</h1>
-        <p>
-          Create, edit, preview, and publish DIY tutorial content used by the public tutorial pages.
-        </p>
+        <p>Manage public DIY tutorial content.</p>
       </div>
 
       <TutorialManager />

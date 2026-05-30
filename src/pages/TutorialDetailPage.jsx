@@ -44,6 +44,8 @@ export function TutorialDetailPage({
   const [isCompleted, setIsCompleted] = useState(false);
   const tutorialShellRef = useRef(null);
   const tutorialMainRef = useRef(null);
+  const lastScrollTopRef = useRef(0);
+  const lastScrollLogAtRef = useRef(0);
   const commandsButtonRef = useRef(null);
   const materialsButtonRef = useRef(null);
   const desktopCommandsButtonRef = useRef(null);
@@ -192,6 +194,25 @@ export function TutorialDetailPage({
       metadata: {
         totalSteps: steps.length,
         completedAtStep: activeStepIndex + 1,
+      },
+    });
+  }
+
+  function handleTutorialScroll(event) {
+    if (!studyContext?.taskTrialId) return;
+    const scrollTop = event.currentTarget.scrollTop;
+    const previousScrollTop = lastScrollTopRef.current;
+    const now = Date.now();
+    lastScrollTopRef.current = scrollTop;
+
+    if (Math.abs(scrollTop - previousScrollTop) < 24 || now - lastScrollLogAtRef.current < 500) return;
+
+    lastScrollLogAtRef.current = now;
+    logTutorialTouch(scrollTop > previousScrollTop ? "scroll_down" : "scroll_up", {
+      metadata: {
+        scrollTop,
+        previousScrollTop,
+        scrollTarget: "tutorial_content",
       },
     });
   }
@@ -522,6 +543,7 @@ export function TutorialDetailPage({
                 className="tutorial-main-column tutorial-content-card"
                 aria-label={copy.currentStepLabel}
                 ref={tutorialMainRef}
+                onScroll={handleTutorialScroll}
               >
                 <div className="tutorial-runner-header">
                   <div className="tutorial-header-topline">
@@ -662,17 +684,33 @@ function getTutorialSearchResults(tutorial, query) {
   const normalizedQuery = normalizeSearchText(query);
   if (!tutorial || !normalizedQuery) return [];
 
-  const sharedText = normalizeSearchText([
+  const tutorialContextText = normalizeSearchText([
     tutorial.title,
     tutorial.description,
     ...(tutorial.tags || []),
-    ...(tutorial.materials || []).flatMap((material) => [
-      material.name,
-      material.quantity,
-      material.unit,
-      material.notes,
-    ]),
   ].join(" "));
+  const materialText = normalizeSearchText((tutorial.materials || []).flatMap((material) => [
+    material.name,
+    material.quantity,
+    material.unit,
+    material.notes,
+  ]).join(" "));
+
+  const stepMatches = (tutorial.steps || []).filter((step) => {
+    const stepText = normalizeSearchText([
+      step.title,
+      step.instruction,
+      ...(step.keywords || []),
+    ].join(" "));
+
+    return stepText.includes(normalizedQuery);
+  });
+
+  if (stepMatches.length) return stepMatches;
+
+  if (!tutorialContextText.includes(normalizedQuery) && !materialText.includes(normalizedQuery)) {
+    return [];
+  }
 
   return (tutorial.steps || []).filter((step) => {
     const stepText = normalizeSearchText([
@@ -680,8 +718,8 @@ function getTutorialSearchResults(tutorial, query) {
       step.instruction,
       ...(step.keywords || []),
     ].join(" "));
-
-    return stepText.includes(normalizedQuery) || sharedText.includes(normalizedQuery);
+    const queryTokens = normalizedQuery.split(" ").filter((token) => token.length > 2);
+    return queryTokens.some((token) => stepText.includes(token));
   });
 }
 

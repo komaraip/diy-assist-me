@@ -1,6 +1,7 @@
 import { Clock, Flag, PlayCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
+import { InfoPopover } from "./InfoPopover.jsx";
 
 export function TaskTrialControls({
   task,
@@ -14,7 +15,7 @@ export function TaskTrialControls({
   const [completionStatus, setCompletionStatus] = useState("successful");
   const [invalidTrial, setInvalidTrial] = useState(false);
   const [invalidTrialReason, setInvalidTrialReason] = useState("");
-  const [researcherNote, setResearcherNote] = useState("");
+  const [taskNote, setTaskNote] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const normalizedLanguage = normalizeStudyLanguage(language);
   const copy = getStudyCopy(normalizedLanguage);
@@ -24,7 +25,9 @@ export function TaskTrialControls({
     if (taskTrial.completionStatus) setCompletionStatus(taskTrial.completionStatus);
     if (taskTrial.invalidTrial) setInvalidTrial(true);
     if (taskTrial.invalidTrialReason) setInvalidTrialReason(taskTrial.invalidTrialReason);
-    if (taskTrial.researcherNote) setResearcherNote(taskTrial.researcherNote);
+    if (taskTrial.participantTaskNote || taskTrial.researcherNote) {
+      setTaskNote(taskTrial.participantTaskNote || taskTrial.researcherNote);
+    }
   }, [taskTrial]);
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export function TaskTrialControls({
       completionStatus,
       invalidTrial,
       invalidTrialReason,
-      researcherNote,
+      participantTaskNote: taskNote,
     });
   }
 
@@ -98,10 +101,11 @@ export function TaskTrialControls({
 
       {taskTrial ? (
         <details className="debrief-accordion" style={{ margin: 0 }}>
-          <summary>📝 {copy.taskTrial.facilitatorSummary}</summary>
+          <summary>
+            <span>{copy.taskTrial.completionSummary}</span>
+            <InfoPopover title={copy.taskTrial.completionSummary} description={copy.taskTrial.completionDescription} />
+          </summary>
           <div className="accordion-content" style={{ background: "var(--surface-soft)" }}>
-            <p className="study-context-line" style={{ marginTop: 0 }}>{copy.taskTrial.facilitatorDescription}</p>
-
             <label className="field-label">
               {copy.taskTrial.outcomeLabel}
               <select
@@ -141,8 +145,8 @@ export function TaskTrialControls({
             <label className="field-label" style={{ marginTop: "0.5rem" }}>
               {copy.taskTrial.taskNote}
               <textarea
-                value={researcherNote}
-                onChange={(event) => setResearcherNote(event.target.value)}
+                value={taskNote}
+                onChange={(event) => setTaskNote(event.target.value)}
                 rows="2"
                 disabled={isCompleted}
               />

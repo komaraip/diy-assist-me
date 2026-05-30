@@ -3,6 +3,7 @@ import { useState } from "react";
 import { createObserverNote } from "../../services/observerNoteService.js";
 import { appendTechnicalNote } from "../../services/sessionService.js";
 import { getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
+import { InfoPopover } from "./InfoPopover.jsx";
 
 export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }) {
   const [observerNote, setObserverNote] = useState("");
@@ -49,8 +50,10 @@ export function ObserverNotesPanel({ session, task, taskTrial, language = "en" }
 
   return (
     <div className="observer-notes-panel-flat">
-      <p className="study-context-line" style={{ margin: "0 0 0.4rem", fontSize: "0.9rem" }}>{copy.description}</p>
-      <p className="status-note" style={{ margin: "0 0 1rem", fontSize: "0.85rem" }}>{copy.rq3Reminder}</p>
+      <div className="compact-heading-row notes-heading-row">
+        <strong>{copy.summary}</strong>
+        <InfoPopover title={copy.summary} description={`${copy.description} ${copy.rq3Reminder}`} />
+      </div>
 
       <div className="two-column-grid">
         <form className="note-form" onSubmit={handleSaveObserverNote}>

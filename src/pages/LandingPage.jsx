@@ -16,7 +16,7 @@ const featureItems = [
   {
     icon: Mic,
     title: "Fixed English voice commands",
-    text: "A constrained command set triggers the same tutorial actions as touch controls in Chrome desktop.",
+    text: "A constrained command set triggers the same tutorial actions as touch controls on a documented study device.",
   },
   {
     icon: ClipboardList,
@@ -79,7 +79,7 @@ export function LandingPage() {
             <div className="hero-image-small">
               <ImageWithFallback src={workshopImage} alt="Hands working with wood in a workshop" />
             </div>
-            <div className="floating-status">Chrome desktop, low-noise room, no raw audio</div>
+            <div className="floating-status">Documented device, low-noise room, no raw audio</div>
           </div>
         </div>
       </section>

@@ -1,10 +1,11 @@
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ObserverNotesPanel } from "../components/study/ObserverNotesPanel.jsx";
 import { TaskTrialControls } from "../components/study/TaskTrialControls.jsx";
 import { TutorialDetailPage } from "./TutorialDetailPage.jsx";
 import { getStudySession } from "../services/studyService.js";
+import { logTouchInteraction, logVoiceInteraction } from "../services/logService.js";
 import { completeTaskTrial, listTaskTrialsBySession, startTaskTrial } from "../services/taskTrialService.js";
 import { findStudyTask } from "../utils/studyAssignments.js";
 import { buildStudyLogContext } from "../utils/studyContext.js";
@@ -19,6 +20,7 @@ export function StudyTaskPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const tutorialOpenLogRef = useRef(new Set());
   const language = normalizeStudyLanguage(session?.language);
   const copy = getStudyCopy(language);
 
@@ -56,6 +58,32 @@ export function StudyTaskPage() {
     () => buildStudyLogContext({ session, task, taskTrial: activeTrial }),
     [activeTrial, session, task]
   );
+
+  useEffect(() => {
+    if (!session || !task || !activeTrial || activeTrial.endedAt || !activeTrial.id) return;
+    if (tutorialOpenLogRef.current.has(activeTrial.id)) return;
+
+    tutorialOpenLogRef.current.add(activeTrial.id);
+    const logInteraction = task.modality === "voice" ? logVoiceInteraction : logTouchInteraction;
+    void logInteraction({
+      participantId: session.participantId,
+      participantCode: session.participantCode,
+      sessionId: session.id,
+      conditionId: task.conditionId,
+      conditionOrder: task.conditionOrder,
+      taskId: task.id,
+      trialType: task.trialType,
+      tutorialId: task.tutorialId,
+      eventType: "tutorial_open",
+      commandSuccess: task.modality === "voice" ? true : null,
+      recognized: task.modality === "voice" ? true : null,
+      elapsedMsFromTaskStart: 0,
+      metadata: {
+        taskTrialId: activeTrial.id,
+        source: "guided_task_render",
+      },
+    });
+  }, [activeTrial, session, task]);
 
   async function handleStartTrial() {
     if (!session || !task) return;
@@ -177,7 +205,7 @@ export function StudyTaskPage() {
       {statusMessage ? <p className="status-note" role="status" style={{ marginTop: "0.5rem", marginBottom: "1.25rem" }}>{statusMessage}</p> : null}
 
       <details className="debrief-accordion" style={{ marginTop: "1.25rem", marginBottom: "1.5rem" }}>
-        <summary>📝 {copy.observerNotes.summary}</summary>
+        <summary>{copy.observerNotes.summary}</summary>
         <div className="accordion-content" style={{ background: "var(--surface-soft)" }}>
           <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
         </div>

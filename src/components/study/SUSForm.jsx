@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { Lock } from "lucide-react";
 import { hasCompleteSusResponses } from "../../utils/susScoring.js";
 import { formatStudyMode, getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
+import { InfoPopover } from "./InfoPopover.jsx";
 
 export function SUSForm({ condition, isSubmitting, onSubmit, language = "en" }) {
   const [responses, setResponses] = useState(() => buildInitialResponses());
@@ -25,8 +27,10 @@ export function SUSForm({ condition, isSubmitting, onSubmit, language = "en" }) 
     <form className="study-form" onSubmit={handleSubmit}>
       <section className="study-panel">
         <p className="eyebrow">{copy.susForm.eyebrow}</p>
-        <h2>{formatMode(condition.modality, normalizedLanguage)}</h2>
-        <p className="study-context-line">{copy.susForm.description}</p>
+        <div className="compact-heading-row">
+          <h2>{formatMode(condition.modality, normalizedLanguage)}</h2>
+          <InfoPopover title={formatMode(condition.modality, normalizedLanguage)} description={copy.susForm.description} />
+        </div>
       </section>
 
       {items.map((item, index) => {
@@ -70,7 +74,7 @@ export function SUSForm({ condition, isSubmitting, onSubmit, language = "en" }) 
           disabled
           style={{ cursor: "not-allowed", opacity: 1, color: "#2d332f" }}
         >
-          <span aria-hidden="true">🔒</span>
+          <Lock aria-hidden="true" />
           {copy.susForm.submit}
         </button>
       )}

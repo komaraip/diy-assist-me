@@ -33,7 +33,7 @@ export function HelpPage() {
         <article className="placeholder-panel">
           <HelpCircle aria-hidden="true" />
           <h2>Browser and privacy notes</h2>
-          <p>Voice mode requires Web Speech API support and is tested in Google Chrome desktop in a quiet or low-noise room. The app stores transcripts, command outcomes, timestamps, and metadata, but not raw microphone audio.</p>
+          <p>Voice mode requires Web Speech API support and should be tested on a documented device and browser in a quiet or low-noise room. The app stores transcripts, command outcomes, timestamps, and metadata, but not raw microphone audio.</p>
         </article>
         <article className="placeholder-panel">
           <Mic aria-hidden="true" />

@@ -1,8 +1,10 @@
 import { GitBranch, MonitorCheck, ShieldCheck, UserRound } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { GuidedProgress } from "../components/study/GuidedProgress.jsx";
+import { InfoPopover } from "../components/study/InfoPopover.jsx";
 import { createStudySession } from "../services/studyService.js";
+import { getSessionBalanceSummary } from "../services/sessionService.js";
 import { SEQUENCE_ASSIGNMENTS, TUTORIAL_ROTATIONS } from "../utils/studyAssignments.js";
 import { DEFAULT_STUDY_LANGUAGE, getStudyCopy } from "../i18n/studyCopy.js";
 
@@ -21,21 +23,53 @@ const initialEnvironment = {
   roomNoiseLevelNote: "",
   internetConnectionNote: "",
   taskEnvironmentNote: "Desk-based hands-busy simulation",
-  researcherObservationNote: "",
+  participantSetupNote: "",
+  sameDeviceConfirmed: false,
+  cacheResetConfirmed: false,
+  microphoneCheckConfirmed: false,
+};
+
+const initialEligibility = {
+  familiarWithWebTutorials: false,
+  canPerformSimulatedDiy: false,
+  notPrototypeDeveloper: false,
+  notExpertInSelectedTasks: false,
+  noTemporaryVoiceCondition: false,
+  noUncorrectedHearingVisualLimit: false,
 };
 
 export function StudyPage() {
   const [participantProfile, setParticipantProfile] = useState(initialParticipantProfile);
+  const [eligibility, setEligibility] = useState(initialEligibility);
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [environment, setEnvironment] = useState(initialEnvironment);
   const [sequenceAssignment, setSequenceAssignment] = useState("AB");
   const [tutorialRotation, setTutorialRotation] = useState("rotation_a");
+  const [balanceSummary, setBalanceSummary] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [sessionResult, setSessionResult] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const copy = getStudyCopy(DEFAULT_STUDY_LANGUAGE);
   const speechSupportStatus = getSpeechSupportStatus(copy);
   const environmentFields = copy.environmentFields;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBalanceSummary() {
+      const result = await getSessionBalanceSummary();
+      if (!isMounted || result.error) return;
+      setBalanceSummary(result.data);
+      setSequenceAssignment(result.data.recommendedSequenceAssignment || "AB");
+      setTutorialRotation(result.data.recommendedTutorialRotation || "rotation_a");
+    }
+
+    loadBalanceSummary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handleCreateSession(event) {
     event.preventDefault();
@@ -45,6 +79,13 @@ export function StudyPage() {
     if (!hasCompleteParticipantProfile(participantProfile)) {
       setSessionResult({ data: null, source: "local", warning: null, error: copy.setupPage.participantError });
       setStatusMessage(copy.setupPage.participantError);
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!isEligibleForStudy(participantProfile, eligibility)) {
+      setSessionResult({ data: null, source: "local", warning: null, error: copy.setupPage.screeningError });
+      setStatusMessage(copy.setupPage.screeningError);
       setIsSubmitting(false);
       return;
     }
@@ -65,6 +106,7 @@ export function StudyPage() {
 
     const result = await createStudySession({
       participantProfile,
+      eligibility,
       consentConfirmed,
       environment,
       sequenceAssignment,
@@ -82,6 +124,13 @@ export function StudyPage() {
 
   function updateParticipantProfile(field, value) {
     setParticipantProfile((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function updateEligibility(field, value) {
+    setEligibility((current) => ({
       ...current,
       [field]: value,
     }));
@@ -115,8 +164,12 @@ export function StudyPage() {
         <section className="form-section participant-profile-card" aria-labelledby="participant-profile-heading">
           <UserRound aria-hidden="true" />
           <div>
-            <h2 id="participant-profile-heading">{copy.setupPage.participantHeading}</h2>
-            <p>{copy.setupPage.participantDescription}</p>
+            <SetupCardHeading
+              headingId="participant-profile-heading"
+              infoId="participant-profile-info"
+              title={copy.setupPage.participantHeading}
+              description={copy.setupPage.participantDescription}
+            />
             <div className="form-grid">
               <label className="field-label">
                 {copy.setupPage.participantFields.fullName}
@@ -164,8 +217,12 @@ export function StudyPage() {
         <section className="form-section study-consent-card" aria-labelledby="consent-heading">
           <ShieldCheck aria-hidden="true" />
           <div>
-            <h2 id="consent-heading">{copy.setupPage.consentHeading}</h2>
-            <p>{copy.setupPage.consentDescription}</p>
+            <SetupCardHeading
+              headingId="consent-heading"
+              infoId="consent-info"
+              title={copy.setupPage.consentHeading}
+              description={copy.setupPage.consentDescription}
+            />
             <label className="checkbox-row">
               <input
                 type="checkbox"
@@ -178,11 +235,40 @@ export function StudyPage() {
           </div>
         </section>
 
+        <section className="form-section study-screening-card" aria-labelledby="screening-heading">
+          <ShieldCheck aria-hidden="true" />
+          <div>
+            <SetupCardHeading
+              headingId="screening-heading"
+              infoId="screening-info"
+              title={copy.setupPage.screeningHeading}
+              description={copy.setupPage.screeningDescription}
+            />
+            <div className="checkbox-stack">
+              {Object.entries(copy.setupPage.screeningFields).map(([field, label]) => (
+                <label className="checkbox-row" key={field}>
+                  <input
+                    type="checkbox"
+                    checked={eligibility[field]}
+                    onChange={(event) => updateEligibility(field, event.target.checked)}
+                    required
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="form-section study-choice-card" aria-labelledby="assignment-heading">
           <GitBranch aria-hidden="true" />
           <div>
-            <h2 id="assignment-heading">{copy.setupPage.choicesHeading}</h2>
-            <p>{copy.setupPage.choicesDescription}</p>
+            <SetupCardHeading
+              headingId="assignment-heading"
+              infoId="assignment-info"
+              title={copy.setupPage.choicesHeading}
+              description={copy.setupPage.choicesDescription}
+            />
             <div className="form-grid">
               <label className="field-label">
                 {copy.setupPage.modeOrderLabel}
@@ -190,6 +276,7 @@ export function StudyPage() {
                   value={sequenceAssignment}
                   onChange={(event) => setSequenceAssignment(event.target.value)}
                   required
+                  disabled
                 >
                   {SEQUENCE_ASSIGNMENTS.map((assignment) => (
                     <option key={assignment.value} value={assignment.value}>
@@ -204,6 +291,7 @@ export function StudyPage() {
                   value={tutorialRotation}
                   onChange={(event) => setTutorialRotation(event.target.value)}
                   required
+                  disabled
                 >
                   {TUTORIAL_ROTATIONS.map((rotation) => (
                     <option key={rotation.value} value={rotation.value}>
@@ -213,14 +301,26 @@ export function StudyPage() {
                 </select>
               </label>
             </div>
+            {balanceSummary ? (
+              <p className="assignment-status">
+                {copy.setupPage.recommendedAssignment(
+                  balanceSummary.recommendedSequenceAssignment,
+                  balanceSummary.recommendedTutorialRotation
+                )}
+              </p>
+            ) : null}
           </div>
         </section>
 
         <section className="form-section study-setup-notes-card" aria-labelledby="environment-heading">
           <MonitorCheck aria-hidden="true" />
           <div>
-            <h2 id="environment-heading">{copy.setupPage.setupHeading}</h2>
-            <p>{copy.setupPage.setupDescription(speechSupportStatus)}</p>
+            <SetupCardHeading
+              headingId="environment-heading"
+              infoId="environment-info"
+              title={copy.setupPage.setupHeading}
+              description={copy.setupPage.setupDescription(speechSupportStatus)}
+            />
             <div className="form-grid">
               {environmentFields.filter((field) => !field.fullWidth).map((field) => (
                 <SelectInput
@@ -231,6 +331,20 @@ export function StudyPage() {
                   placeholder={field.placeholder}
                   options={field.options}
                 />
+              ))}
+            </div>
+            <div className="checkbox-stack">
+              <h3>{copy.setupPage.controlChecklistHeading}</h3>
+              {Object.entries(copy.setupPage.controlChecklistFields).map(([field, label]) => (
+                <label className="checkbox-row" key={field}>
+                  <input
+                    type="checkbox"
+                    checked={environment[field]}
+                    onChange={(event) => updateEnvironment(field, event.target.checked)}
+                    required
+                  />
+                  <span>{label}</span>
+                </label>
               ))}
             </div>
             {environmentFields.filter((field) => field.fullWidth).map((field) => (
@@ -248,8 +362,8 @@ export function StudyPage() {
               Extra setup note (Optional)
               <input
                 type="text"
-                value={environment.researcherObservationNote}
-                onChange={(event) => updateEnvironment("researcherObservationNote", event.target.value)}
+                value={environment.participantSetupNote}
+                onChange={(event) => updateEnvironment("participantSetupNote", event.target.value)}
                 placeholder="e.g. mic volume low, minor background noise, lag spike during voice load"
               />
             </label>
@@ -291,8 +405,22 @@ function SelectInput({ label, value, onChange, placeholder, options, fullWidth =
   );
 }
 
+function SetupCardHeading({ headingId, title, description }) {
+  return (
+    <div className="setup-card-heading">
+      <div className="setup-card-title-row">
+        <h2 id={headingId}>{title}</h2>
+        <InfoPopover title={title} description={description} />
+      </div>
+    </div>
+  );
+}
+
 function hasCompleteEnvironment(environment, environmentFields) {
-  return environmentFields.every((field) => String(environment[field.field] || "").trim());
+  return environmentFields.every((field) => String(environment[field.field] || "").trim()) &&
+    environment.sameDeviceConfirmed === true &&
+    environment.cacheResetConfirmed === true &&
+    environment.microphoneCheckConfirmed === true;
 }
 
 function hasCompleteParticipantProfile(participantProfile) {
@@ -304,6 +432,14 @@ function hasCompleteParticipantProfile(participantProfile) {
     participantProfile.tutorialAppUsage,
   ].every((value) => String(value || "").trim());
 }
+
+function isEligibleForStudy(participantProfile, eligibility) {
+  const ageEligible = participantProfile.ageRange === "18-24" || participantProfile.ageRange === "25-35";
+  const englishEligible = participantProfile.englishAbility === "can_understand" ||
+    participantProfile.englishAbility === "comfortable_commands";
+  return ageEligible && englishEligible && Object.values(eligibility).every(Boolean);
+}
+
 
 function getSpeechSupportStatus(copy) {
   if (typeof window === "undefined") return copy.shared.notChecked;

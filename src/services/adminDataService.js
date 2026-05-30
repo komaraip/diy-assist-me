@@ -112,7 +112,7 @@ export async function deleteSessionBundle(sessionId, participantId = null) {
     // Session doc itself
     docsToDelete.push(doc(db, "sessions", sessionId));
 
-    // Participant doc (no sessionId field — must delete by ID directly)
+    // Participant doc has no sessionId field, so delete by ID directly.
     if (participantId) {
       docsToDelete.push(doc(db, "participants", participantId));
     }

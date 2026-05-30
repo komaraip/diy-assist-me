@@ -2,19 +2,18 @@ export const DEFAULT_STUDY_LANGUAGE = "en";
 export const SUPPORTED_STUDY_LANGUAGES = ["en"];
 
 const environmentOptionValues = {
-  deviceType: ["Laptop", "Desktop computer", "Tablet", "Smartphone"],
-  browserName: ["Google Chrome desktop", "Microsoft Edge desktop", "Safari", "Firefox", "Other browser"],
-  microphonePermissionStatus: ["Allowed", "Blocked", "Prompt not shown yet", "Not checked"],
-  roomNoiseLevelNote: ["Quiet room", "Low background noise", "Moderate background noise", "Noisy room"],
-  internetConnectionNote: ["Stable connection", "Slow but usable", "Unstable connection", "Disconnected"],
+  deviceType: ["Laptop", "Tablet", "Smartphone"],
+  browserName: ["Google Chrome desktop", "Google Chrome mobile", "Microsoft Edge desktop", "Safari mobile", "Other browser"],
+  microphonePermissionStatus: ["Allowed"],
+  roomNoiseLevelNote: ["Quiet room", "Low background noise"],
+  internetConnectionNote: ["Stable connection"],
 };
 
 const participantProfileOptionValues = {
-  ageRange: ["<18", "18-24", "25-34", "35-44", "45-54", "55+"],
+  ageRange: ["18-24", "25-35"],
   englishAbility: [
     { value: "can_understand", label: "Can understand English" },
-    { value: "limited", label: "Limited English understanding" },
-    { value: "not_comfortable", label: "Not comfortable with English" },
+    { value: "comfortable_commands", label: "Comfortable using simple English commands" },
   ],
   tutorialAppUsage: [
     { value: "daily", label: "Daily" },
@@ -93,12 +92,33 @@ const en = {
     consentLabel: "I confirm consent before creating a guided session.",
     choicesHeading: "Session choices",
     choicesDescription:
-      "Choose whether touch mode or voice mode comes first, then pick the tutorial set. Use 12 AB and 12 BA sessions for the planned balanced sample.",
+      "The app assigns the mode order and tutorial set for this session so respondents can continue independently.",
     modeOrderLabel: "Mode order",
     tutorialSetLabel: "Tutorial set",
     setupHeading: "Setup notes",
     setupDescription: (speechSupportStatus) =>
-      `Record Chrome desktop, microphone permission, internet condition, and room noise before testing. Select one option for each setup field. Current browser voice support: ${speechSupportStatus}.`,
+      `Use a documented and consistent setup for the full session: same device, browser, screen orientation, microphone, stable internet, and a quiet or low-noise room. Current browser voice support: ${speechSupportStatus}.`,
+    screeningHeading: "Eligibility screening",
+    screeningDescription:
+      "Confirm each criterion before creating a study session. Ineligible respondents should not continue into the measured flow.",
+    screeningError: "This respondent is not eligible for this study.",
+    screeningFields: {
+      familiarWithWebTutorials: "Participant is familiar with web tutorials.",
+      canPerformSimulatedDiy: "Participant can perform simple simulated DIY tasks.",
+      notPrototypeDeveloper: "Participant was not involved in prototype development.",
+      notExpertInSelectedTasks: "Participant is not an expert in the selected tutorial tasks.",
+      noTemporaryVoiceCondition: "Participant has no temporary voice condition that strongly affects recognition.",
+      noUncorrectedHearingVisualLimit: "Participant has no uncorrected hearing or visual limitation that prevents participation.",
+    },
+    controlChecklistHeading: "Controlled setup checklist",
+    controlChecklistFields: {
+      sameDeviceConfirmed: "Same device/browser/screen orientation/microphone/internet setup is used for this session.",
+      cacheResetConfirmed: "Cache or prototype state has been reset before this session.",
+      microphoneCheckConfirmed: "Microphone recognition check has been completed.",
+    },
+    balanceHeading: "Assigned session setup",
+    balanceDescription: "The app keeps the planned AB/BA and tutorial rotation balance in the background.",
+    recommendedAssignment: (sequence, rotation) => `This session is assigned to ${sequence}, ${rotation}.`,
     startButton: "Start guided session",
     startingButton: "Starting...",
     participantError: "Please complete the participant profile before creating a guided session.",
@@ -326,9 +346,9 @@ const en = {
     finishing: "Finishing...",
     finished: "Task finished",
     finish: "Finish task",
-    facilitatorSummary: "Self-Report Task Details (Optional)",
-    facilitatorDescription: "You can report your task success or any invalid trial details below.",
-    outcomeLabel: "How successful was this task for you?",
+    completionSummary: "Task Completion Report",
+    completionDescription: "Report whether you completed the task and whether any technical issue made the trial invalid.",
+    outcomeLabel: "Task completion result",
     outcomes: {
       successful: "Successful (completed all steps)",
       partially_successful: "Partially successful (completed with minor issues)",
@@ -386,6 +406,7 @@ const en = {
       `Use the voice command "go to step ${targetStep}".`,
       'Use the voice command "previous step".',
       `Return to step ${targetStep}.`,
+      'Use the voice command "scroll down".',
       "Finish the task.",
     ],
     touchPracticeScript: [
@@ -402,10 +423,11 @@ const en = {
       `Open the step overview and jump to step ${targetStep}.`,
       'Tap the "Previous" button.',
       `Return to step ${targetStep}.`,
+      'Scroll down in the tutorial content.',
       "Finish the task.",
     ],
     practiceSuccess: "Participant understands the available controls before the measured condition.",
-    measuredSuccess: "Participant reaches the target instruction and completes the task without facilitator intervention.",
+    measuredSuccess: "Respondent reaches the target instruction and completes the task independently.",
     targetKeywordFallback: "materials",
   },
   tutorial: {

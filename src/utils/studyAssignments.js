@@ -156,7 +156,7 @@ function buildTask({ conditionId, conditionOrder, modality, trialType, tutorial,
         ),
     requiredActions: isPractice
       ? ["materials_open", "step_next", "repeat_instruction"]
-      : ["materials_open", "step_next", "repeat_instruction", "tutorial_search", "step_jump", "step_previous"],
+      : ["materials_open", "step_next", "repeat_instruction", "tutorial_search", "step_jump", "step_previous", "scroll_down"],
     targetKeyword,
     targetStep: target.targetStep,
     successCriteria: isPractice ? copy.practiceSuccess : copy.measuredSuccess,

@@ -245,8 +245,14 @@ export function buildAnalysisReadyRows(data = {}) {
 
     const profile = session.participantProfile || participantMap.get(session.participantId)?.participantProfile || {};
     const hasProfile = !!(profile.fullName || profile.email || profile.ageRange || profile.englishAbility);
-    const ageInvalid = hasProfile && profile.ageRange && profile.ageRange !== "18-24" && profile.ageRange !== "25-34";
-    const languageInvalid = hasProfile && profile.englishAbility === "not_comfortable";
+    const ageInvalid = hasProfile && profile.ageRange && profile.ageRange !== "18-24" && profile.ageRange !== "25-35";
+    const languageInvalid = hasProfile && !["can_understand", "comfortable_commands"].includes(profile.englishAbility);
+    const repeatedCommandCount = voiceLogs.filter((log) => log.recoveryAttemptType === "repeated_command").length;
+    const rephrasedCommandCount = voiceLogs.filter((log) => log.recoveryAttemptType === "rephrased_command").length;
+    const touchDuration = Number(touchTrial?.durationSeconds);
+    const voiceDuration = Number(voiceTrial?.durationSeconds);
+    const touchSusScore = Number(touchSus?.susScore);
+    const voiceSusScore = Number(voiceSus?.susScore);
 
     const invalidReasons = [
       !touchTrial ? "missing_touch_trial" : "",
@@ -270,10 +276,18 @@ export function buildAnalysisReadyRows(data = {}) {
       tutorialRotation: session.tutorialRotation || touchTrial?.tutorialRotation || voiceTrial?.tutorialRotation || "",
       touch_task_duration_seconds: touchTrial?.durationSeconds ?? "",
       voice_task_duration_seconds: voiceTrial?.durationSeconds ?? "",
+      duration_difference_voice_minus_touch: Number.isFinite(voiceDuration) && Number.isFinite(touchDuration)
+        ? Number((voiceDuration - touchDuration).toFixed(2))
+        : "",
       touch_task_success: touchTrial?.completionStatus || "",
       voice_task_success: voiceTrial?.completionStatus || "",
+      touch_task_success_numeric: completionStatusToNumber(touchTrial?.completionStatus),
+      voice_task_success_numeric: completionStatusToNumber(voiceTrial?.completionStatus),
       touch_sus_score: touchSus?.susScore ?? "",
       voice_sus_score: voiceSus?.susScore ?? "",
+      sus_difference_voice_minus_touch: Number.isFinite(voiceSusScore) && Number.isFinite(touchSusScore)
+        ? Number((voiceSusScore - touchSusScore).toFixed(2))
+        : "",
       voice_total_commands: voiceLogs.length,
       voice_recognized_count: voiceLogs.filter((log) => log.recognized === true).length,
       voice_command_success_count: voiceCommandLogs.filter((log) => log.commandSuccess === true).length,
@@ -287,10 +301,13 @@ export function buildAnalysisReadyRows(data = {}) {
       ),
       voice_recovery_effort: voiceLogs.filter((log) =>
         log.recoveryType ||
+        log.isRecoveryAttempt ||
         log.fallbackUsed ||
         log.commandSuccess === false ||
         log.eventType === "voice_no_match"
       ).length + voiceFallbackTouchCount,
+      voice_repeated_command_count: repeatedCommandCount,
+      voice_rephrased_command_count: rephrasedCommandCount,
       voice_fallback_count: voiceLogs.filter((log) => log.fallbackUsed).length + voiceFallbackTouchCount,
       voice_no_match_count: voiceLogs.filter((log) => log.eventType === "voice_no_match").length,
       voice_command_failed_count: voiceCommandLogs.filter((log) => log.commandSuccess === false).length,
@@ -603,6 +620,7 @@ function summarizeBooleanRate(records, field) {
 function summarizeRecoveryEffort(voiceLogs) {
   const recoveryLogs = voiceLogs.filter((log) =>
     log.recoveryType ||
+    log.isRecoveryAttempt ||
     log.fallbackUsed ||
     log.commandSuccess === false ||
     log.eventType === "voice_no_match"
@@ -610,7 +628,9 @@ function summarizeRecoveryEffort(voiceLogs) {
   return {
     totalCount: recoveryLogs.length,
     byRecoveryType: countBy(recoveryLogs, "recoveryType"),
-    repeatedCommandCount: voiceLogs.filter((log) => isRepeatLog(log)).length,
+    repeatedCommandCount: voiceLogs.filter((log) => log.recoveryAttemptType === "repeated_command").length,
+    rephrasedCommandCount: voiceLogs.filter((log) => log.recoveryAttemptType === "rephrased_command").length,
+    fallbackTouchCount: voiceLogs.filter((log) => log.fallbackUsed).length,
   };
 }
 
@@ -695,6 +715,9 @@ function summarizeNumberList(values) {
     count: values.length,
     average: average(values),
     median: median(values),
+    standardDeviation: standardDeviation(values),
+    standardError: standardError(values),
+    confidenceInterval95: confidenceInterval95(values),
     min: values.length ? Math.min(...values) : null,
     max: values.length ? Math.max(...values) : null,
   };
@@ -730,6 +753,30 @@ function median(values) {
   return Number(((sorted[midpoint - 1] + sorted[midpoint]) / 2).toFixed(2));
 }
 
+function standardDeviation(values) {
+  if (values.length < 2) return null;
+  const mean = average(values);
+  const variance = values.reduce((total, value) => total + ((value - mean) ** 2), 0) / (values.length - 1);
+  return Number(Math.sqrt(variance).toFixed(2));
+}
+
+function standardError(values) {
+  const sd = standardDeviation(values);
+  if (sd === null) return null;
+  return Number((sd / Math.sqrt(values.length)).toFixed(2));
+}
+
+function confidenceInterval95(values) {
+  const se = standardError(values);
+  const mean = average(values);
+  if (se === null || mean === null) return null;
+  const margin = 1.96 * se;
+  return {
+    lower: Number((mean - margin).toFixed(2)),
+    upper: Number((mean + margin).toFixed(2)),
+  };
+}
+
 function ratio(numerator, denominator) {
   if (!denominator) return null;
   return Number((numerator / denominator).toFixed(4));
@@ -739,8 +786,9 @@ function uniqueCount(values) {
   return new Set(values.filter(Boolean)).size;
 }
 
-function isRepeatLog(log) {
-  const eventType = log.eventType || "";
-  const matchedIntent = log.matchedIntent || "";
-  return eventType.includes("repeat") || matchedIntent.includes("repeat");
+function completionStatusToNumber(status) {
+  if (status === "successful") return 1;
+  if (status === "partially_successful") return 0.5;
+  if (status === "unsuccessful") return 0;
+  return "";
 }

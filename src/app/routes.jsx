@@ -10,9 +10,10 @@ import { StudyTaskPage } from "../pages/StudyTaskPage.jsx";
 import { SUSPage } from "../pages/SUSPage.jsx";
 import { DebriefPage } from "../pages/DebriefPage.jsx";
 import { AdminPage } from "../pages/AdminPage.jsx";
+import { AdminGuidedSessionsPage } from "../pages/AdminGuidedSessionsPage.jsx";
+import { AdminThesisPage } from "../pages/AdminThesisPage.jsx";
 import { AdminTutorialsPage } from "../pages/AdminTutorialsPage.jsx";
 import { HelpPage } from "../pages/HelpPage.jsx";
-import { ExportsPage } from "../pages/ExportsPage.jsx";
 import { NotFoundPage } from "../pages/NotFoundPage.jsx";
 
 export const router = createBrowserRouter([
@@ -21,11 +22,18 @@ export const router = createBrowserRouter([
     element: <AdminLayout />,
     children: [
       { index: true, element: <AdminPage /> },
+      { path: "guided-sessions", element: <AdminGuidedSessionsPage /> },
+      { path: "thesis", element: <AdminThesisPage /> },
       { path: "tutorials", element: <AdminTutorialsPage /> },
-      { path: "export", element: <ExportsPage /> },
+      { path: "data", element: <Navigate to="/admin/guided-sessions?tab=sessions" replace /> },
+      { path: "sessions", element: <Navigate to="/admin/guided-sessions?tab=sessions" replace /> },
+      { path: "logs", element: <Navigate to="/admin/guided-sessions?tab=logs" replace /> },
+      { path: "metrics", element: <Navigate to="/admin/thesis?tab=overview" replace /> },
+      { path: "evidence", element: <Navigate to="/admin/thesis?tab=overview" replace /> },
+      { path: "export", element: <Navigate to="/admin/thesis?tab=exports" replace /> },
     ],
   },
-  { path: "/exports", element: <Navigate to="/admin/export" replace /> },
+  { path: "/exports", element: <Navigate to="/admin/thesis?tab=exports" replace /> },
   {
     path: "/",
     element: <RootLayout />,

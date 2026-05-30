@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getStudyCopy, normalizeStudyLanguage } from "../../i18n/studyCopy.js";
+import { InfoPopover } from "./InfoPopover.jsx";
 
 const initialResponses = {
   preferredModality: "",
@@ -34,8 +35,10 @@ export function DebriefForm({ isSubmitting, onSubmit, language = "en" }) {
     <form className="study-form" onSubmit={handleSubmit}>
       <section className="study-panel">
         <p className="eyebrow">{copy.eyebrow}</p>
-        <h2>{copy.title}</h2>
-        <p className="study-context-line">{copy.description}</p>
+        <div className="compact-heading-row">
+          <h2>{copy.title}</h2>
+          <InfoPopover title={copy.title} description={copy.description} />
+        </div>
       </section>
 
       <label className="field-label">

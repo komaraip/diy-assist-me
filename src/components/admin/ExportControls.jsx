@@ -30,7 +30,7 @@ const exportCards = [
   {
     fileName: EXPORT_FILENAMES.observerNotes,
     title: "Observer notes CSV",
-    description: "Facilitator notes, severity, tags, task context, and timestamps for RQ3.",
+    description: "Issue notes, severity, tags, task context, and timestamps for RQ3.",
     icon: FileSpreadsheet,
   },
   {
@@ -41,8 +41,8 @@ const exportCards = [
   },
   {
     fileName: EXPORT_FILENAMES.fullSessions,
-    title: "Full sessions JSON",
-    description: "Complete session bundles with participants, tasks, responses, notes, logs, and metadata.",
+    title: "Identifiable admin sessions JSON",
+    description: "Complete admin review bundle. May include names and emails; use anonymized CSV files for thesis analysis.",
     icon: FileJson,
   },
   {
@@ -122,7 +122,7 @@ export function ExportControls() {
 
       {(exportResult?.data?.excludedSessionCount ?? 0) > 0 ? (
         <p className="status-note exclude-notice" role="status">
-          ℹ️ {exportResult.data.excludedSessionCount} session{exportResult.data.excludedSessionCount === 1 ? "" : "s"} excluded from this export (marked "Exclude from export" on the dashboard).
+          Info: {exportResult.data.excludedSessionCount} session{exportResult.data.excludedSessionCount === 1 ? "" : "s"} excluded from this export (marked "Exclude from export" on the dashboard).
         </p>
       ) : null}
 

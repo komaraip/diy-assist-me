@@ -99,7 +99,7 @@ export function SessionReview({ adminData, dataSource = "" }) {
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
               >
-                {isDeleting ? "Deleting…" : "Yes, delete permanently"}
+                {isDeleting ? "Deleting..." : "Yes, delete permanently"}
               </button>
             </div>
           </div>
@@ -231,7 +231,7 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
                 <span>{participantProfile.ageRange || "Not recorded"}</span>
                 {participantProfile.ageRange &&
                   participantProfile.ageRange !== "18-24" &&
-                  participantProfile.ageRange !== "25-34" && (
+                  participantProfile.ageRange !== "25-35" && (
                     <span
                       className="screening-warning"
                       style={{
@@ -246,7 +246,7 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
                         whiteSpace: "nowrap"
                       }}
                     >
-                      ⚠️ Out of Target (18-35)
+                      Out of target (18-35)
                     </span>
                   )}
               </span>
@@ -257,7 +257,7 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
             value={
               <span style={{ display: "inline-flex", alignItems: "center" }}>
                 <span>{formatLabel(participantProfile.englishAbility)}</span>
-                {participantProfile.englishAbility === "not_comfortable" && (
+                {!["can_understand", "comfortable_commands"].includes(participantProfile.englishAbility) && (
                   <span
                     className="screening-warning"
                     style={{
@@ -272,7 +272,7 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
                       whiteSpace: "nowrap"
                     }}
                   >
-                    ⚠️ Inadequate (Target: English commands)
+                    Inadequate for English commands
                   </span>
                 )}
               </span>
@@ -295,6 +295,30 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
           </dl>
         ) : (
           <EmptyState>No setup notes recorded.</EmptyState>
+        )}
+      </DetailSection>
+
+      <DetailSection title="Eligibility screening">
+        {Object.keys(session.eligibility || session.participant?.eligibility || {}).length ? (
+          <dl className="detail-list">
+            {Object.entries(session.eligibility || session.participant?.eligibility || {}).map(([key, value]) => (
+              <DetailItem key={key} label={formatLabel(key)} value={value ? "Confirmed" : "Not confirmed"} />
+            ))}
+          </dl>
+        ) : (
+          <EmptyState>No eligibility screening recorded.</EmptyState>
+        )}
+      </DetailSection>
+
+      <DetailSection title="Detected browser and screen">
+        {Object.keys(session.browserInfo || {}).length ? (
+          <dl className="detail-list">
+            {Object.entries(session.browserInfo || {}).map(([key, value]) => (
+              <DetailItem key={key} label={formatLabel(key)} value={String(value ?? "")} />
+            ))}
+          </dl>
+        ) : (
+          <EmptyState>No browser metadata recorded.</EmptyState>
         )}
       </DetailSection>
 
@@ -496,7 +520,7 @@ function SessionEditForm({ session, onSave, onCancel }) {
           value={researcherNote}
           onChange={(e) => setResearcherNote(e.target.value)}
           rows={2}
-          placeholder="e.g. test run, consent withdrawn…"
+          placeholder="e.g. test run, consent withdrawn..."
         />
       </div>
 
@@ -518,7 +542,7 @@ function SessionEditForm({ session, onSave, onCancel }) {
           Cancel
         </button>
         <button type="submit" className="button primary-button" disabled={isSaving}>
-          {isSaving ? "Saving…" : "Save changes"}
+          {isSaving ? "Saving..." : "Save changes"}
         </button>
       </div>
     </form>

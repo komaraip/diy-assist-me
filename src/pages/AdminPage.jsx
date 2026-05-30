@@ -1,22 +1,37 @@
-import { ClipboardCheck, FileText, MessageSquareText, Mic, RefreshCcw, TableProperties, Trash2, Users } from "lucide-react";
+import { BookOpenText, ClipboardList, FileText, TableProperties } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { EvidenceChecklist } from "../components/admin/EvidenceChecklist.jsx";
-import { InteractionLogViewer } from "../components/admin/InteractionLogViewer.jsx";
-import { MetricsSummary } from "../components/admin/MetricsSummary.jsx";
-import { SessionReview } from "../components/admin/SessionReview.jsx";
-import { loadAdminData, purgeAllStudyData } from "../services/adminDataService.js";
+import { AdminDataToolbar } from "../components/admin/AdminDataToolbar.jsx";
+import { AdminSummaryCards } from "../components/admin/AdminSummaryCards.jsx";
+import { loadAdminData } from "../services/adminDataService.js";
+
+const quickLinks = [
+  {
+    to: "/admin/guided-sessions",
+    title: "Guided Sessions",
+    description: "Review guided session bundles and interaction logs.",
+    icon: ClipboardList,
+  },
+  {
+    to: "/admin/thesis",
+    title: "Thesis",
+    description: "Open Chapter 4 metrics, evidence readiness, and export files.",
+    icon: FileText,
+  },
+  {
+    to: "/admin/tutorials",
+    title: "Tutorials",
+    description: "Manage the tutorial catalog used by public and guided flows.",
+    icon: BookOpenText,
+  },
+];
 
 export function AdminPage() {
   return (
     <section className="admin-page">
       <div className="admin-page-header">
-        <p className="eyebrow">Researcher admin</p>
-        <h1>Dashboard</h1>
-        <p>
-          Review guided sessions, task activity, SUS responses, voice and touch logs, observer notes,
-          and export readiness for RQ1, RQ2, and RQ3.
-        </p>
+        <p className="eyebrow">Overview</p>
+        <p>Monitor study progress and open focused admin workspaces.</p>
       </div>
 
       <AdminDashboard />
@@ -51,174 +66,35 @@ function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
-      <div className="admin-toolbar">
-        <p className="data-source-note">
-          Data source: {resultMeta.source}
-          {resultMeta.warning ? `. ${resultMeta.warning}` : ""}
-        </p>
-        <div className="admin-toolbar-actions">
-          <button type="button" className="button secondary-action" onClick={loadData}>
-            <RefreshCcw aria-hidden="true" />
-            Refresh
-          </button>
-          <Link className="button primary-button" to="/admin/export">
-            <TableProperties aria-hidden="true" />
-            Open exports
-          </Link>
-          <PurgeButton onPurged={loadData} />
-        </div>
-      </div>
-
+      <AdminDataToolbar source={resultMeta.source} warning={resultMeta.warning} onRefresh={loadData} />
       <AdminSummaryCards adminData={adminData} />
-      <MetricsSummary adminData={adminData} />
-      <EvidenceChecklist adminData={adminData} />
-      <SessionReview adminData={adminData} dataSource={resultMeta.source} />
-      <InteractionLogViewer logs={adminData.interactionLogs || []} />
-    </div>
-  );
-}
 
-function PurgeButton({ onPurged }) {
-  const [step, setStep] = useState("idle"); // idle | confirm | purging | done | error
-  const [confirmText, setConfirmText] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [deletedCount, setDeletedCount] = useState(null);
-
-  async function handlePurge() {
-    if (confirmText !== "PURGE") return;
-    setStep("purging");
-    const result = await purgeAllStudyData();
-    if (result.error) {
-      setErrorMsg(result.error);
-      setStep("error");
-      return;
-    }
-    setDeletedCount(result.data?.deleted ?? "?");
-    setStep("done");
-    setConfirmText("");
-    onPurged();
-  }
-
-  if (step === "idle") {
-    return (
-      <button type="button" className="button danger-button" onClick={() => setStep("confirm")}>
-        <Trash2 size={14} aria-hidden="true" />
-        Purge all data
-      </button>
-    );
-  }
-
-  if (step === "confirm") {
-    return (
-      <div className="admin-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="purge-confirm-title">
-        <div className="admin-confirm-dialog">
-          <h3 id="purge-confirm-title">⚠️ Purge ALL Firestore data?</h3>
-          <p>
-            This will permanently delete <strong>every document</strong> in all study collections:
-            participants, sessions, taskTrials, interactionLogs, susResponses, debriefResponses, and observerNotes.
-            This cannot be undone.
-          </p>
-          <p>Type <strong>PURGE</strong> to confirm:</p>
-          <input
-            type="text"
-            value={confirmText}
-            onChange={(e) => setConfirmText(e.target.value)}
-            placeholder="Type PURGE"
-            autoFocus
-            style={{ padding: "0.5rem 0.75rem", borderRadius: "6px", border: "1px solid #fca5a5", marginBottom: "1rem", width: "100%", fontSize: "0.9rem" }}
-          />
-          <div className="admin-confirm-actions">
-            <button type="button" className="button secondary-action" onClick={() => { setStep("idle"); setConfirmText(""); }}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="button danger-button"
-              onClick={handlePurge}
-              disabled={confirmText !== "PURGE"}
-            >
-              Yes, purge everything
-            </button>
+      <section className="admin-panel" aria-labelledby="admin-quick-links-heading">
+        <div className="admin-panel-heading">
+          <div>
+            <p className="eyebrow">Admin workspaces</p>
+            <h2 id="admin-quick-links-heading">Open a focused page</h2>
           </div>
+          <TableProperties aria-hidden="true" />
         </div>
-      </div>
-    );
-  }
 
-  if (step === "purging") {
-    return <button type="button" className="button danger-button" disabled>Purging…</button>;
-  }
-
-  if (step === "done") {
-    return (
-      <button type="button" className="button secondary-action" onClick={() => setStep("idle")}>
-        ✓ Purged {deletedCount} docs — dismiss
-      </button>
-    );
-  }
-
-  if (step === "error") {
-    return (
-      <button type="button" className="button danger-button" onClick={() => setStep("idle")} title={errorMsg}>
-        Purge failed — dismiss
-      </button>
-    );
-  }
-
-  return null;
-}
-
-function AdminSummaryCards({ adminData }) {
-  const cards = [
-    {
-      label: "Total sessions",
-      value: (adminData.sessions || []).length,
-      detail: "Guided sessions loaded",
-      icon: Users,
-    },
-    {
-      label: "Task trials",
-      value: (adminData.taskTrials || []).length,
-      detail: "Practice and task records",
-      icon: ClipboardCheck,
-    },
-    {
-      label: "Voice logs",
-      value: (adminData.interactionLogs || []).filter((log) => log.modality === "voice").length,
-      detail: "Voice interaction events",
-      icon: Mic,
-    },
-    {
-      label: "SUS responses",
-      value: (adminData.susResponses || []).length,
-      detail: "Questionnaire responses",
-      icon: FileText,
-    },
-    {
-      label: "Debrief responses",
-      value: (adminData.debriefResponses || []).length,
-      detail: "Post-session feedback",
-      icon: MessageSquareText,
-    },
-  ];
-
-  return (
-    <section className="admin-summary-grid" aria-label="Admin data summary">
-      {cards.map((card) => {
-        const Icon = card.icon;
-        return (
-          <article className="admin-summary-card" key={card.label}>
-            <span className="admin-summary-icon">
-              <Icon aria-hidden="true" />
-            </span>
-            <div>
-              <span>{card.label}</span>
-              <strong>{card.value}</strong>
-              <p>{card.detail}</p>
-            </div>
-          </article>
-        );
-      })}
-    </section>
+        <div className="admin-quick-link-grid">
+          {quickLinks.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link className="admin-quick-link-card" to={item.to} key={item.to}>
+                <span className="admin-summary-icon">
+                  <Icon aria-hidden="true" />
+                </span>
+                <div>
+                  <strong>{item.title}</strong>
+                  <p>{item.description}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    </div>
   );
 }

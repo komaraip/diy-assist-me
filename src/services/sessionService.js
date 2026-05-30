@@ -1,6 +1,6 @@
-import { addDoc, arrayUnion, collection, doc, getDoc, updateDoc } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
-import { createLocalRecord, getLocalRecord, updateLocalRecord } from "./localStore.js";
+import { createLocalRecord, getLocalRecord, listLocalRecords, updateLocalRecord } from "./localStore.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../i18n/studyCopy.js";
 
@@ -14,6 +14,7 @@ export async function createSession({
   participantId,
   participantCode,
   participantProfile = {},
+  eligibility = {},
   consentConfirmed,
   environment = {},
   sequenceAssignment = "",
@@ -32,6 +33,7 @@ export async function createSession({
     participantId,
     participantCode,
     participantProfile: normalizeParticipantProfile(participantProfile),
+    eligibility: normalizeEligibility(eligibility),
     schemaVersion: SCHEMA_VERSION,
     consentConfirmed: true,
     status: "created",
@@ -155,6 +157,45 @@ export async function appendTechnicalNote(sessionId, note) {
   }
 }
 
+export async function getSessionBalanceSummary() {
+  const source = isFirebaseEnabled && db ? "firebase" : "local";
+
+  const summarize = (sessions) => {
+    const activeSessions = (sessions || []).filter((session) => session.excludeFromExport !== true);
+    const countBy = (field, value) => activeSessions.filter((session) => session[field] === value).length;
+    const sequenceRecommendation = countBy("sequenceAssignment", "AB") <= countBy("sequenceAssignment", "BA") ? "AB" : "BA";
+    const rotationRecommendation = countBy("tutorialRotation", "rotation_a") <= countBy("tutorialRotation", "rotation_b")
+      ? "rotation_a"
+      : "rotation_b";
+
+    return {
+      totalSessions: activeSessions.length,
+      abCount: countBy("sequenceAssignment", "AB"),
+      baCount: countBy("sequenceAssignment", "BA"),
+      rotationACount: countBy("tutorialRotation", "rotation_a"),
+      rotationBCount: countBy("tutorialRotation", "rotation_b"),
+      targetParticipants: 24,
+      targetPerSequence: 12,
+      recommendedSequenceAssignment: sequenceRecommendation,
+      recommendedTutorialRotation: rotationRecommendation,
+    };
+  };
+
+  if (!isFirebaseEnabled || !db) {
+    return serviceSuccess(summarize(listLocalRecords("sessions").data || []), "local", LOCAL_READ_WARNING);
+  }
+
+  try {
+    const snapshot = await getDocs(collection(db, "sessions"));
+    return serviceSuccess(summarize(snapshot.docs.map((documentSnapshot) => ({
+      id: documentSnapshot.id,
+      ...documentSnapshot.data(),
+    }))), "firebase");
+  } catch {
+    return serviceSuccess(summarize(listLocalRecords("sessions").data || []), "local", FIREBASE_READ_FALLBACK_WARNING);
+  }
+}
+
 function normalizeEnvironment(environment) {
   return {
     deviceType: environment.deviceType || "",
@@ -163,7 +204,11 @@ function normalizeEnvironment(environment) {
     roomNoiseLevelNote: environment.roomNoiseLevelNote || "",
     internetConnectionNote: environment.internetConnectionNote || "",
     taskEnvironmentNote: environment.taskEnvironmentNote || "",
-    researcherObservationNote: environment.researcherObservationNote || "",
+    participantSetupNote: environment.participantSetupNote || environment.researcherObservationNote || "",
+    researcherObservationNote: environment.researcherObservationNote || environment.participantSetupNote || "",
+    sameDeviceConfirmed: environment.sameDeviceConfirmed === true,
+    cacheResetConfirmed: environment.cacheResetConfirmed === true,
+    microphoneCheckConfirmed: environment.microphoneCheckConfirmed === true,
   };
 }
 
@@ -177,6 +222,17 @@ function normalizeParticipantProfile(participantProfile = {}) {
   };
 }
 
+function normalizeEligibility(eligibility = {}) {
+  return {
+    familiarWithWebTutorials: eligibility.familiarWithWebTutorials === true,
+    canPerformSimulatedDiy: eligibility.canPerformSimulatedDiy === true,
+    notPrototypeDeveloper: eligibility.notPrototypeDeveloper === true,
+    notExpertInSelectedTasks: eligibility.notExpertInSelectedTasks === true,
+    noTemporaryVoiceCondition: eligibility.noTemporaryVoiceCondition === true,
+    noUncorrectedHearingVisualLimit: eligibility.noUncorrectedHearingVisualLimit === true,
+  };
+}
+
 function getBrowserInfo() {
   if (typeof navigator === "undefined") {
     return {
@@ -187,6 +243,12 @@ function getBrowserInfo() {
       detectedBrowserVersion: "",
       speechRecognitionSupported: false,
       isSecureContext: false,
+      viewportWidth: null,
+      viewportHeight: null,
+      screenWidth: null,
+      screenHeight: null,
+      devicePixelRatio: null,
+      orientation: "",
     };
   }
 
@@ -200,6 +262,14 @@ function getBrowserInfo() {
     detectedBrowserVersion: detected.version,
     speechRecognitionSupported: isSpeechRecognitionSupported(),
     isSecureContext: typeof window !== "undefined" ? window.isSecureContext === true : false,
+    viewportWidth: typeof window !== "undefined" ? window.innerWidth : null,
+    viewportHeight: typeof window !== "undefined" ? window.innerHeight : null,
+    screenWidth: typeof window !== "undefined" && window.screen ? window.screen.width : null,
+    screenHeight: typeof window !== "undefined" && window.screen ? window.screen.height : null,
+    devicePixelRatio: typeof window !== "undefined" ? window.devicePixelRatio : null,
+    orientation: typeof window !== "undefined" && window.screen?.orientation
+      ? window.screen.orientation.type
+      : "",
   };
 }
 

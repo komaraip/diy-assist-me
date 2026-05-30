@@ -13,6 +13,7 @@ export async function createParticipant({
   tutorialRotation = "",
   language = DEFAULT_STUDY_LANGUAGE,
   participantProfile = {},
+  eligibility = {},
   notes = "",
 } = {}) {
   const createdAt = new Date().toISOString();
@@ -25,6 +26,7 @@ export async function createParticipant({
       tutorialRotation,
       language: normalizedLanguage,
       participantProfile: normalizedParticipantProfile,
+      eligibility: normalizeEligibility(eligibility),
       notes,
       createdAt,
     });
@@ -41,6 +43,7 @@ export async function createParticipant({
       tutorialRotation,
       language: normalizedLanguage,
       participantProfile: normalizedParticipantProfile,
+      eligibility: normalizeEligibility(eligibility),
       notes,
       createdAt,
     };
@@ -52,6 +55,7 @@ export async function createParticipant({
       tutorialRotation,
       language: normalizedLanguage,
       participantProfile: normalizedParticipantProfile,
+      eligibility: normalizeEligibility(eligibility),
       notes,
       createdAt,
     });
@@ -60,7 +64,7 @@ export async function createParticipant({
   }
 }
 
-function createLocalParticipant({ sequenceAssignment, tutorialRotation, language, participantProfile, notes, createdAt }) {
+function createLocalParticipant({ sequenceAssignment, tutorialRotation, language, participantProfile, eligibility, notes, createdAt }) {
   const participantCode = getNextLocalParticipantCode();
   return createLocalRecord("participants", {
     participantCode,
@@ -69,6 +73,7 @@ function createLocalParticipant({ sequenceAssignment, tutorialRotation, language
     tutorialRotation,
     language,
     participantProfile,
+    eligibility,
     notes,
     createdAt,
   });
@@ -81,6 +86,17 @@ function normalizeParticipantProfile(participantProfile = {}) {
     ageRange: String(participantProfile.ageRange || "").trim(),
     englishAbility: String(participantProfile.englishAbility || "").trim(),
     tutorialAppUsage: String(participantProfile.tutorialAppUsage || "").trim(),
+  };
+}
+
+function normalizeEligibility(eligibility = {}) {
+  return {
+    familiarWithWebTutorials: eligibility.familiarWithWebTutorials === true,
+    canPerformSimulatedDiy: eligibility.canPerformSimulatedDiy === true,
+    notPrototypeDeveloper: eligibility.notPrototypeDeveloper === true,
+    notExpertInSelectedTasks: eligibility.notExpertInSelectedTasks === true,
+    noTemporaryVoiceCondition: eligibility.noTemporaryVoiceCondition === true,
+    noUncorrectedHearingVisualLimit: eligibility.noUncorrectedHearingVisualLimit === true,
   };
 }
 

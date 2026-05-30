@@ -36,6 +36,7 @@ export function useVoiceCommands({
   const unsupportedLoggedRef = useRef(false);
   const stopListeningRef = useRef(null);
   const recognitionErrorStatsRef = useRef({});
+  const lastFailureRef = useRef(null);
 
   useEffect(() => {
     onCommandRef.current = onCommand;
@@ -81,11 +82,18 @@ export function useVoiceCommands({
         commandSuccess: false,
         failureReason: message,
         recoveryType: "touch_fallback_available",
+        isRecoveryAttempt: false,
+        recoveryAttemptType: "",
         fallbackUsed: false,
         elapsedMsFromTaskStart: getElapsedMsFromStartedAt(taskStartedAt),
         stepIndexBefore: getStepIndexRef.current?.() ?? null,
         stepIndexAfter: getStepIndexRef.current?.() ?? null,
       });
+      lastFailureRef.current = {
+        normalizedTranscript: "",
+        matchedIntent: null,
+        timestamp: Date.now(),
+      };
     },
     [conditionId, conditionOrder, enabled, participantCode, participantId, sessionId, taskId, taskStartedAt, trialType, tutorialId]
   );
@@ -98,6 +106,10 @@ export function useVoiceCommands({
 
       const parsed = parseVoiceCommand(rawTranscript, normalizedLanguage);
       const stepIndexBefore = getStepIndexRef.current?.() ?? null;
+      const recoveryAttempt = getRecoveryAttempt({
+        previousFailure: lastFailureRef.current,
+        parsed,
+      });
       setLastParse(parsed);
 
       if (parsed.intent === VOICE_INTENTS.UNKNOWN) {
@@ -121,6 +133,8 @@ export function useVoiceCommands({
           commandSuccess: false,
           failureReason: "no_matching_intent",
           recoveryType: "repeat_or_touch_fallback",
+          isRecoveryAttempt: recoveryAttempt.isRecoveryAttempt,
+          recoveryAttemptType: recoveryAttempt.recoveryAttemptType,
           fallbackUsed: false,
           elapsedMsFromTaskStart: getElapsedMsFromStartedAt(taskStartedAt),
           stepIndexBefore,
@@ -128,6 +142,11 @@ export function useVoiceCommands({
           speechConfidence: confidence,
           metadata: { speechConfidence: confidence },
         });
+        lastFailureRef.current = {
+          normalizedTranscript: parsed.normalizedTranscript,
+          matchedIntent: parsed.intent,
+          timestamp: Date.now(),
+        };
         return { success: false };
       }
 
@@ -159,6 +178,8 @@ export function useVoiceCommands({
         commandSuccess: success,
         failureReason: dispatchResult?.failureReason || null,
         recoveryType: dispatchResult?.recoveryType || null,
+        isRecoveryAttempt: recoveryAttempt.isRecoveryAttempt,
+        recoveryAttemptType: recoveryAttempt.recoveryAttemptType,
         fallbackUsed: false,
         elapsedMsFromTaskStart: getElapsedMsFromStartedAt(taskStartedAt),
         stepIndexBefore: dispatchResult?.stepIndexBefore ?? stepIndexBefore,
@@ -175,6 +196,16 @@ export function useVoiceCommands({
           ...(dispatchResult?.metadata || {}),
         },
       });
+
+      if (success) {
+        lastFailureRef.current = null;
+      } else {
+        lastFailureRef.current = {
+          normalizedTranscript: parsed.normalizedTranscript,
+          matchedIntent: parsed.intent,
+          timestamp: Date.now(),
+        };
+      }
 
       if (parsed.intent === VOICE_INTENTS.STOP_LISTENING) {
         stopListeningRef.current?.();
@@ -229,6 +260,34 @@ export function useVoiceCommands({
     showCommandHints,
     setShowCommandHints,
     commandHints: getCommandHints(normalizedLanguage),
+  };
+}
+
+function getRecoveryAttempt({ previousFailure, parsed }) {
+  if (!previousFailure || Date.now() - previousFailure.timestamp > 30000) {
+    return {
+      isRecoveryAttempt: false,
+      recoveryAttemptType: "",
+    };
+  }
+
+  if (previousFailure.normalizedTranscript && previousFailure.normalizedTranscript === parsed.normalizedTranscript) {
+    return {
+      isRecoveryAttempt: true,
+      recoveryAttemptType: "repeated_command",
+    };
+  }
+
+  if (previousFailure.matchedIntent && previousFailure.matchedIntent === parsed.intent) {
+    return {
+      isRecoveryAttempt: true,
+      recoveryAttemptType: "rephrased_command",
+    };
+  }
+
+  return {
+    isRecoveryAttempt: true,
+    recoveryAttemptType: "new_command_after_failure",
   };
 }
 

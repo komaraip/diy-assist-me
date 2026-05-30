@@ -53,6 +53,8 @@ function buildInteractionLogRecord(event = {}) {
     commandSuccess: event.commandSuccess ?? null,
     failureReason: event.failureReason ?? null,
     recoveryType: event.recoveryType ?? null,
+    isRecoveryAttempt: event.isRecoveryAttempt ?? false,
+    recoveryAttemptType: event.recoveryAttemptType ?? "",
     fallbackUsed: event.fallbackUsed ?? false,
     speechConfidence: event.speechConfidence ?? event.metadata?.speechConfidence ?? null,
     matchedPhrase: event.matchedPhrase ?? event.metadata?.matchedPhrase ?? "",
