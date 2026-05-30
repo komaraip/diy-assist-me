@@ -14,6 +14,7 @@ import {
   prepareTutorialForSave,
   validateTutorialDraft,
 } from "../../utils/validateTutorial.js";
+import { getGuidedSessionTutorialIntegrity, REQUIRED_GUIDED_TUTORIALS } from "../../utils/studyAssignments.js";
 import { TutorialForm } from "./TutorialForm.jsx";
 import { TutorialTable } from "./TutorialTable.jsx";
 
@@ -46,6 +47,9 @@ export function TutorialManager() {
       return matchesQuery && matchesCategory;
     });
   }, [categoryFilter, query, tutorials]);
+  const guidedTutorialIntegrity = useMemo(() => {
+    return getGuidedSessionTutorialIntegrity(tutorials.map((tutorial) => tutorial.normalized));
+  }, [tutorials]);
 
   async function loadTutorials() {
     setIsLoading(true);
@@ -80,6 +84,14 @@ export function TutorialManager() {
   }
 
   async function handleDelete(tutorial) {
+    if (isProtectedGuidedTutorial(tutorial)) {
+      setErrorMessage(
+        `"${tutorial.normalized.title}" is required by guided sessions and cannot be deleted. Mark it inactive only after replacing the controlled core tutorial set.`
+      );
+      setStatusMessage("");
+      return;
+    }
+
     const confirmed = window.confirm(`Delete "${tutorial.normalized.title}"? This cannot be undone.`);
     if (!confirmed) return;
 
@@ -212,6 +224,7 @@ export function TutorialManager() {
 
       {errorMessage ? <p className="status-note error-note" role="alert">{errorMessage}</p> : null}
       {statusMessage ? <p className="status-note" role="status">{statusMessage}</p> : null}
+      {!isLoading && tutorials.length ? <GuidedTutorialIntegrityNotice integrity={guidedTutorialIntegrity} /> : null}
 
       {draft ? (
         <TutorialForm
@@ -235,4 +248,38 @@ export function TutorialManager() {
       )}
     </div>
   );
+}
+
+function GuidedTutorialIntegrityNotice({ integrity }) {
+  if (integrity.isReady) {
+    return (
+      <p className="status-note" role="status">
+        Guided session core tutorials are ready: tutorial_001, tutorial_002, tutorial_005, and tutorial_009.
+      </p>
+    );
+  }
+
+  const issueSummary = [
+    formatIntegrityIssue("missing", integrity.missing),
+    formatIntegrityIssue("inactive", integrity.inactive),
+    formatIntegrityIssue("incomplete", integrity.incomplete),
+    formatIntegrityIssue("wrong role", integrity.wrongRole),
+    formatIntegrityIssue("not priority", integrity.notPriority),
+  ].filter(Boolean).join("; ");
+
+  return (
+    <p className="status-note error-note" role="alert">
+      Guided session core tutorial integrity issue: {issueSummary}. Fix these before creating new guided sessions.
+    </p>
+  );
+}
+
+function formatIntegrityIssue(label, items = []) {
+  if (!items.length) return "";
+  return `${label}: ${items.map((item) => item.id).join(", ")}`;
+}
+
+function isProtectedGuidedTutorial(tutorial) {
+  return Boolean(tutorial.raw.guided_session_priority || tutorial.normalized.guidedSessionPriority) ||
+    REQUIRED_GUIDED_TUTORIALS.some((item) => item.id === tutorial.id);
 }

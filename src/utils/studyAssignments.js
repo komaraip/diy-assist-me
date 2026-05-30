@@ -32,6 +32,21 @@ export const TUTORIAL_ROTATIONS = [
   },
 ];
 
+export const REQUIRED_GUIDED_TUTORIALS = TUTORIAL_ROTATIONS.flatMap((rotation) => [
+  {
+    id: rotation.practiceTutorialId,
+    rotation: rotation.value,
+    trialType: "practice",
+    studyRole: "core_practice",
+  },
+  {
+    id: rotation.measuredTutorialId,
+    rotation: rotation.value,
+    trialType: "measured",
+    studyRole: "core_measured",
+  },
+]);
+
 const TASK_TARGETS = {
   rotation_a: {
     practice: { preferredKeywords: ["oats", "milk", "bowl"], targetStep: 2 },
@@ -56,22 +71,13 @@ export function buildStudyPlan({
   const availableTutorials = tutorials.filter((tutorial) => tutorial?.id);
   const normalizedLanguage = normalizeStudyLanguage(language);
 
-  if (!availableTutorials.length) {
+  if (!availableTutorials.length || !getGuidedSessionTutorialIntegrity(availableTutorials).isReady) {
     return [];
   }
 
-  const practiceTutorial = pickStudyTutorial({
-    tutorials: availableTutorials,
-    tutorialId: rotation.practiceTutorialId,
-    studyRole: "core_practice",
-    fallbackIndex: rotation.practiceIndex,
-  });
-  const measuredTutorial = pickStudyTutorial({
-    tutorials: availableTutorials,
-    tutorialId: rotation.measuredTutorialId,
-    studyRole: "core_measured",
-    fallbackIndex: rotation.measuredIndex,
-  });
+  const tutorialById = new Map(availableTutorials.map((tutorial) => [tutorial.id, tutorial]));
+  const practiceTutorial = tutorialById.get(rotation.practiceTutorialId);
+  const measuredTutorial = tutorialById.get(rotation.measuredTutorialId);
 
   return sequence.modalities.map((modality, index) => {
     const conditionId = `condition_${index + 1}`;
@@ -129,6 +135,38 @@ export function findStudyTask(session, taskId) {
 
 export function findStudyCondition(session, conditionId) {
   return (session?.conditions || []).find((condition) => condition.id === conditionId) || null;
+}
+
+export function getGuidedSessionTutorialIntegrity(tutorials = []) {
+  const tutorialById = new Map((tutorials || []).filter((tutorial) => tutorial?.id).map((tutorial) => [tutorial.id, tutorial]));
+  const missing = [];
+  const inactive = [];
+  const incomplete = [];
+  const wrongRole = [];
+  const notPriority = [];
+
+  REQUIRED_GUIDED_TUTORIALS.forEach((required) => {
+    const tutorial = tutorialById.get(required.id);
+    if (!tutorial) {
+      missing.push(required);
+      return;
+    }
+
+    if (tutorial.active === false) inactive.push(required);
+    if (!hasCompleteTutorialContent(tutorial)) incomplete.push(required);
+    if (getTutorialStudyRole(tutorial) !== required.studyRole) wrongRole.push(required);
+    if (!isGuidedSessionPriority(tutorial)) notPriority.push(required);
+  });
+
+  return {
+    isReady: !missing.length && !inactive.length && !incomplete.length && !wrongRole.length && !notPriority.length,
+    requiredTutorials: REQUIRED_GUIDED_TUTORIALS,
+    missing,
+    inactive,
+    incomplete,
+    wrongRole,
+    notPriority,
+  };
 }
 
 function buildTask({ conditionId, conditionOrder, modality, trialType, tutorial, rotationValue, taskIndex, language }) {
@@ -218,14 +256,20 @@ function clampStep(stepNumber, stepCount) {
   return Math.max(1, Math.min(Number(stepNumber) || 1, stepCount));
 }
 
-function pickTutorial(tutorials, index) {
-  return tutorials[index % tutorials.length];
+function getTutorialStudyRole(tutorial) {
+  return tutorial?.studyRole || tutorial?.study_role || "";
 }
 
-function pickStudyTutorial({ tutorials, tutorialId, studyRole, fallbackIndex }) {
-  return (
-    tutorials.find((tutorial) => tutorial.id === tutorialId) ||
-    tutorials.find((tutorial) => tutorial.studyRole === studyRole && tutorial.guidedSessionPriority) ||
-    pickTutorial(tutorials, fallbackIndex)
+function isGuidedSessionPriority(tutorial) {
+  return Boolean(tutorial?.guidedSessionPriority ?? tutorial?.guided_session_priority);
+}
+
+function hasCompleteTutorialContent(tutorial) {
+  return Boolean(
+    tutorial?.title &&
+      Array.isArray(tutorial.steps) &&
+      tutorial.steps.length >= 3 &&
+      Array.isArray(tutorial.materials) &&
+      tutorial.materials.length > 0
   );
 }

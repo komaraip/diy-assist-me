@@ -82,7 +82,7 @@ const ENGLISH_SEARCH_PATTERNS = [
 ];
 
 const ENGLISH_STEP_PATTERNS = [
-  /^(?:go to step|open step|jump to step|step)(?:\s+number)?\s+(\d+)$/,
+  /^(?:go to step|open step|jump to step|step)(?:\s+number)?\s+(\d+)(?:\s+step\s+\1)*$/,
 ];
 
 export const COMMAND_DICTIONARY = ENGLISH_COMMAND_DICTIONARY;

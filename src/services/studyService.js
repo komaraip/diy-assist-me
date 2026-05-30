@@ -1,7 +1,7 @@
 import { createParticipant } from "./participantService.js";
 import { createSession, getSessionById } from "./sessionService.js";
 import { listTutorials } from "./tutorialService.js";
-import { buildStudyPlan } from "../utils/studyAssignments.js";
+import { buildStudyPlan, getGuidedSessionTutorialIntegrity } from "../utils/studyAssignments.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 
@@ -35,12 +35,21 @@ export async function createStudySession({
     return serviceFailure(tutorialResult.error || copy.missingTutorialsError, tutorialResult.source);
   }
 
+  const tutorialIntegrity = getGuidedSessionTutorialIntegrity(tutorialResult.data);
+  if (!tutorialIntegrity.isReady) {
+    return serviceFailure(getTutorialIntegrityError(tutorialIntegrity, copy), tutorialResult.source);
+  }
+
   const conditions = buildStudyPlan({
     sequenceAssignment,
     tutorialRotation,
     tutorials: tutorialResult.data,
     language: normalizedLanguage,
   });
+
+  if (!conditions.length) {
+    return serviceFailure(copy.missingTutorialsError, tutorialResult.source);
+  }
 
   const participantResult = await createParticipant({
     sequenceAssignment,
@@ -129,4 +138,15 @@ function isEligibleStudyParticipant(participantProfile, eligibility) {
 
 function combineWarnings(warnings) {
   return warnings.filter(Boolean).join(" ") || null;
+}
+
+function getTutorialIntegrityError(integrity, copy) {
+  const issueLabels = [
+    ...integrity.missing.map((item) => `${item.id} missing`),
+    ...integrity.inactive.map((item) => `${item.id} inactive`),
+    ...integrity.incomplete.map((item) => `${item.id} incomplete`),
+    ...integrity.wrongRole.map((item) => `${item.id} wrong role`),
+    ...integrity.notPriority.map((item) => `${item.id} not marked guided-session priority`),
+  ];
+  return `${copy.missingTutorialsError} Core tutorial integrity issues: ${issueLabels.join(", ")}.`;
 }

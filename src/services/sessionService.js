@@ -163,10 +163,23 @@ export async function getSessionBalanceSummary() {
   const summarize = (sessions) => {
     const activeSessions = (sessions || []).filter((session) => session.excludeFromExport !== true);
     const countBy = (field, value) => activeSessions.filter((session) => session[field] === value).length;
-    const sequenceRecommendation = countBy("sequenceAssignment", "AB") <= countBy("sequenceAssignment", "BA") ? "AB" : "BA";
-    const rotationRecommendation = countBy("tutorialRotation", "rotation_a") <= countBy("tutorialRotation", "rotation_b")
-      ? "rotation_a"
-      : "rotation_b";
+    const balanceCells = [
+      { sequenceAssignment: "AB", tutorialRotation: "rotation_a" },
+      { sequenceAssignment: "AB", tutorialRotation: "rotation_b" },
+      { sequenceAssignment: "BA", tutorialRotation: "rotation_a" },
+      { sequenceAssignment: "BA", tutorialRotation: "rotation_b" },
+    ].map((cell) => ({
+      ...cell,
+      count: activeSessions.filter((session) =>
+        session.sequenceAssignment === cell.sequenceAssignment &&
+        session.tutorialRotation === cell.tutorialRotation
+      ).length,
+    }));
+    const recommendedCell = [...balanceCells].sort((a, b) =>
+      a.count - b.count ||
+      a.sequenceAssignment.localeCompare(b.sequenceAssignment) ||
+      a.tutorialRotation.localeCompare(b.tutorialRotation)
+    )[0];
 
     return {
       totalSessions: activeSessions.length,
@@ -174,10 +187,12 @@ export async function getSessionBalanceSummary() {
       baCount: countBy("sequenceAssignment", "BA"),
       rotationACount: countBy("tutorialRotation", "rotation_a"),
       rotationBCount: countBy("tutorialRotation", "rotation_b"),
+      balanceCells,
       targetParticipants: 24,
       targetPerSequence: 12,
-      recommendedSequenceAssignment: sequenceRecommendation,
-      recommendedTutorialRotation: rotationRecommendation,
+      targetPerCell: 6,
+      recommendedSequenceAssignment: recommendedCell.sequenceAssignment,
+      recommendedTutorialRotation: recommendedCell.tutorialRotation,
     };
   };
 

@@ -75,8 +75,8 @@ export function GuidedSessionTaskPage() {
       trialType: task.trialType,
       tutorialId: task.tutorialId,
       eventType: "tutorial_open",
-      commandSuccess: task.modality === "voice" ? true : null,
-      recognized: task.modality === "voice" ? true : null,
+      commandSuccess: null,
+      recognized: null,
       elapsedMsFromTaskStart: 0,
       metadata: {
         taskTrialId: activeTrial.id,

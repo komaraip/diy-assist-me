@@ -1,5 +1,16 @@
 const VOICE_RECOGNITION_ERROR_THRESHOLD = 3;
 const FALLBACK_COMPLETED_RATIO = 0.5;
+const SYSTEM_VOICE_EVENTS = new Set(["tutorial_open"]);
+const NON_ISSUE_TECHNICAL_NOTES = new Set([
+  "no note",
+  "no notes",
+  "none",
+  "n/a",
+  "na",
+  "not applicable",
+  "no issue",
+  "no issues",
+]);
 
 export function calculateChapter4Metrics(data = {}) {
   const taskTrials = data.taskTrials || [];
@@ -16,8 +27,11 @@ export function calculateChapter4Metrics(data = {}) {
   );
   const sessionLinkedLogs = interactionLogs.filter((log) => log.sessionId);
   const voiceLogs = sessionLinkedLogs.filter((log) => log.modality === "voice");
-  const failedVoiceLogs = voiceLogs.filter((log) => log.commandSuccess === false);
-  const fallbackLogs = sessionLinkedLogs.filter((log) => log.fallbackUsed);
+  const voiceCommandLogs = voiceLogs.filter(isVoiceCommandLog);
+  const measuredVoiceCommandLogs = voiceCommandLogs.filter((log) => log.trialType === "measured");
+  const failedMeasuredVoiceLogs = measuredVoiceCommandLogs.filter((log) => log.commandSuccess === false);
+  const failedVoiceLogs = voiceCommandLogs.filter((log) => log.commandSuccess === false);
+  const measuredFallbackLogs = sessionLinkedLogs.filter((log) => log.trialType === "measured" && log.fallbackUsed);
   const technicalNotes = getTechnicalNotes(sessions);
   const technicalNoteSummary = summarizeTechnicalNotes(technicalNotes);
   const validationSummary = summarizeTaskTrialValidation(trialValidations);
@@ -37,19 +51,19 @@ export function calculateChapter4Metrics(data = {}) {
       RQ2: {
         description: "Browser-based voice reliability",
         metrics: {
-          recognitionAccuracy: summarizeBooleanRate(voiceLogs, "recognized"),
+          recognitionAccuracy: summarizeBooleanRate(measuredVoiceCommandLogs, "recognized"),
           commandSuccessRate: summarizeBooleanRate(
-            voiceLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined),
+            measuredVoiceCommandLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined),
             "commandSuccess"
           ),
-          recoveryEffort: summarizeRecoveryEffort(voiceLogs),
-          failureReasons: countBy(failedVoiceLogs, "failureReason"),
+          recoveryEffort: summarizeRecoveryEffort(measuredVoiceCommandLogs),
+          failureReasons: countBy(failedMeasuredVoiceLogs, "failureReason"),
           fallbackUse: {
-            voiceFallbackCount: voiceLogs.filter((log) => log.fallbackUsed).length + validationSummary.voiceFallbackTouchActionCount,
-            totalFallbackCount: fallbackLogs.length,
+            voiceFallbackCount: measuredVoiceCommandLogs.filter((log) => log.fallbackUsed).length + validationSummary.voiceFallbackTouchActionCount,
+            totalFallbackCount: measuredFallbackLogs.length,
           },
-          noMatchCount: voiceLogs.filter((log) => log.eventType === "voice_no_match").length,
-          recognitionErrors: countBy(voiceLogs.filter((log) => log.recognitionErrorCode), "recognitionErrorCode"),
+          noMatchCount: measuredVoiceCommandLogs.filter((log) => log.eventType === "voice_no_match").length,
+          recognitionErrors: countBy(measuredVoiceCommandLogs.filter((log) => log.recognitionErrorCode), "recognitionErrorCode"),
         },
       },
       RQ3: {
@@ -73,7 +87,7 @@ export function calculateChapter4Metrics(data = {}) {
               failureReason: log.failureReason || "",
               recoveryType: log.recoveryType || "",
             })),
-          fallbackUseCount: fallbackLogs.length,
+          fallbackUseCount: measuredFallbackLogs.length,
         },
       },
     },
@@ -87,7 +101,7 @@ export function calculateChapter4Metrics(data = {}) {
       baCount: sessions.filter((session) => session.sequenceAssignment === "BA").length,
       invalidTrialCount: measuredTrials.filter((trial) => trial.invalidTrial).length,
       missingSusCount: countMissingSusByCondition(sessions, susResponses),
-      missingVoiceLogCount: countMissingVoiceLogs(sessions, voiceLogs),
+      missingVoiceLogCount: countMissingVoiceLogs(sessions, measuredVoiceCommandLogs),
       voiceTechnicalIssueCount: validationSummary.voiceTechnicalIssueCount,
       voiceFallbackCompletedCount: validationSummary.voiceFallbackCompletedCount,
       voiceFallbackTouchActionCount: validationSummary.voiceFallbackTouchActionCount,
@@ -108,8 +122,8 @@ export function buildEvidenceChecklist(data = {}) {
   const debriefResponses = data.debriefResponses || [];
   const sessions = data.sessions || [];
   const measuredTrials = taskTrials.filter((trial) => trial.trialType === "measured");
-  const voiceLogs = interactionLogs.filter((log) => log.sessionId && log.modality === "voice");
-  const technicalNoteCount = sessions.reduce((count, session) => count + (session.technicalNotes || []).length, 0);
+  const voiceLogs = interactionLogs.filter((log) => log.sessionId && log.modality === "voice" && isVoiceCommandLog(log));
+  const technicalNoteCount = getTechnicalNotes(sessions).length;
   const validationSummary = summarizeTaskTrialValidation(buildTaskTrialValidation(data));
   const firstRequiredActionWarning = validationSummary.requiredActionWarnings[0];
   const firstVoiceWarning = validationSummary.invalidVoiceTrialWarnings[0];
@@ -175,7 +189,7 @@ export function buildTaskTrialValidation(data = {}) {
 
   return taskTrials.map((trial) => {
     const trialLogs = getLogsForTrial(interactionLogs, trial);
-    const voiceLogs = trialLogs.filter((log) => log.modality === "voice");
+    const voiceLogs = trialLogs.filter((log) => log.modality === "voice" && isVoiceCommandLog(log));
     const voiceCommandLogs = voiceLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined);
     const fallbackTouchLogs = trialLogs.filter((log) => log.modality === "touch" && log.fallbackUsed);
     const voiceCommandSuccessCount = voiceCommandLogs.filter((log) => log.commandSuccess === true).length;
@@ -238,8 +252,8 @@ export function buildAnalysisReadyRows(data = {}) {
     const touchSus = findLatestSusByModality(susResponses, session.id, "touch");
     const voiceSus = findLatestSusByModality(susResponses, session.id, "voice");
     const voiceLogs = voiceTrial
-      ? getLogsForTrial(interactionLogs, voiceTrial).filter((log) => log.modality === "voice")
-      : interactionLogs.filter((log) => log.sessionId === session.id && log.modality === "voice");
+      ? getLogsForTrial(interactionLogs, voiceTrial).filter((log) => log.modality === "voice" && isVoiceCommandLog(log))
+      : interactionLogs.filter((log) => log.sessionId === session.id && log.modality === "voice" && isVoiceCommandLog(log));
     const voiceCommandLogs = voiceLogs.filter((log) => log.commandSuccess !== null && log.commandSuccess !== undefined);
     const voiceFallbackTouchCount = voiceValidation?.fallbackTouchActionCount || 0;
 
@@ -261,6 +275,12 @@ export function buildAnalysisReadyRows(data = {}) {
       voiceTrial?.invalidTrial ? `voice_invalid:${voiceTrial.invalidTrialReason || "not specified"}` : "",
       voiceValidation && voiceValidation.voiceTrialValidity !== "valid" && voiceValidation.voiceTrialValidity !== "not_applicable"
         ? `voice_${voiceValidation.voiceTrialValidity}:${voiceValidation.exclusionReason || "not specified"}`
+        : "",
+      touchValidation?.requiredActionsMet === false
+        ? `touch_required_action_incomplete:${touchValidation.missingRequiredActions.join("|") || "not specified"}`
+        : "",
+      voiceValidation?.requiredActionsMet === false
+        ? `voice_required_action_incomplete:${voiceValidation.missingRequiredActions.join("|") || "not specified"}`
         : "",
       !touchSus ? "missing_touch_sus" : "",
       !voiceSus ? "missing_voice_sus" : "",
@@ -376,6 +396,7 @@ function mapValidationsByTrialKey(validations) {
 }
 
 function isValidForPrimaryMetrics(trial, validation) {
+  if (trial.trialType === "measured" && validation?.requiredActionsMet === false) return false;
   if (trial.modality !== "voice" || trial.trialType !== "measured") return true;
   return validation?.voiceTrialValidity === "valid";
 }
@@ -516,6 +537,20 @@ function includesAny(value, candidates) {
 
 function normalizeLogValue(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function isVoiceCommandLog(log = {}) {
+  if (log.modality !== "voice") return false;
+  if (SYSTEM_VOICE_EVENTS.has(log.eventType)) return false;
+  return Boolean(
+    log.rawTranscript ||
+      log.normalizedTranscript ||
+      log.matchedIntent ||
+      log.recognitionErrorCode ||
+      String(log.eventType || "").startsWith("voice_") ||
+      (log.commandSuccess !== null && log.commandSuccess !== undefined) ||
+      (log.recognized !== null && log.recognized !== undefined)
+  );
 }
 
 function getAnalysisSessions(data) {
@@ -669,12 +704,19 @@ function summarizeDebriefThemes(debriefResponses) {
 
 function getTechnicalNotes(sessions) {
   return sessions.flatMap((session) =>
-    (session.technicalNotes || []).map((note) => ({
-      ...note,
-      sessionId: session.id,
-      participantId: session.participantId,
-    }))
+    (session.technicalNotes || [])
+      .filter(isMeaningfulTechnicalNote)
+      .map((note) => ({
+        ...note,
+        sessionId: session.id,
+        participantId: session.participantId,
+      }))
   );
+}
+
+function isMeaningfulTechnicalNote(note) {
+  const value = normalizeLogValue(note?.note);
+  return Boolean(value) && !NON_ISSUE_TECHNICAL_NOTES.has(value);
 }
 
 function countMissingSusByCondition(sessions, susResponses) {
