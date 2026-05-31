@@ -45,7 +45,8 @@ export function TutorialDetailPage({
   const [isCompleted, setIsCompleted] = useState(false);
   const tutorialShellRef = useRef(null);
   const tutorialMainRef = useRef(null);
-  const lastScrollTopRef = useRef(0);
+  const lastWindowScrollTopRef = useRef(0);
+  const lastTutorialScrollTopRef = useRef(0);
   const lastScrollLogAtRef = useRef(0);
   const commandsButtonRef = useRef(null);
   const materialsButtonRef = useRef(null);
@@ -70,6 +71,35 @@ export function TutorialDetailPage({
       isMounted = false;
     };
   }, [normalizedLanguage, tutorialId]);
+
+  useEffect(() => {
+    if (!studyContext?.taskTrialId) return undefined;
+
+    function handleWindowScroll(event) {
+      if (event.target !== document && event.target !== window) return;
+
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      const previousScrollTop = lastWindowScrollTopRef.current;
+      const now = Date.now();
+      lastWindowScrollTopRef.current = scrollTop;
+
+      if (Math.abs(scrollTop - previousScrollTop) < 24 || now - lastScrollLogAtRef.current < 500) return;
+
+      lastScrollLogAtRef.current = now;
+      logTutorialTouch(scrollTop > previousScrollTop ? "scroll_down" : "scroll_up", {
+        metadata: {
+          scrollTop,
+          previousScrollTop,
+          scrollTarget: "window",
+        },
+      });
+    }
+
+    window.addEventListener("scroll", handleWindowScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleWindowScroll);
+    };
+  }, [studyContext?.taskTrialId, studyContext?.startedAt, activeStepIndex, logTutorialTouch]);
 
   const steps = tutorial?.steps || [];
   const currentStep = steps[activeStepIndex] || null;
@@ -207,9 +237,9 @@ export function TutorialDetailPage({
   function handleTutorialScroll(event) {
     if (!studyContext?.taskTrialId) return;
     const scrollTop = event.currentTarget.scrollTop;
-    const previousScrollTop = lastScrollTopRef.current;
+    const previousScrollTop = lastTutorialScrollTopRef.current;
     const now = Date.now();
-    lastScrollTopRef.current = scrollTop;
+    lastTutorialScrollTopRef.current = scrollTop;
 
     if (Math.abs(scrollTop - previousScrollTop) < 24 || now - lastScrollLogAtRef.current < 500) return;
 

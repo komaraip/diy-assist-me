@@ -121,6 +121,19 @@ export function GuidedSessionTaskPage() {
     });
   }, [activeTrial, session, task]);
 
+  useEffect(() => {
+    if (
+      statusMessage &&
+      (statusMessage === copy.taskPage.startedStatus || statusMessage === copy.taskPage.finishedStatus)
+    ) {
+      const timer = setTimeout(() => {
+        setStatusMessage("");
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [statusMessage, copy.taskPage.startedStatus, copy.taskPage.finishedStatus]);
+
   async function handleStartTrial() {
     if (!session || !task) return;
     setIsStarting(true);
@@ -184,13 +197,13 @@ export function GuidedSessionTaskPage() {
   const canRenderTutorial = !!activeTrial && !activeTrial.endedAt;
 
   return (
-    <section className="page-section">
+    <section className="page-section" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       <Link className="inline-link" to={`/guided-session/${session.id}`}>
         <ArrowLeft aria-hidden="true" />
         {copy.taskPage.back}
       </Link>
 
-      <div className="page-header compact-header">
+      <div className="page-header compact-header" style={{ margin: 0 }}>
         <h1>{task.trialType === "measured" ? copy.tasks.measuredLabel : copy.tasks.practiceLabel}</h1>
         <span className="session-code">
           {copy.shared.sessionCode}: {session.participantCode} | {formatModality(task.modality, language)}
@@ -199,7 +212,7 @@ export function GuidedSessionTaskPage() {
       </div>
 
 
-      <div className="two-column-grid" style={{ marginBottom: "1.25rem" }}>
+      <div className="three-column-grid" style={{ margin: 0 }}>
         <section className="study-panel what-next-panel" style={{ margin: 0 }} aria-labelledby="what-next-heading">
           <h2 id="what-next-heading">{copy.taskPage.whatNextTitle}</h2>
           <ol className="plain-list">
@@ -227,37 +240,54 @@ export function GuidedSessionTaskPage() {
             })()}
           </ol>
         </section>
+
+        <TaskTrialControls
+          position="top"
+          task={task}
+          taskTrial={activeTrial}
+          isStarting={isStarting}
+          isCompleting={isCompleting}
+          onStart={handleStartTrial}
+          onComplete={handleCompleteTrial}
+          requiredActionStatus={requiredActionStatus}
+          language={language}
+        />
       </div>
-
-      <TaskTrialControls
-        task={task}
-        taskTrial={activeTrial}
-        isStarting={isStarting}
-        isCompleting={isCompleting}
-        onStart={handleStartTrial}
-        onComplete={handleCompleteTrial}
-        requiredActionStatus={requiredActionStatus}
-        language={language}
-      />
-      {statusMessage ? <p className="status-note" role="status" style={{ marginTop: "0.5rem", marginBottom: "1.25rem" }}>{statusMessage}</p> : null}
-
-      <details className="debrief-accordion" style={{ marginTop: "1.25rem", marginBottom: "1.5rem" }}>
-        <summary>{copy.observerNotes.summary}</summary>
-        <div className="accordion-content" style={{ background: "var(--surface-soft)" }}>
-          <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
-        </div>
-      </details>
+      {statusMessage ? <p className="status-note" role="status" style={{ margin: 0 }}>{statusMessage}</p> : null}
 
       {canRenderTutorial ? (
-        <TutorialDetailPage
-          tutorialIdOverride={task.tutorialId}
-          studyContext={studyContext}
-          allowedModality={task.modality}
-          backLink={`/guided-session/${session.id}`}
-          backLabel={copy.taskPage.embeddedBackLabel}
+        <div className="tutorial-container" style={{ margin: 0 }}>
+          <TutorialDetailPage
+            tutorialIdOverride={task.tutorialId}
+            studyContext={studyContext}
+            allowedModality={task.modality}
+            backLink={`/guided-session/${session.id}`}
+            backLabel={copy.taskPage.embeddedBackLabel}
+            language={language}
+            embedded
+          />
+        </div>
+      ) : null}
+
+      {activeTrial ? (
+        <TaskTrialControls
+          position="bottom"
+          task={task}
+          taskTrial={activeTrial}
+          isStarting={isStarting}
+          isCompleting={isCompleting}
+          onStart={handleStartTrial}
+          onComplete={handleCompleteTrial}
+          requiredActionStatus={requiredActionStatus}
           language={language}
-          embedded
-        />
+        >
+          <details className="debrief-accordion" style={{ margin: 0 }}>
+            <summary>{copy.observerNotes.summary}</summary>
+            <div className="accordion-content" style={{ background: "var(--surface-soft)" }}>
+              <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
+            </div>
+          </details>
+        </TaskTrialControls>
       ) : null}
     </section>
   );

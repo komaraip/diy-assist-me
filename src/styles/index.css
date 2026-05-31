@@ -2653,19 +2653,30 @@ button:disabled {
 }
 
 .condition-grid,
-.two-column-grid {
+.two-column-grid,
+.three-column-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
 }
 
+.condition-grid,
+.two-column-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.three-column-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .condition-grid > .study-panel,
-.two-column-grid > .study-panel {
+.two-column-grid > .study-panel,
+.three-column-grid > .study-panel {
   margin-top: 0 !important;
 }
 
 .two-column-grid > .guided-progress,
-.condition-grid > .guided-progress {
+.condition-grid > .guided-progress,
+.three-column-grid > .guided-progress {
   margin-bottom: 0 !important;
   margin-top: 0 !important;
 }
@@ -2706,7 +2717,9 @@ button:disabled {
 }
 
 .mode-card,
-.what-next-panel {
+.what-next-panel,
+.top-trial-controls,
+.three-column-grid > .study-panel {
   box-shadow: 0 12px 30px rgba(51, 56, 54, 0.08);
 }
 
@@ -4306,6 +4319,7 @@ code {
   .form-grid,
     .condition-grid,
     .two-column-grid,
+    .three-column-grid,
     .admin-summary-grid,
     .admin-quick-link-grid,
     .admin-filter-grid,
@@ -5447,9 +5461,6 @@ details.task-notes-panel .task-notes-content {
 /* ==========================================================================
    Support Page UI Redesign (Minimalist, Balanced & High-Contrast)
    ========================================================================== */
-.support-page-section {
-  /* Inherit max-width and padding from .page-section for perfect alignment */
-}
 
 .support-page-header {
   text-align: center;
