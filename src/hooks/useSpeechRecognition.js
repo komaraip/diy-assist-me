@@ -31,6 +31,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
   const startRecognitionRef = useRef(null);
   const shouldKeepListeningRef = useRef(false);
   const intentionalStopRef = useRef(false);
+  const audioSuspendedRef = useRef(false);
   const fatalErrorRef = useRef(!hasSupport);
   const isStartingRef = useRef(false);
   const isProcessingFinalResultRef = useRef(false);
@@ -71,6 +72,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
     if (
       !shouldKeepListeningRef.current ||
       intentionalStopRef.current ||
+      audioSuspendedRef.current ||
       fatalErrorRef.current ||
       recognitionRef.current ||
       isStartingRef.current
@@ -86,6 +88,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
       if (
         !shouldKeepListeningRef.current ||
         intentionalStopRef.current ||
+        audioSuspendedRef.current ||
         fatalErrorRef.current ||
         recognitionRef.current ||
         isStartingRef.current
@@ -100,6 +103,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
 
   const stopListening = useCallback(() => {
     intentionalStopRef.current = true;
+    audioSuspendedRef.current = false;
     restartAfterProcessingRef.current = false;
     setKeepListening(false);
     clearRestartTimer();
@@ -157,7 +161,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
       return;
     }
 
-    if (!shouldKeepListeningRef.current || recognitionRef.current || isStartingRef.current) {
+    if (!shouldKeepListeningRef.current || audioSuspendedRef.current || recognitionRef.current || isStartingRef.current) {
       return;
     }
 
@@ -222,7 +226,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
 
     recognition.onerror = (event) => {
       const recognitionErrorCode = event.error || "unknown";
-      if (intentionalStopRef.current && recognitionErrorCode === "aborted") {
+      if ((intentionalStopRef.current || audioSuspendedRef.current) && recognitionErrorCode === "aborted") {
         return;
       }
       const message = getRecognitionErrorMessage(recognitionErrorCode, copy);
@@ -236,7 +240,10 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
       isStartingRef.current = false;
 
       const shouldRestart =
-        shouldKeepListeningRef.current && !intentionalStopRef.current && !fatalErrorRef.current;
+        shouldKeepListeningRef.current &&
+        !intentionalStopRef.current &&
+        !audioSuspendedRef.current &&
+        !fatalErrorRef.current;
 
       if (!shouldRestart) {
         setIsRestarting(false);
@@ -289,6 +296,7 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
     }
 
     intentionalStopRef.current = false;
+    audioSuspendedRef.current = false;
     fatalErrorRef.current = false;
     restartAfterProcessingRef.current = false;
     consecutiveNoSpeechErrorsRef.current = 0;
@@ -300,9 +308,52 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
     startRecognition();
   }, [clearRestartTimer, copy.unavailableLong, reportError, setKeepListening, startRecognition]);
 
+  const suspendListeningForAudio = useCallback(() => {
+    if (!shouldKeepListeningRef.current) return false;
+
+    audioSuspendedRef.current = true;
+    restartAfterProcessingRef.current = false;
+    clearRestartTimer();
+    setIsRestarting(false);
+    setErrorMessage("");
+
+    const recognition = recognitionRef.current;
+    recognitionRef.current = null;
+    isStartingRef.current = false;
+
+    if (recognition) {
+      try {
+        recognition.abort();
+      } catch {
+        // Browser implementations can throw when recognition has already ended.
+      }
+    }
+
+    if (voiceStateRef.current === VOICE_STATES.LISTENING) {
+      setVoiceState(VOICE_STATES.SUCCESS);
+    }
+
+    return true;
+  }, [clearRestartTimer]);
+
+  const resumeListeningAfterAudio = useCallback(() => {
+    if (!audioSuspendedRef.current) return;
+
+    audioSuspendedRef.current = false;
+
+    if (!shouldKeepListeningRef.current || intentionalStopRef.current || fatalErrorRef.current) {
+      setIsRestarting(false);
+      return;
+    }
+
+    setErrorMessage("");
+    scheduleRestart();
+  }, [scheduleRestart]);
+
   useEffect(() => {
     return () => {
       intentionalStopRef.current = true;
+      audioSuspendedRef.current = false;
       shouldKeepListeningRef.current = false;
       clearRestartTimer();
 
@@ -329,6 +380,8 @@ export function useSpeechRecognition({ onFinalResult, onRecognitionError, langua
     errorMessage,
     startListening,
     stopListening,
+    suspendListeningForAudio,
+    resumeListeningAfterAudio,
     setVoiceState,
     setTranscript,
   };

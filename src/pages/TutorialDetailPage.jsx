@@ -11,7 +11,7 @@ import { logTouchInteraction } from "../services/logService.js";
 import { getTutorialById } from "../services/tutorialService.js";
 import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
 import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
-import { getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
+import { getSpeechRecognitionLocale, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 import { TutorialPopover } from "../components/tutorial/TutorialPopover.jsx";
 
 const SCROLL_AMOUNT_RATIO = 0.6;
@@ -52,6 +52,8 @@ export function TutorialDetailPage({
   const materialsButtonRef = useRef(null);
   const desktopCommandsButtonRef = useRef(null);
   const lastVoiceFailureRef = useRef(null);
+  const repeatSpeechTokenRef = useRef(0);
+  const repeatSpeechShouldResumeVoiceRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -71,6 +73,22 @@ export function TutorialDetailPage({
       isMounted = false;
     };
   }, [normalizedLanguage, tutorialId]);
+
+  useEffect(() => {
+    const speechSynthesis = typeof window !== "undefined" ? window.speechSynthesis : null;
+    if (!speechSynthesis || typeof speechSynthesis.getVoices !== "function") return undefined;
+
+    const loadVoices = () => {
+      speechSynthesis.getVoices();
+    };
+
+    loadVoices();
+    speechSynthesis.addEventListener?.("voiceschanged", loadVoices);
+
+    return () => {
+      speechSynthesis.removeEventListener?.("voiceschanged", loadVoices);
+    };
+  }, []);
 
   useEffect(() => {
     if (!studyContext?.taskTrialId) return undefined;
@@ -179,11 +197,99 @@ export function TutorialDetailPage({
 
   function handleRepeat() {
     if (!currentStep) return;
-    const message = copy.repeatStep(currentStep.stepNumber, currentStep.instruction);
-    setFeedbackMessage(message);
+    const repeatResult = speakRepeatInstruction(currentStep);
     logTutorialTouch("repeat_instruction", {
-      metadata: { instruction: currentStep.instruction },
+      metadata: repeatResult.metadata,
     });
+  }
+
+  function speakRepeatInstruction(step, { pauseVoiceRecognition = false } = {}) {
+    const message = copy.repeatStep(step.stepNumber, step.instruction);
+    setFeedbackMessage(message);
+
+    const speechSynthesis = typeof window !== "undefined" ? window.speechSynthesis : null;
+    const SpeechSynthesisUtteranceClass =
+      typeof window !== "undefined" ? window.SpeechSynthesisUtterance : null;
+    const baseMetadata = {
+      instruction: step.instruction,
+      repeatOutput: "live_feedback_only",
+      speechSynthesisSupported: false,
+      speechSynthesisStatus: "unsupported",
+    };
+
+    if (!speechSynthesis || typeof SpeechSynthesisUtteranceClass !== "function") {
+      return { message, metadata: baseMetadata };
+    }
+
+    const token = repeatSpeechTokenRef.current + 1;
+    cancelRepeatSpeech({ resumeVoice: true });
+    repeatSpeechTokenRef.current = token;
+
+    const shouldResumeVoice =
+      pauseVoiceRecognition &&
+      voiceCommands.isVoiceEnabled &&
+      typeof voiceCommands.suspendListeningForAudio === "function" &&
+      voiceCommands.suspendListeningForAudio();
+    repeatSpeechShouldResumeVoiceRef.current = !!shouldResumeVoice;
+
+    const utterance = new SpeechSynthesisUtteranceClass(step.instruction);
+    utterance.lang = getSpeechRecognitionLocale(normalizedLanguage);
+    const preferredVoice = getPreferredSpeechVoice(speechSynthesis, utterance.lang);
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    utterance.rate = 0.92;
+    utterance.pitch = 1.04;
+    utterance.onend = () => finishRepeatSpeech(token);
+    utterance.onerror = () => finishRepeatSpeech(token);
+
+    try {
+      speechSynthesis.speak(utterance);
+      return {
+        message,
+        metadata: {
+          ...baseMetadata,
+          repeatOutput: "speech_synthesis",
+          speechSynthesisSupported: true,
+          speechSynthesisStatus: "started",
+          speechSynthesisVoice: preferredVoice?.name || "",
+        },
+      };
+    } catch {
+      finishRepeatSpeech(token);
+      return {
+        message,
+        metadata: {
+          ...baseMetadata,
+          speechSynthesisSupported: true,
+          speechSynthesisStatus: "error",
+          speechSynthesisVoice: preferredVoice?.name || "",
+        },
+      };
+    }
+  }
+
+  function cancelRepeatSpeech({ resumeVoice = false } = {}) {
+    repeatSpeechTokenRef.current += 1;
+
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+
+    if (resumeVoice && repeatSpeechShouldResumeVoiceRef.current) {
+      repeatSpeechShouldResumeVoiceRef.current = false;
+      voiceCommands.resumeListeningAfterAudio?.();
+    } else if (!resumeVoice) {
+      repeatSpeechShouldResumeVoiceRef.current = false;
+    }
+  }
+
+  function finishRepeatSpeech(token) {
+    if (repeatSpeechTokenRef.current !== token) return;
+    if (!repeatSpeechShouldResumeVoiceRef.current) return;
+
+    repeatSpeechShouldResumeVoiceRef.current = false;
+    voiceCommands.resumeListeningAfterAudio?.();
   }
 
   function setMaterialsVisibility(nextValue, { logTouch = true } = {}) {
@@ -391,12 +497,11 @@ export function TutorialDetailPage({
       }
       case VOICE_INTENTS.REPEAT_INSTRUCTION: {
         if (!currentStep) return voiceFailure(copy.missingInstructionError, "missing_current_step", stepIndexBefore);
-        const message = copy.repeatStep(currentStep.stepNumber, currentStep.instruction);
-        setFeedbackMessage(message);
-        return voiceSuccess("voice_command", message, {
+        const repeatResult = speakRepeatInstruction(currentStep, { pauseVoiceRecognition: true });
+        return voiceSuccess("voice_command", repeatResult.message, {
           stepIndexBefore,
           stepIndexAfter: stepIndexBefore,
-          metadata: { instruction: currentStep.instruction },
+          metadata: repeatResult.metadata,
         });
       }
       case VOICE_INTENTS.SHOW_MATERIALS: {
@@ -572,6 +677,13 @@ export function TutorialDetailPage({
       lastVoiceFailureRef.current = null;
     },
   });
+
+  useEffect(() => {
+    return () => {
+      cancelRepeatSpeech({ resumeVoice: true });
+    };
+  }, [tutorialId]);
+
   const isVoiceOn =
     voiceCommands.isVoiceEnabled ||
     voiceCommands.isRestarting ||
@@ -859,6 +971,68 @@ function getVoiceConditionTouchMetadata(isVoiceCondition, lastVoiceFailureRef) {
   return {
     touchUseContext: "voice_condition_touch_use",
   };
+}
+
+function getPreferredSpeechVoice(speechSynthesis, locale) {
+  const voices = typeof speechSynthesis?.getVoices === "function" ? speechSynthesis.getVoices() : [];
+  if (!voices.length) return null;
+
+  const normalizedLocale = String(locale || "en-US").toLowerCase();
+  const primaryLanguage = normalizedLocale.split("-")[0];
+  const matchingVoices = voices.filter((voice) => {
+    const voiceLang = String(voice.lang || "").toLowerCase();
+    return voiceLang === normalizedLocale || voiceLang.startsWith(`${primaryLanguage}-`);
+  });
+  const candidates = matchingVoices.length ? matchingVoices : voices;
+
+  return [...candidates].sort((left, right) => {
+    return getSpeechVoiceScore(right, normalizedLocale, primaryLanguage) -
+      getSpeechVoiceScore(left, normalizedLocale, primaryLanguage);
+  })[0] || null;
+}
+
+function getSpeechVoiceScore(voice, normalizedLocale, primaryLanguage) {
+  const name = String(voice.name || "").toLowerCase();
+  const lang = String(voice.lang || "").toLowerCase();
+  let score = 0;
+
+  if (lang === normalizedLocale) score += 40;
+  else if (lang.startsWith(`${primaryLanguage}-`)) score += 24;
+  if (voice.localService === false) score += 10;
+
+  if (includesAny(name, ["natural", "neural", "online", "premium", "enhanced"])) score += 28;
+  if (includesAny(name, ["female", "woman"])) score += 24;
+  if (includesAny(name, [
+    "aria",
+    "jenny",
+    "zira",
+    "samantha",
+    "susan",
+    "victoria",
+    "karen",
+    "moira",
+    "tessa",
+    "ava",
+    "serena",
+    "shelley",
+    "libby",
+    "natasha",
+    "sonia",
+    "olivia",
+    "google uk english female",
+  ])) {
+    score += 18;
+  }
+  if (name.includes("google")) score += 8;
+  if (includesAny(name, ["male", "man", "david", "mark", "george", "daniel", "fred", "thomas", "guy", "ryan", "brian", "james"])) {
+    score -= 36;
+  }
+
+  return score;
+}
+
+function includesAny(value, patterns) {
+  return patterns.some((pattern) => value.includes(pattern));
 }
 
 function getTutorialSearchResults(tutorial, query) {
