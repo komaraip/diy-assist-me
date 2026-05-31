@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 
 export function CatalogControls({
   searchQuery,
@@ -12,13 +12,14 @@ export function CatalogControls({
   return (
     <section className="catalog-controls" aria-labelledby="catalog-heading">
       <div className="catalog-toolbar-top">
-        <div>
+        <div className="catalog-header-copy">
           <p className="eyebrow">Tutorials</p>
           <h1 id="catalog-heading">Choose a tutorial</h1>
           <p>Browse practical DIY guides, check what you need, and follow each step at your own pace.</p>
         </div>
         <p className="result-count" aria-live="polite">
-          {resultCount} tutorial{resultCount === 1 ? "" : "s"} shown
+          <span>{resultCount}</span>
+          tutorial{resultCount === 1 ? "" : "s"} shown
         </p>
       </div>
 
@@ -33,6 +34,20 @@ export function CatalogControls({
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search by title, material, or step..."
             />
+          </span>
+        </label>
+
+        <label className="category-select-field">
+          <span>Category</span>
+          <span className="category-select-control">
+            <Filter aria-hidden="true" />
+            <select value={activeCategory} onChange={(event) => onCategoryChange(event.target.value)}>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </span>
         </label>
 
