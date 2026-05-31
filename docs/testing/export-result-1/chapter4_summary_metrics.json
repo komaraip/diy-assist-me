@@ -1,0 +1,231 @@
+{
+  "exportedAt": "2026-05-30T22:20:08.409Z",
+  "appVersion": "0.1.0",
+  "source": "diy-assist-me",
+  "exportSource": "firebase",
+  "excludedSessionCount": 0,
+  "researchQuestions": {
+    "RQ1": {
+      "description": "Touch vs voice task performance and perceived usability",
+      "metrics": {
+        "taskCompletionTimeByModality": {
+          "voice": {
+            "count": 1,
+            "completedCount": 1,
+            "averageDurationSeconds": 73,
+            "medianDurationSeconds": 73,
+            "minDurationSeconds": 73,
+            "maxDurationSeconds": 73
+          }
+        },
+        "taskSuccessByModality": {
+          "voice": {
+            "count": 1,
+            "byCompletionStatus": {
+              "successful": 1
+            }
+          }
+        },
+        "susByModality": {
+          "touch": {
+            "count": 1,
+            "averageSusScore": 70,
+            "medianSusScore": 70,
+            "minSusScore": 70,
+            "maxSusScore": 70
+          },
+          "voice": {
+            "count": 1,
+            "averageSusScore": 87.5,
+            "medianSusScore": 87.5,
+            "minSusScore": 87.5,
+            "maxSusScore": 87.5
+          }
+        },
+        "pairedDifferences": {
+          "validPairCount": 0,
+          "invalidPairCount": 1,
+          "voiceMinusTouchDurationSeconds": {
+            "count": 0,
+            "average": null,
+            "median": null,
+            "standardDeviation": null,
+            "standardError": null,
+            "confidenceInterval95": null,
+            "min": null,
+            "max": null
+          },
+          "voiceMinusTouchSusScore": {
+            "count": 0,
+            "average": null,
+            "median": null,
+            "standardDeviation": null,
+            "standardError": null,
+            "confidenceInterval95": null,
+            "min": null,
+            "max": null
+          }
+        }
+      }
+    },
+    "RQ2": {
+      "description": "Browser-based voice reliability",
+      "metrics": {
+        "recognitionAccuracy": {
+          "count": 15,
+          "positiveCount": 13,
+          "rate": 0.8667
+        },
+        "commandSuccessRate": {
+          "count": 15,
+          "positiveCount": 13,
+          "rate": 0.8667
+        },
+        "recoveryEffort": {
+          "totalCount": 3,
+          "byRecoveryType": {
+            "touch_fallback_available": 2,
+            "unknown": 1
+          },
+          "repeatedCommandCount": 0,
+          "rephrasedCommandCount": 0,
+          "fallbackTouchCount": 0
+        },
+        "failureReasons": {
+          "Voice commands had a network issue. You can still use the buttons.": 2
+        },
+        "fallbackUse": {
+          "voiceFallbackCount": 1,
+          "totalFallbackCount": 1
+        },
+        "noMatchCount": 0,
+        "recognitionErrors": {
+          "network": 2
+        }
+      }
+    },
+    "RQ3": {
+      "description": "Usability problems and design implications",
+      "metrics": {
+        "observerNoteCategories": {
+          "count": 0,
+          "bySeverity": {},
+          "byTag": {}
+        },
+        "debriefThemes": {
+          "responseCount": 1,
+          "easiestPart": 0,
+          "hardestPart": 0,
+          "voiceProblems": 0,
+          "touchProblems": 0,
+          "fallbackComments": 0,
+          "commandClarity": 0,
+          "recoveryEffort": 0,
+          "designImplications": 0,
+          "suggestions": 0
+        },
+        "technicalIssues": {
+          "count": 3,
+          "uniqueCount": 2,
+          "examples": [
+            "Voice recognition error (network): Voice commands had a network issue. You can still use the buttons. (2 times)",
+            "Repeated voice recognition error (network) occurred 3 times. Recommend marking the voice trial as technical_issue if this affects the measured task. Last message: Voice commands had a network issue. You can still use the buttons."
+          ]
+        },
+        "failedCommandExamples": [
+          {
+            "rawTranscript": "cricket",
+            "matchedIntent": "UNKNOWN",
+            "failureReason": "no_matching_intent",
+            "recoveryType": "repeat_or_touch_fallback"
+          },
+          {
+            "rawTranscript": "",
+            "matchedIntent": "",
+            "failureReason": "Voice commands had a network issue. You can still use the buttons.",
+            "recoveryType": "touch_fallback_available"
+          },
+          {
+            "rawTranscript": "",
+            "matchedIntent": "",
+            "failureReason": "Voice commands had a network issue. You can still use the buttons.",
+            "recoveryType": "touch_fallback_available"
+          },
+          {
+            "rawTranscript": "",
+            "matchedIntent": "",
+            "failureReason": "Voice commands had a network issue. You can still use the buttons.",
+            "recoveryType": "touch_fallback_available"
+          },
+          {
+            "rawTranscript": "show material",
+            "matchedIntent": "UNKNOWN",
+            "failureReason": "no_matching_intent",
+            "recoveryType": "repeat_or_touch_fallback"
+          },
+          {
+            "rawTranscript": "",
+            "matchedIntent": "",
+            "failureReason": "Voice commands had a network issue. You can still use the buttons.",
+            "recoveryType": "touch_fallback_available"
+          },
+          {
+            "rawTranscript": "",
+            "matchedIntent": "",
+            "failureReason": "Voice commands had a network issue. You can still use the buttons.",
+            "recoveryType": "touch_fallback_available"
+          },
+          {
+            "rawTranscript": "",
+            "matchedIntent": "",
+            "failureReason": "Voice commands had a network issue. You can still use the buttons.",
+            "recoveryType": "touch_fallback_available"
+          },
+          {
+            "rawTranscript": "",
+            "matchedIntent": "",
+            "failureReason": "Voice commands had a network issue. You can still use the buttons.",
+            "recoveryType": "touch_fallback_available"
+          },
+          {
+            "rawTranscript": "",
+            "matchedIntent": "",
+            "failureReason": "Voice commands had a network issue. You can still use the buttons.",
+            "recoveryType": "touch_fallback_available"
+          }
+        ],
+        "fallbackUseCount": 1
+      }
+    }
+  },
+  "dataQuality": {
+    "participantCount": 1,
+    "completedSessionCount": 1,
+    "abCount": 1,
+    "baCount": 0,
+    "invalidTrialCount": 0,
+    "missingSusCount": 0,
+    "missingVoiceLogCount": 0,
+    "voiceTechnicalIssueCount": 0,
+    "voiceFallbackCompletedCount": 0,
+    "voiceFallbackTouchActionCount": 1,
+    "invalidVoiceTrialCount": 0,
+    "requiredActionWarningCount": 1,
+    "validationWarningCount": 1,
+    "invalidVoiceTrialWarnings": [],
+    "requiredActionWarnings": [
+      {
+        "participantId": "1pbEUehDWg2IQDCFWgx1",
+        "sessionId": "krCCs0puG6es7mEiZR8e",
+        "conditionId": "condition_1",
+        "taskId": "condition_1_measured_2",
+        "modality": "touch",
+        "missingRequiredActions": [
+          "step_jump",
+          "scroll_down"
+        ],
+        "requiredActionCompletionRate": 0.7143
+      }
+    ]
+  }
+}
