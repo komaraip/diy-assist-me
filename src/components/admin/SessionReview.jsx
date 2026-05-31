@@ -218,7 +218,7 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
         </div>
       )}
 
-      <DetailSection title="Session overview">
+      <DetailSection title="Session overview" defaultOpen={true}>
         <dl className="detail-list">
           <DetailItem label="Session ID" value={session.id} />
           <DetailItem label="User code" value={session.participantCode || session.participantId} />
@@ -290,7 +290,11 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
         {Object.keys(session.environment || {}).length ? (
           <dl className="detail-list">
             {Object.entries(session.environment || {}).map(([key, value]) => (
-              <DetailItem key={key} label={formatLabel(key)} value={value} />
+              <DetailItem
+                key={key}
+                label={formatLabel(key)}
+                value={typeof value === "boolean" ? (value ? "Confirmed" : "Not confirmed") : value}
+              />
             ))}
           </dl>
         ) : (
@@ -551,12 +555,16 @@ function SessionEditForm({ session, onSave, onCancel }) {
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
 
-function DetailSection({ title, children }) {
+function DetailSection({ title, defaultOpen = false, children }) {
   return (
-    <section className="session-detail-section" aria-label={title}>
-      <h4>{title}</h4>
-      {children}
-    </section>
+    <details className="debrief-accordion session-detail-section" style={{ marginTop: "1rem" }} open={defaultOpen}>
+      <summary style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span>{title}</span>
+      </summary>
+      <div className="accordion-content" style={{ background: "var(--surface)" }}>
+        {children}
+      </div>
+    </details>
   );
 }
 

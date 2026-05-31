@@ -300,14 +300,6 @@ export function GuidedSessionSetupPage() {
                 </select>
               </label>
             </div>
-            {balanceSummary ? (
-              <p className="assignment-status">
-                {copy.setupPage.recommendedAssignment(
-                  balanceSummary.recommendedSequenceAssignment,
-                  balanceSummary.recommendedTutorialRotation
-                )}
-              </p>
-            ) : null}
           </div>
         </section>
 
