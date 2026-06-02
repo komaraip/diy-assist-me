@@ -1,5 +1,6 @@
-import { CheckCircle2, CircleAlert, ClipboardCheck } from "lucide-react";
+import { CheckCircle2, ChevronDown, CircleAlert, ClipboardCheck } from "lucide-react";
 import { buildEvidenceChecklist } from "../../utils/chapter4Metrics.js";
+import { humanizeAnalysisText, splitAnalysisDetail } from "../../utils/analysisDisplay.js";
 
 export function EvidenceChecklist({ adminData }) {
   const items = buildEvidenceChecklist(adminData);
@@ -13,22 +14,27 @@ export function EvidenceChecklist({ adminData }) {
         <ClipboardCheck aria-hidden="true" />
       </div>
 
-      <ul className="evidence-list">
+      <div className="evidence-list analysis-accordion-list">
         {items.map((item) => (
-          <li key={item.id} className={item.complete ? "complete" : "missing"}>
-            <span className="evidence-icon" aria-hidden="true">
-              {item.complete ? <CheckCircle2 /> : <CircleAlert />}
-            </span>
-            <div className="evidence-content">
-              <div className="evidence-title-row">
-                <strong>{item.id}: {item.label}</strong>
-                <span>{item.statusLabel || (item.complete ? "Evidence available" : "Evidence missing or incomplete")}</span>
-              </div>
-              <p>{item.detail}</p>
-            </div>
-          </li>
+          <details key={item.id} className={item.complete ? "analysis-evidence-card complete" : "analysis-evidence-card missing"} open>
+            <summary className="analysis-accordion-summary">
+              <span className="evidence-icon" aria-hidden="true">
+                {item.complete ? <CheckCircle2 /> : <CircleAlert />}
+              </span>
+              <span className="analysis-summary-text">
+                <small>{item.id}: {humanizeAnalysisText(item.label)}</small>
+                <em>{humanizeAnalysisText(item.statusLabel || (item.complete ? "Evidence available" : "Evidence missing or incomplete"))}</em>
+              </span>
+              <ChevronDown aria-hidden="true" />
+            </summary>
+            <ul className="analysis-bullet-list">
+              {splitAnalysisDetail(item.detail).map((detail) => (
+                <li key={detail}>{detail}</li>
+              ))}
+            </ul>
+          </details>
         ))}
-      </ul>
+      </div>
     </section>
   );
 }

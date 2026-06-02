@@ -1,6 +1,6 @@
-import { collection, deleteDoc, doc, getDocs, query, updateDoc, where, writeBatch } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where, writeBatch } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
-import { deleteLocalRecord, deleteLocalRecordsByField, listLocalRecords, updateLocalRecord } from "./localStore.js";
+import { createLocalRecord, deleteLocalRecord, deleteLocalRecordsByField, listLocalRecords, updateLocalRecord } from "./localStore.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 
 export const ADMIN_COLLECTIONS = [
@@ -216,10 +216,23 @@ export async function deleteSessionBundle(sessionId, participantId = null) {
 
 /** Allowed top-level patch keys for session metadata edits. */
 const ALLOWED_META_KEYS = [
+  "browserInfo",
+  "completedAt",
+  "createdAt",
+  "eligibility",
+  "endedAt",
+  "environment",
+  "excludeFromExport",
+  "participantId",
   "participantCode",
   "participantProfile",
-  "excludeFromExport",
   "researcherNote",
+  "sequenceAssignment",
+  "source",
+  "startedAt",
+  "status",
+  "technicalNotes",
+  "tutorialRotation",
 ];
 
 /**
@@ -242,6 +255,52 @@ export async function updateSessionMeta(sessionId, patch) {
     return serviceSuccess({ id: sessionId, ...safePatch }, "firebase");
   } catch (error) {
     return serviceFailure(`Failed to update session: ${error?.message || error}`, "firebase");
+  }
+}
+
+/**
+ * Updates an existing admin record in one of the known study collections.
+ * This is intentionally collection-whitelisted so admin correction tools cannot
+ * write arbitrary Firestore paths.
+ */
+export async function updateAdminRecord(collectionName, recordId, patch) {
+  if (!ADMIN_COLLECTIONS.includes(collectionName)) {
+    return serviceFailure("Collection is not editable from admin.", "local");
+  }
+  if (!recordId) return serviceFailure("Record id is required.", "local");
+
+  if (!isFirebaseEnabled || !db) {
+    return updateLocalRecord(collectionName, recordId, patch);
+  }
+
+  try {
+    await updateDoc(doc(db, collectionName, recordId), patch);
+    return serviceSuccess({ id: recordId, ...patch }, "firebase");
+  } catch (error) {
+    return serviceFailure(`Failed to update ${collectionName}: ${error?.message || error}`, "firebase");
+  }
+}
+
+/**
+ * Creates an admin record in one of the known study collections.
+ * Intended for documented data correction when a linked record is missing.
+ */
+export async function createAdminRecord(collectionName, data) {
+  if (!ADMIN_COLLECTIONS.includes(collectionName)) {
+    return serviceFailure("Collection is not editable from admin.", "local");
+  }
+
+  if (!isFirebaseEnabled || !db) {
+    const { id, ...payload } = data || {};
+    return createLocalRecord(collectionName, id ? { id, ...payload } : payload);
+  }
+
+  try {
+    const { id, ...payload } = data || {};
+    const docRef = await addDoc(collection(db, collectionName), payload);
+    return serviceSuccess({ id: docRef.id, ...payload }, "firebase");
+  } catch (error) {
+    return serviceFailure(`Failed to create ${collectionName}: ${error?.message || error}`, "firebase");
   }
 }
 

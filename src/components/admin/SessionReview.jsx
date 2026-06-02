@@ -1,6 +1,6 @@
 import { ClipboardList, Pencil, Trash2, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { buildSessionBundles, deleteSessionBundle, updateSessionMeta } from "../../services/adminDataService.js";
+import { buildSessionBundles, createAdminRecord, deleteSessionBundle, updateAdminRecord, updateSessionMeta } from "../../services/adminDataService.js";
 
 export function SessionReview({ adminData, dataSource = "" }) {
   const initialBundles = useMemo(() => buildSessionBundles(adminData), [adminData]);
@@ -449,95 +449,345 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
 function SessionEditForm({ session, onSave, onCancel }) {
   const profile = getParticipantProfile(session);
   const [participantCode, setParticipantCode] = useState(session.participantCode || "");
+  const [participantId, setParticipantId] = useState(session.participantId || "");
   const [fullName, setFullName] = useState(profile.fullName || "");
   const [email, setEmail] = useState(profile.email || "");
+  const [ageRange, setAgeRange] = useState(profile.ageRange || "");
+  const [englishAbility, setEnglishAbility] = useState(profile.englishAbility || "");
+  const [tutorialAppUsage, setTutorialAppUsage] = useState(profile.tutorialAppUsage || "");
+  const [sequenceAssignment, setSequenceAssignment] = useState(session.sequenceAssignment || "");
+  const [tutorialRotation, setTutorialRotation] = useState(session.tutorialRotation || "");
+  const [status, setStatus] = useState(session.status || "");
+  const [source, setSource] = useState(session.source || "");
+  const [startedAt, setStartedAt] = useState(session.startedAt || "");
+  const [createdAt, setCreatedAt] = useState(session.createdAt || "");
+  const [endedAt, setEndedAt] = useState(session.endedAt || "");
+  const [completedAt, setCompletedAt] = useState(session.completedAt || "");
+  const [environment, setEnvironment] = useState(() => ({
+    ...DEFAULT_ENVIRONMENT_FIELDS,
+    ...(session.environment || {}),
+  }));
+  const [eligibility, setEligibility] = useState(() => ({
+    ...DEFAULT_ELIGIBILITY_FIELDS,
+    ...(session.eligibility || session.participant?.eligibility || {}),
+  }));
+  const [browserInfoDraft, setBrowserInfoDraft] = useState(() => stringifyJson(session.browserInfo || {}));
+  const [technicalNotesDraft, setTechnicalNotesDraft] = useState(() => stringifyJson(session.technicalNotes || []));
+  const [childDrafts, setChildDrafts] = useState(() => ({
+    taskTrials: stringifyJson(session.taskTrials || []),
+    susResponses: stringifyJson(session.susResponses || []),
+    debriefResponses: stringifyJson(session.debriefResponses || []),
+    observerNotes: stringifyJson(session.observerNotes || []),
+    interactionLogs: stringifyJson(session.interactionLogs || []),
+  }));
   const [researcherNote, setResearcherNote] = useState(session.researcherNote || "");
   const [excludeFromExport, setExcludeFromExport] = useState(!!session.excludeFromExport);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+
+  function updateEnvironment(field, value) {
+    setEnvironment((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateEligibility(field, value) {
+    setEligibility((current) => ({ ...current, [field]: value }));
+  }
+
+  function addDebriefTemplate() {
+    const currentDebriefs = parseJsonArray(childDrafts.debriefResponses, "Debrief responses");
+    if (currentDebriefs.error) {
+      setSaveError(currentDebriefs.error);
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const nextRecord = {
+      id: `new_debrief_${Date.now()}`,
+      participantId,
+      participantCode,
+      schemaVersion: "chapter4-rq1-rq3-v1",
+      sessionId: session.id,
+      responses: {
+        preferredModality: "",
+        easiestPart: "",
+        hardestPart: "",
+        voiceProblems: "",
+        touchProblems: "",
+        fallbackComments: "",
+        commandClarity: "",
+        recoveryEffort: "",
+        designImplications: "",
+        suggestions: "",
+      },
+      timestamp,
+      createdAt: timestamp,
+    };
+
+    setChildDrafts((current) => ({
+      ...current,
+      debriefResponses: stringifyJson([...currentDebriefs.value, nextRecord]),
+    }));
+    setSaveError(null);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setIsSaving(true);
     setSaveError(null);
 
+    const parsedBrowserInfo = parseJsonObject(browserInfoDraft, "Detected browser and screen");
+    const parsedTechnicalNotes = parseJsonArray(technicalNotesDraft, "Technical notes");
+    const parsedChildDrafts = {};
+
+    for (const collectionName of EDITABLE_CHILD_COLLECTIONS) {
+      const parsed = parseJsonArray(childDrafts[collectionName], formatLabel(collectionName));
+      if (parsed.error) {
+        setSaveError(parsed.error);
+        setIsSaving(false);
+        return;
+      }
+      parsedChildDrafts[collectionName] = parsed.value;
+    }
+
+    if (parsedBrowserInfo.error || parsedTechnicalNotes.error) {
+      setSaveError(parsedBrowserInfo.error || parsedTechnicalNotes.error);
+      setIsSaving(false);
+      return;
+    }
+
     const patch = {
+      browserInfo: parsedBrowserInfo.value,
+      completedAt,
+      createdAt,
+      eligibility,
+      endedAt,
+      environment,
+      excludeFromExport,
+      participantId,
       participantCode,
       participantProfile: {
         ...(session.participantProfile || {}),
         fullName,
         email,
+        ageRange,
+        englishAbility,
+        tutorialAppUsage,
       },
       researcherNote,
-      excludeFromExport,
+      sequenceAssignment,
+      source,
+      startedAt,
+      status,
+      technicalNotes: parsedTechnicalNotes.value,
+      tutorialRotation,
     };
 
     const result = await updateSessionMeta(session.id, patch);
-    setIsSaving(false);
-
     if (result.error) {
+      setIsSaving(false);
       setSaveError(result.error);
       return;
     }
 
-    onSave(patch);
+    for (const collectionName of EDITABLE_CHILD_COLLECTIONS) {
+      const existingIds = new Set((session[collectionName] || []).map((record) => record.id).filter(Boolean));
+      const draftIds = new Set(parsedChildDrafts[collectionName].map((record) => record?.id).filter(Boolean));
+      for (const existingId of existingIds) {
+        if (!draftIds.has(existingId)) {
+          setIsSaving(false);
+          setSaveError(`${formatLabel(collectionName)} cannot remove existing records from this form. Missing id: ${existingId}`);
+          return;
+        }
+      }
+      for (const record of parsedChildDrafts[collectionName]) {
+        if (!record?.id) {
+          setIsSaving(false);
+          setSaveError(`${formatLabel(collectionName)} contains a record without id.`);
+          return;
+        }
+        if (!existingIds.has(record.id)) {
+          if (!String(record.id).startsWith("new_")) {
+            setIsSaving(false);
+            setSaveError(`${formatLabel(collectionName)} new records must use a new_ id marker. Check id: ${record.id}`);
+            return;
+          }
+
+          const { id, ...createPayload } = record;
+          const createResult = await createAdminRecord(collectionName, createPayload);
+          if (createResult.error) {
+            setIsSaving(false);
+            setSaveError(createResult.error);
+            return;
+          }
+          record.id = createResult.data.id;
+          continue;
+        }
+
+        const { id, ...recordPatch } = record;
+        const childResult = await updateAdminRecord(collectionName, id, recordPatch);
+        if (childResult.error) {
+          setIsSaving(false);
+          setSaveError(childResult.error);
+          return;
+        }
+      }
+    }
+
+    setIsSaving(false);
+    onSave({ ...patch, ...parsedChildDrafts });
   }
 
   return (
     <form className="session-edit-form" onSubmit={handleSubmit} aria-label="Edit session metadata">
-      <h4>Edit session metadata</h4>
-
-      <div className="form-row">
-        <label htmlFor={`edit-code-${session.id}`}>Participant code</label>
-        <input
-          id={`edit-code-${session.id}`}
-          type="text"
-          value={participantCode}
-          onChange={(e) => setParticipantCode(e.target.value)}
-        />
+      <div className="session-edit-heading">
+        <h4>Edit selected session</h4>
+        <p>Correct documented admin data only. Existing linked records are updated by id; this form does not create or delete records.</p>
       </div>
 
-      <div className="form-row">
-        <label htmlFor={`edit-name-${session.id}`}>Full name</label>
-        <input
-          id={`edit-name-${session.id}`}
-          type="text"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-        />
-      </div>
-
-      <div className="form-row">
-        <label htmlFor={`edit-email-${session.id}`}>Email</label>
-        <input
-          id={`edit-email-${session.id}`}
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-
-      <div className="form-row">
-        <label htmlFor={`edit-note-${session.id}`}>Researcher note</label>
-        <textarea
-          id={`edit-note-${session.id}`}
-          value={researcherNote}
-          onChange={(e) => setResearcherNote(e.target.value)}
-          rows={2}
-          placeholder="e.g. test run, consent withdrawn..."
-        />
-      </div>
-
-      <div className="form-row form-row-checkbox">
-        <label>
-          <input
-            type="checkbox"
-            checked={excludeFromExport}
-            onChange={(e) => setExcludeFromExport(e.target.checked)}
+      <details className="session-edit-section" open>
+        <summary>Session overview</summary>
+        <div className="session-edit-grid">
+          <TextField id={`edit-participant-id-${session.id}`} label="Participant ID" value={participantId} onChange={setParticipantId} />
+          <TextField id={`edit-code-${session.id}`} label="Participant code" value={participantCode} onChange={setParticipantCode} />
+          <TextField id={`edit-name-${session.id}`} label="Full name" value={fullName} onChange={setFullName} />
+          <TextField id={`edit-email-${session.id}`} label="Email" type="email" value={email} onChange={setEmail} />
+          <SelectField
+            id={`edit-age-${session.id}`}
+            label="Age range"
+            value={ageRange}
+            onChange={setAgeRange}
+            options={PARTICIPANT_PROFILE_OPTIONS.ageRange}
           />
-          Exclude this session from all exports
-        </label>
-      </div>
+          <SelectField
+            id={`edit-english-${session.id}`}
+            label="English ability"
+            value={englishAbility}
+            onChange={setEnglishAbility}
+            options={PARTICIPANT_PROFILE_OPTIONS.englishAbility}
+          />
+          <SelectField
+            id={`edit-usage-${session.id}`}
+            label="Tutorial app usage"
+            value={tutorialAppUsage}
+            onChange={setTutorialAppUsage}
+            options={PARTICIPANT_PROFILE_OPTIONS.tutorialAppUsage}
+          />
+          <TextField id={`edit-sequence-${session.id}`} label="Sequence" value={sequenceAssignment} onChange={setSequenceAssignment} />
+          <TextField id={`edit-rotation-${session.id}`} label="Tutorial rotation" value={tutorialRotation} onChange={setTutorialRotation} />
+          <TextField id={`edit-status-${session.id}`} label="Status" value={status} onChange={setStatus} />
+          <TextField id={`edit-started-${session.id}`} label="Started at" value={startedAt} onChange={setStartedAt} />
+          <TextField id={`edit-created-${session.id}`} label="Created at" value={createdAt} onChange={setCreatedAt} />
+          <TextField id={`edit-ended-${session.id}`} label="Ended at" value={endedAt} onChange={setEndedAt} />
+          <TextField id={`edit-completed-${session.id}`} label="Completed at" value={completedAt} onChange={setCompletedAt} />
+          <TextField id={`edit-source-${session.id}`} label="Source" value={source} onChange={setSource} />
+        </div>
+      </details>
+
+      <details className="session-edit-section" open>
+        <summary>Setup and environment</summary>
+        <div className="session-edit-grid">
+          {ENVIRONMENT_SELECT_FIELDS.map((field) => (
+            <SelectField
+              key={field.name}
+              id={`edit-${field.name}-${session.id}`}
+              label={field.label}
+              value={environment[field.name] || ""}
+              onChange={(value) => updateEnvironment(field.name, value)}
+              options={field.options}
+            />
+          ))}
+          {ENVIRONMENT_TEXT_FIELDS.map((field) => (
+            <TextField
+              key={field.name}
+              id={`edit-${field.name}-${session.id}`}
+              label={field.label}
+              value={environment[field.name] || ""}
+              onChange={(value) => updateEnvironment(field.name, value)}
+            />
+          ))}
+        </div>
+        <div className="checkbox-stack session-edit-checklist">
+          {ENVIRONMENT_BOOLEAN_FIELDS.map((field) => (
+            <label className="checkbox-row" key={field.name}>
+              <input
+                type="checkbox"
+                checked={environment[field.name] === true}
+                onChange={(event) => updateEnvironment(field.name, event.target.checked)}
+              />
+              <span>{field.label}</span>
+            </label>
+          ))}
+        </div>
+      </details>
+
+      <details className="session-edit-section">
+        <summary>Eligibility screening</summary>
+        <div className="checkbox-stack session-edit-checklist">
+          {ELIGIBILITY_FIELDS.map((field) => (
+            <label className="checkbox-row" key={field.name}>
+              <input
+                type="checkbox"
+                checked={eligibility[field.name] === true}
+                onChange={(event) => updateEligibility(field.name, event.target.checked)}
+              />
+              <span>{field.label}</span>
+            </label>
+          ))}
+        </div>
+      </details>
+
+      <JsonEditSection
+        title="Detected browser and screen"
+        value={browserInfoDraft}
+        onChange={setBrowserInfoDraft}
+        rows={8}
+      />
+
+      <JsonEditSection
+        title="Technical notes"
+        value={technicalNotesDraft}
+        onChange={setTechnicalNotesDraft}
+        rows={7}
+      />
+
+      {EDITABLE_CHILD_COLLECTIONS.map((collectionName) => (
+        <JsonEditSection
+          key={collectionName}
+          title={formatLabel(collectionName)}
+          value={childDrafts[collectionName]}
+          onChange={(value) => setChildDrafts((current) => ({ ...current, [collectionName]: value }))}
+          rows={collectionName === "interactionLogs" ? 10 : 8}
+          action={collectionName === "debriefResponses" ? {
+            label: "Add missing final feedback",
+            onClick: addDebriefTemplate,
+          } : null}
+        />
+      ))}
+
+      <details className="session-edit-section" open>
+        <summary>Admin controls</summary>
+        <div className="form-row">
+          <label htmlFor={`edit-note-${session.id}`}>Researcher note</label>
+          <textarea
+            id={`edit-note-${session.id}`}
+            value={researcherNote}
+            onChange={(e) => setResearcherNote(e.target.value)}
+            rows={2}
+            placeholder="e.g. corrected setup metadata from researcher documentation..."
+          />
+        </div>
+
+        <div className="form-row form-row-checkbox">
+          <label>
+            <input
+              type="checkbox"
+              checked={excludeFromExport}
+              onChange={(e) => setExcludeFromExport(e.target.checked)}
+            />
+            Exclude this session from all exports
+          </label>
+        </div>
+      </details>
 
       {saveError && <p className="status-note error-note">{saveError}</p>}
 
@@ -554,6 +804,200 @@ function SessionEditForm({ session, onSave, onCancel }) {
 }
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
+
+function TextField({ id, label, value, onChange, type = "text" }) {
+  return (
+    <div className="form-row">
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </div>
+  );
+}
+
+function SelectField({ id, label, value, onChange, options }) {
+  return (
+    <div className="form-row">
+      <label htmlFor={id}>{label}</label>
+      <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">Not recorded</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function JsonEditSection({ title, value, onChange, rows = 6, action = null }) {
+  return (
+    <details className="session-edit-section">
+      <summary>
+        <span>{title}</span>
+        {action ? (
+          <button
+            type="button"
+            className="button secondary-action session-edit-summary-action"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              action.onClick();
+            }}
+          >
+            {action.label}
+          </button>
+        ) : null}
+      </summary>
+      <div className="form-row">
+        <label>{title} JSON</label>
+        <textarea
+          className="json-edit-area"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          rows={rows}
+          spellCheck={false}
+        />
+      </div>
+    </details>
+  );
+}
+
+const EDITABLE_CHILD_COLLECTIONS = [
+  "taskTrials",
+  "susResponses",
+  "debriefResponses",
+  "observerNotes",
+  "interactionLogs",
+];
+
+const PARTICIPANT_PROFILE_OPTIONS = {
+  ageRange: [
+    { value: "18-24", label: "18-24" },
+    { value: "25-35", label: "25-35" },
+  ],
+  englishAbility: [
+    { value: "can_understand", label: "Can understand English" },
+    { value: "comfortable_commands", label: "Comfortable using simple English commands" },
+  ],
+  tutorialAppUsage: [
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+    { value: "rarely_never", label: "Rarely or never" },
+  ],
+};
+
+const DEFAULT_ENVIRONMENT_FIELDS = {
+  deviceType: "",
+  browserName: "",
+  microphonePermissionStatus: "",
+  roomNoiseLevelNote: "",
+  internetConnectionNote: "",
+  taskEnvironmentNote: "",
+  participantSetupNote: "",
+  researcherObservationNote: "",
+  sameDeviceConfirmed: false,
+  cacheResetConfirmed: false,
+  microphoneCheckConfirmed: false,
+};
+
+const ENVIRONMENT_SELECT_FIELDS = [
+  {
+    name: "deviceType",
+    label: "Device type",
+    options: ["Laptop", "Tablet", "Smartphone"].map((value) => ({ value, label: value })),
+  },
+  {
+    name: "browserName",
+    label: "Browser name",
+    options: [
+      "Google Chrome desktop",
+      "Google Chrome mobile",
+      "Microsoft Edge desktop",
+      "Safari mobile",
+      "Other browser",
+    ].map((value) => ({ value, label: value })),
+  },
+  {
+    name: "microphonePermissionStatus",
+    label: "Microphone permission status",
+    options: ["Allowed"].map((value) => ({ value, label: value })),
+  },
+  {
+    name: "roomNoiseLevelNote",
+    label: "Room noise level",
+    options: ["Quiet room", "Low background noise"].map((value) => ({ value, label: value })),
+  },
+  {
+    name: "internetConnectionNote",
+    label: "Internet connection",
+    options: ["Stable connection"].map((value) => ({ value, label: value })),
+  },
+];
+
+const ENVIRONMENT_TEXT_FIELDS = [
+  { name: "taskEnvironmentNote", label: "Task environment note" },
+  { name: "participantSetupNote", label: "Participant setup note" },
+  { name: "researcherObservationNote", label: "Researcher observation note" },
+];
+
+const ENVIRONMENT_BOOLEAN_FIELDS = [
+  { name: "sameDeviceConfirmed", label: "Same device/browser/screen/microphone/internet confirmed" },
+  { name: "cacheResetConfirmed", label: "Cache or prototype state reset confirmed" },
+  { name: "microphoneCheckConfirmed", label: "Microphone recognition check confirmed" },
+];
+
+const DEFAULT_ELIGIBILITY_FIELDS = {
+  familiarWithWebTutorials: false,
+  canPerformSimulatedDiy: false,
+  notPrototypeDeveloper: false,
+  notExpertInSelectedTasks: false,
+  noTemporaryVoiceCondition: false,
+  noUncorrectedHearingVisualLimit: false,
+};
+
+const ELIGIBILITY_FIELDS = [
+  { name: "familiarWithWebTutorials", label: "Participant is familiar with web tutorials" },
+  { name: "canPerformSimulatedDiy", label: "Participant can perform simple simulated DIY tasks" },
+  { name: "notPrototypeDeveloper", label: "Participant was not involved in prototype development" },
+  { name: "notExpertInSelectedTasks", label: "Participant is not an expert in the selected tutorial tasks" },
+  { name: "noTemporaryVoiceCondition", label: "Participant has no temporary voice condition affecting recognition" },
+  { name: "noUncorrectedHearingVisualLimit", label: "Participant has no uncorrected hearing or visual limitation" },
+];
+
+function stringifyJson(value) {
+  return JSON.stringify(value ?? null, null, 2);
+}
+
+function parseJsonObject(value, label) {
+  try {
+    const parsed = JSON.parse(value || "{}");
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+      return { error: `${label} must be a JSON object.` };
+    }
+    return { value: parsed };
+  } catch (error) {
+    return { error: `${label} has invalid JSON: ${error.message}` };
+  }
+}
+
+function parseJsonArray(value, label) {
+  try {
+    const parsed = JSON.parse(value || "[]");
+    if (!Array.isArray(parsed)) {
+      return { error: `${label} must be a JSON array.` };
+    }
+    return { value: parsed };
+  } catch (error) {
+    return { error: `${label} has invalid JSON: ${error.message}` };
+  }
+}
 
 function DetailSection({ title, defaultOpen = false, children }) {
   return (

@@ -86,7 +86,20 @@ function DataDashboard({ activeTab }) {
         }
       />
       
-      <AdminTabs tabs={tabs} activeTab={activeTab} basePath="/admin/data" />
+      <AdminTabs
+        tabs={tabs}
+        activeTab={activeTab}
+        basePath="/admin/data"
+        endContent={
+          activeTab === "analysis" && eligibilitySummary.excludedSessionCount ? (
+            <span className="exclude-notice analysis-exclude-badge" role="status">
+              {eligibilitySummary.excludedSessionCount} session
+              {eligibilitySummary.excludedSessionCount === 1 ? "" : "s"} excluded from
+              analysis/export metrics.
+            </span>
+          ) : null
+        }
+      />
       
       {activeTab === "sessions" && (
         <SessionReview adminData={adminData} dataSource={resultMeta.source} />
@@ -98,13 +111,6 @@ function DataDashboard({ activeTab }) {
       
       {activeTab === "analysis" && (
         <div className="admin-thesis-overview-grid">
-          {eligibilitySummary.excludedSessionCount ? (
-            <p className="status-note exclude-notice" role="status">
-              {eligibilitySummary.excludedSessionCount} session
-              {eligibilitySummary.excludedSessionCount === 1 ? "" : "s"} excluded from
-              analysis/export metrics.
-            </p>
-          ) : null}
           <MetricsSummary adminData={exportEligibleAdminData} />
           <EvidenceChecklist adminData={exportEligibleAdminData} />
           <AnalysisIssues adminData={exportEligibleAdminData} />
