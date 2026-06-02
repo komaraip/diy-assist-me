@@ -226,7 +226,6 @@ const ALLOWED_META_KEYS = [
   "participantId",
   "participantCode",
   "participantProfile",
-  "researcherNote",
   "sequenceAssignment",
   "source",
   "startedAt",

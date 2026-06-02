@@ -4383,6 +4383,17 @@ button:disabled {
   line-height: 1.45;
 }
 
+.session-edit-inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  margin-top: 0.25rem;
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 .session-edit-section {
   border: 1px solid var(--border);
   border-radius: 8px;

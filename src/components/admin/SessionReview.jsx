@@ -480,7 +480,6 @@ function SessionEditForm({ session, onSave, onCancel }) {
     observerNotes: stringifyJson(session.observerNotes || []),
     interactionLogs: stringifyJson(session.interactionLogs || []),
   }));
-  const [researcherNote, setResearcherNote] = useState(session.researcherNote || "");
   const [excludeFromExport, setExcludeFromExport] = useState(!!session.excludeFromExport);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
@@ -573,7 +572,6 @@ function SessionEditForm({ session, onSave, onCancel }) {
         englishAbility,
         tutorialAppUsage,
       },
-      researcherNote,
       sequenceAssignment,
       source,
       startedAt,
@@ -642,6 +640,14 @@ function SessionEditForm({ session, onSave, onCancel }) {
       <div className="session-edit-heading">
         <h4>Edit selected session</h4>
         <p>Correct documented admin data only. Existing linked records are updated by id; this form does not create or delete records.</p>
+        <label className="session-edit-inline-check">
+          <input
+            type="checkbox"
+            checked={excludeFromExport}
+            onChange={(e) => setExcludeFromExport(e.target.checked)}
+          />
+          Exclude this session from all exports
+        </label>
       </div>
 
       <details className="session-edit-section" open>
@@ -763,31 +769,6 @@ function SessionEditForm({ session, onSave, onCancel }) {
           } : null}
         />
       ))}
-
-      <details className="session-edit-section" open>
-        <summary>Admin controls</summary>
-        <div className="form-row">
-          <label htmlFor={`edit-note-${session.id}`}>Researcher note</label>
-          <textarea
-            id={`edit-note-${session.id}`}
-            value={researcherNote}
-            onChange={(e) => setResearcherNote(e.target.value)}
-            rows={2}
-            placeholder="e.g. corrected setup metadata from researcher documentation..."
-          />
-        </div>
-
-        <div className="form-row form-row-checkbox">
-          <label>
-            <input
-              type="checkbox"
-              checked={excludeFromExport}
-              onChange={(e) => setExcludeFromExport(e.target.checked)}
-            />
-            Exclude this session from all exports
-          </label>
-        </div>
-      </details>
 
       {saveError && <p className="status-note error-note">{saveError}</p>}
 
