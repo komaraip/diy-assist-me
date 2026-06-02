@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { AdminDataToolbar } from "../components/admin/AdminDataToolbar.jsx";
 import { AdminTabs } from "../components/admin/AdminTabs.jsx";
+import { AnalysisInterpretation } from "../components/admin/AnalysisInterpretation.jsx";
 import { AnalysisIssues } from "../components/admin/AnalysisIssues.jsx";
 import { EvidenceChecklist } from "../components/admin/EvidenceChecklist.jsx";
 import { ExportControls } from "../components/admin/ExportControls.jsx";
@@ -94,8 +95,7 @@ function DataDashboard({ activeTab }) {
           activeTab === "analysis" && eligibilitySummary.excludedSessionCount ? (
             <span className="exclude-notice analysis-exclude-badge" role="status">
               {eligibilitySummary.excludedSessionCount} session
-              {eligibilitySummary.excludedSessionCount === 1 ? "" : "s"} excluded from
-              analysis/export metrics.
+              {eligibilitySummary.excludedSessionCount === 1 ? "" : "s"} excluded
             </span>
           ) : null
         }
@@ -111,9 +111,14 @@ function DataDashboard({ activeTab }) {
       
       {activeTab === "analysis" && (
         <div className="admin-thesis-overview-grid">
-          <MetricsSummary adminData={exportEligibleAdminData} />
-          <EvidenceChecklist adminData={exportEligibleAdminData} />
-          <AnalysisIssues adminData={exportEligibleAdminData} />
+          <div className="admin-thesis-overview-column">
+            <MetricsSummary adminData={exportEligibleAdminData} />
+            <AnalysisIssues adminData={exportEligibleAdminData} />
+          </div>
+          <div className="admin-thesis-overview-column">
+            <EvidenceChecklist adminData={exportEligibleAdminData} />
+            <AnalysisInterpretation adminData={exportEligibleAdminData} />
+          </div>
         </div>
       )}
       

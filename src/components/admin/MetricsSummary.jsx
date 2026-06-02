@@ -1,4 +1,4 @@
-import { BarChart3, ChevronDown } from "lucide-react";
+import { BarChart3, CheckCircle2, ChevronDown, CircleAlert, Info } from "lucide-react";
 import { calculateChapter4Metrics } from "../../utils/chapter4Metrics.js";
 import { formatAnalysisLabel, humanizeAnalysisText } from "../../utils/analysisDisplay.js";
 
@@ -58,20 +58,20 @@ export function MetricsSummary({ adminData }) {
   ];
 
   return (
-    <section className="admin-panel analysis-panel metrics-summary-panel" aria-labelledby="metrics-summary-heading">
-      <div className="admin-panel-heading">
+    <details className="admin-panel analysis-panel analysis-panel-dropdown metrics-summary-panel" aria-labelledby="metrics-summary-heading">
+      <summary className="admin-panel-heading analysis-panel-summary">
         <div>
-          <h2 id="metrics-summary-heading">Metrics</h2>
+          <h2 id="metrics-summary-heading"><BarChart3 aria-hidden="true" /> Metrics</h2>
         </div>
-        <BarChart3 aria-hidden="true" />
-      </div>
+        <ChevronDown className="analysis-panel-chevron" aria-hidden="true" />
+      </summary>
 
       <div className="metrics-grid analysis-accordion-grid">
         {cards.map((card) => (
           <MetricCard key={card.label} {...card} />
         ))}
       </div>
-    </section>
+    </details>
   );
 }
 
@@ -79,20 +79,31 @@ function MetricCard({ label, value, status, details, tone = "neutral" }) {
   return (
     <details className={`metric-card analysis-accordion-card ${tone}`}>
       <summary className="analysis-accordion-summary">
-        <span className="analysis-summary-text">
+        <span className="evidence-icon" aria-hidden="true">
+          {getMetricIcon(tone)}
+        </span>
+        <span className="analysis-summary-text metric-summary-text">
           <small>{label}</small>
           <em>{humanizeAnalysisText(status)}</em>
         </span>
-        <strong>{value}</strong>
-        <ChevronDown aria-hidden="true" />
+        <strong className="analysis-count-pill">{value}</strong>
+        <ChevronDown className="analysis-chevron" aria-hidden="true" />
       </summary>
-      <ul className="analysis-bullet-list">
-        {(details.length ? details : ["No detail available"]).map((detail) => (
-          <li key={detail}>{humanizeAnalysisText(detail)}</li>
-        ))}
-      </ul>
+      <div className="analysis-detail-content">
+        <ul className="analysis-bullet-list">
+          {(details.length ? details : ["No detail available"]).map((detail) => (
+            <li key={detail}>{humanizeAnalysisText(detail)}</li>
+          ))}
+        </ul>
+      </div>
     </details>
   );
+}
+
+function getMetricIcon(tone) {
+  if (tone === "ok") return <CheckCircle2 />;
+  if (tone === "warning" || tone === "danger") return <CircleAlert />;
+  return <Info />;
 }
 
 function formatPercent(value) {
