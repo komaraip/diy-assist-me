@@ -1,13 +1,53 @@
-import { ClipboardList, Pencil, Trash2, X } from "lucide-react";
+import { Check, ClipboardList, Eye, Pencil, Trash2, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { buildSessionBundles, createAdminRecord, deleteSessionBundle, updateAdminRecord, updateSessionMeta } from "../../services/adminDataService.js";
+
+const SESSION_PAGE_SIZE = 10;
 
 export function SessionReview({ adminData, dataSource = "" }) {
   const initialBundles = useMemo(() => buildSessionBundles(adminData), [adminData]);
   // Keep local mutable copy so edits/deletes reflect instantly without a full reload
   const [sessions, setSessions] = useState(initialBundles);
   const [selectedSessionId, setSelectedSessionId] = useState("");
-  const selectedSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0] || null;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [page, setPage] = useState(1);
+  const filteredSessions = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return sessions
+      .filter((session) => {
+        if (!query) return true;
+        return [
+          session.id,
+          session.participantId,
+          session.participantCode,
+          getParticipantDisplayName(session),
+          getSessionStatus(session),
+          session.sequenceAssignment,
+          session.tutorialRotation,
+        ].some((value) => String(value || "").toLowerCase().includes(query));
+      })
+      .filter((session) => {
+        if (statusFilter === "all") return true;
+        if (statusFilter === "excluded") return !!session.excludeFromExport;
+        if (statusFilter === "completed") return getSessionStatus(session).toLowerCase() === "completed";
+        if (statusFilter === "in-progress") return getSessionStatus(session).toLowerCase() !== "completed";
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortOrder === "code") {
+          return String(a.participantCode || "").localeCompare(String(b.participantCode || ""));
+        }
+        const aTime = new Date(a.startedAt || a.createdAt || 0).getTime();
+        const bTime = new Date(b.startedAt || b.createdAt || 0).getTime();
+        return sortOrder === "oldest" ? aTime - bTime : bTime - aTime;
+      });
+  }, [searchQuery, sessions, sortOrder, statusFilter]);
+  const totalPages = Math.max(1, Math.ceil(filteredSessions.length / SESSION_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedSessions = filteredSessions.slice((safePage - 1) * SESSION_PAGE_SIZE, safePage * SESSION_PAGE_SIZE);
+  const selectedSession = filteredSessions.find((s) => s.id === selectedSessionId) || pagedSessions[0] || filteredSessions[0] || null;
 
   // ── Delete ──────────────────────────────────────────────────────────────────
   const [deleteTargetId, setDeleteTargetId] = useState(null);
@@ -107,57 +147,121 @@ export function SessionReview({ adminData, dataSource = "" }) {
       )}
 
       {sessions.length ? (
-        <div className="admin-review-grid">
-          <div className="session-list" aria-label="Guided sessions">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                className={[
-                  "session-list-item-wrap",
-                  session.excludeFromExport ? "session-excluded" : "",
-                ].join(" ").trim()}
-              >
-                <button
-                  type="button"
-                  className={selectedSession?.id === session.id ? "session-list-item active" : "session-list-item"}
-                  onClick={() => setSelectedSessionId(session.id)}
-                  aria-current={selectedSession?.id === session.id}
-                >
-                  <span className="session-list-topline">
-                    <strong>{getParticipantDisplayName(session)}</strong>
-                    <span className="status-badge">{getSessionStatus(session)}</span>
-                  </span>
-                  <span>Code: {session.participantCode || session.participantId || "Not recorded"}</span>
-                  <span>Sequence: {session.sequenceAssignment || "Not recorded"}</span>
-                  <span>Started: {formatDate(session.startedAt || session.createdAt)}</span>
-                  {session.excludeFromExport && (
-                    <span className="exclude-badge">Excluded from export</span>
-                  )}
-                  <small>Source: {session.source || dataSource || "Not recorded"}</small>
-                </button>
+        <div className="session-review-workspace">
+          <div className="session-review-browser">
+            <div className="session-review-toolbar">
+              <label className="field-label">
+                Search sessions
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => { setSearchQuery(event.target.value); setPage(1); }}
+                  placeholder="Search code, name, session ID..."
+                />
+              </label>
+              <label className="field-label">
+                Status
+                <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}>
+                  <option value="all">All sessions</option>
+                  <option value="completed">Completed</option>
+                  <option value="in-progress">In progress</option>
+                  <option value="excluded">Excluded</option>
+                </select>
+              </label>
+              <label className="field-label">
+                Sort
+                <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="code">Participant code</option>
+                </select>
+              </label>
+            </div>
 
-                <div className="session-list-actions">
-                  <label className="exclude-toggle-label" title="Toggle exclusion from exports">
-                    <input
-                      type="checkbox"
-                      checked={!!session.excludeFromExport}
-                      onChange={() => handleToggleExclude(session.id, !!session.excludeFromExport)}
-                      aria-label={`Exclude ${getParticipantDisplayName(session)} from exports`}
-                    />
-                    <span>Exclude</span>
-                  </label>
-                  <button
-                    type="button"
-                    className="button icon-button danger-icon-button"
-                    title="Delete session permanently"
-                    onClick={() => setDeleteTargetId(session.id)}
-                    aria-label={`Delete session for ${getParticipantDisplayName(session)}`}
-                  >
-                    <Trash2 size={14} aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            ))}
+            <div className="session-table-meta">
+              <span>{filteredSessions.length} of {sessions.length} sessions</span>
+              <span>Page {safePage} of {totalPages}</span>
+            </div>
+
+            <div className="table-wrap session-table-wrap">
+              <table className="admin-table session-review-table">
+                <thead>
+                  <tr>
+                    <th>Participant</th>
+                    <th>Records</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedSessions.map((session) => (
+                    <tr
+                      key={session.id}
+                      className={selectedSession?.id === session.id ? "selected-row" : ""}
+                    >
+                      <td>
+                        <button
+                          type="button"
+                          className="table-link-button"
+                          onClick={() => setSelectedSessionId(session.id)}
+                        >
+                          <span className="session-code-line">
+                            <strong>{session.participantCode || "-"}</strong>
+                          </span>
+                          <span>{getParticipantDisplayName(session)}</span>
+                        </button>
+                      </td>
+                      <td>
+                        <span className="session-record-lines">
+                          <span>{`${session.taskTrials?.length || 0} trials · ${session.susResponses?.length || 0} SUS`}</span>
+                          <span>{`${session.debriefResponses?.length || 0} debrief · ${session.observerNotes?.length || 0} notes`}</span>
+                        </span>
+                      </td>
+                      <td>
+                        <div className="session-row-actions">
+                          <div className="session-action-icons">
+                            <button type="button" className="button icon-button" title="View session" onClick={() => setSelectedSessionId(session.id)}>
+                              <Eye size={14} aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              className="button icon-button danger-icon-button"
+                              title="Delete session permanently"
+                              onClick={() => setDeleteTargetId(session.id)}
+                              aria-label={`Delete session for ${getParticipantDisplayName(session)}`}
+                            >
+                              <Trash2 size={14} aria-hidden="true" />
+                            </button>
+                          </div>
+                          <label className="exclude-toggle-label compact" title="Toggle exclusion from exports">
+                            <input
+                              type="checkbox"
+                              checked={!!session.excludeFromExport}
+                              onChange={() => handleToggleExclude(session.id, !!session.excludeFromExport)}
+                              aria-label={`Exclude ${getParticipantDisplayName(session)} from exports`}
+                            />
+                          </label>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!pagedSessions.length ? (
+                    <tr>
+                      <td colSpan={3}>No sessions match the current filters.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="session-pagination">
+              <button type="button" className="button secondary-action" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+                Previous
+              </button>
+              <span>{safePage} / {totalPages}</span>
+              <button type="button" className="button secondary-action" disabled={safePage >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>
+                Next
+              </button>
+            </div>
           </div>
 
           {selectedSession ? (
