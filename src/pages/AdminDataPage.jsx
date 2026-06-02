@@ -10,7 +10,11 @@ import { InteractionLogViewer } from "../components/admin/InteractionLogViewer.j
 import { MetricsSummary } from "../components/admin/MetricsSummary.jsx";
 import { PurgeButton } from "../components/admin/PurgeButton.jsx";
 import { SessionReview } from "../components/admin/SessionReview.jsx";
-import { loadAdminData } from "../services/adminDataService.js";
+import {
+  buildExportEligibleAdminData,
+  getExportEligibilitySummary,
+  loadAdminData,
+} from "../services/adminDataService.js";
 
 const tabs = [
   { id: "sessions", label: "Sessions", icon: ClipboardList },
@@ -65,6 +69,9 @@ function DataDashboard({ activeTab }) {
     return <p className="status-note error-note">{resultMeta.error || "Study data could not be loaded."}</p>;
   }
 
+  const exportEligibleAdminData = buildExportEligibleAdminData(adminData);
+  const eligibilitySummary = getExportEligibilitySummary(adminData);
+
   return (
     <div className="admin-dashboard">
       <AdminDataToolbar
@@ -91,9 +98,16 @@ function DataDashboard({ activeTab }) {
       
       {activeTab === "analysis" && (
         <div className="admin-thesis-overview-grid">
-          <MetricsSummary adminData={adminData} />
-          <EvidenceChecklist adminData={adminData} />
-          <AnalysisIssues adminData={adminData} />
+          {eligibilitySummary.excludedSessionCount ? (
+            <p className="status-note exclude-notice" role="status">
+              {eligibilitySummary.excludedSessionCount} session
+              {eligibilitySummary.excludedSessionCount === 1 ? "" : "s"} excluded from
+              analysis/export metrics.
+            </p>
+          ) : null}
+          <MetricsSummary adminData={exportEligibleAdminData} />
+          <EvidenceChecklist adminData={exportEligibleAdminData} />
+          <AnalysisIssues adminData={exportEligibleAdminData} />
         </div>
       )}
       

@@ -1,53 +1,60 @@
+import {
+  buildExportEligibleAdminData,
+  getExportEligibilitySummary,
+} from "../../services/adminDataService.js";
+
 export function AdminSummaryCards({ adminData }) {
+  const eligibleData = buildExportEligibleAdminData(adminData);
+  const eligibilitySummary = getExportEligibilitySummary(adminData);
   const cards = [
     {
       label: "Sessions",
-      value: (adminData.sessions || []).length,
+      value: eligibleData.sessions.length,
       description: "Total recorded study sessions",
     },
     {
       label: "Sequence",
-      value: `${countSessions(adminData, "sequenceAssignment", "AB")} / ${countSessions(adminData, "sequenceAssignment", "BA")}`,
+      value: `${countSessions(eligibleData, "sequenceAssignment", "AB")} / ${countSessions(eligibleData, "sequenceAssignment", "BA")}`,
       description: "Sequence balance (AB vs BA)",
     },
     {
       label: "Rotation",
-      value: `${countSessions(adminData, "tutorialRotation", "rotation_a")} / ${countSessions(adminData, "tutorialRotation", "rotation_b")}`,
+      value: `${countSessions(eligibleData, "tutorialRotation", "rotation_a")} / ${countSessions(eligibleData, "tutorialRotation", "rotation_b")}`,
       description: "Rotation balance (A vs B)",
     },
     {
       label: "Trials",
-      value: (adminData.taskTrials || []).length,
+      value: eligibleData.taskTrials.length,
       description: "Completed user task trials",
     },
     {
       label: "Logs",
-      value: (adminData.interactionLogs || []).length,
+      value: eligibleData.interactionLogs.length,
       description: "Total interaction events recorded",
     },
     {
       label: "Voice Logs",
-      value: (adminData.interactionLogs || []).filter((log) => log.modality === "voice").length,
+      value: (eligibleData.interactionLogs || []).filter((log) => log.modality === "voice").length,
       description: "Total voice commands logged",
     },
     {
       label: "SUS",
-      value: (adminData.susResponses || []).length,
+      value: eligibleData.susResponses.length,
       description: "Completed SUS usability surveys",
     },
     {
       label: "Debrief",
-      value: (adminData.debriefResponses || []).length,
+      value: eligibleData.debriefResponses.length,
       description: "Completed debrief feedback surveys",
     },
     {
       label: "Participants",
-      value: (adminData.participants || []).length,
+      value: eligibilitySummary.eligibleParticipantCount,
       description: "Total unique study participants",
     },
     {
       label: "Notes",
-      value: (adminData.observerNotes || []).length,
+      value: eligibleData.observerNotes.length,
       description: "Total researcher observer notes",
     },
   ];
@@ -68,5 +75,5 @@ export function AdminSummaryCards({ adminData }) {
 }
 
 function countSessions(adminData, field, value) {
-  return (adminData.sessions || []).filter((session) => session.excludeFromExport !== true && session[field] === value).length;
+  return (adminData.sessions || []).filter((session) => session[field] === value).length;
 }

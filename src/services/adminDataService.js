@@ -75,6 +75,37 @@ export function buildSessionBundles(data = {}) {
     .sort((a, b) => new Date(b.startedAt || b.createdAt || 0).getTime() - new Date(a.startedAt || a.createdAt || 0).getTime());
 }
 
+export function buildExportEligibleAdminData(data = {}) {
+  const excludedIds = getExcludedSessionIds(data);
+  if (!excludedIds.size) return normalizeAdminDataCollections(data);
+
+  const normalizedData = normalizeAdminDataCollections(data);
+  return {
+    ...normalizedData,
+    sessions: normalizedData.sessions.filter((session) => !excludedIds.has(session.id)),
+    taskTrials: filterSessionChildRecords(normalizedData.taskTrials, excludedIds),
+    interactionLogs: filterSessionChildRecords(normalizedData.interactionLogs, excludedIds),
+    susResponses: filterSessionChildRecords(normalizedData.susResponses, excludedIds),
+    debriefResponses: filterSessionChildRecords(normalizedData.debriefResponses, excludedIds),
+    observerNotes: filterSessionChildRecords(normalizedData.observerNotes, excludedIds),
+  };
+}
+
+export function getExportEligibilitySummary(data = {}) {
+  const normalizedData = normalizeAdminDataCollections(data);
+  const eligibleData = buildExportEligibleAdminData(normalizedData);
+  const excludedIds = getExcludedSessionIds(normalizedData);
+
+  return {
+    excludedSessionIds: Array.from(excludedIds),
+    excludedSessionCount: excludedIds.size,
+    eligibleSessionCount: eligibleData.sessions.length,
+    totalSessionCount: normalizedData.sessions.length,
+    eligibleParticipantCount: countSessionParticipants(eligibleData.sessions),
+    totalParticipantCount: getTotalParticipantCount(normalizedData),
+  };
+}
+
 /** Collections that store session-linked child records keyed by `sessionId`. */
 const SESSION_CHILD_COLLECTIONS = [
   "taskTrials",
@@ -83,6 +114,45 @@ const SESSION_CHILD_COLLECTIONS = [
   "debriefResponses",
   "observerNotes",
 ];
+
+function normalizeAdminDataCollections(data = {}) {
+  return {
+    ...data,
+    participants: data.participants || [],
+    sessions: data.sessions || [],
+    taskTrials: data.taskTrials || [],
+    interactionLogs: data.interactionLogs || [],
+    susResponses: data.susResponses || [],
+    debriefResponses: data.debriefResponses || [],
+    observerNotes: data.observerNotes || [],
+  };
+}
+
+function getExcludedSessionIds(data = {}) {
+  return new Set(
+    (data.sessions || [])
+      .filter((session) => session.excludeFromExport === true)
+      .map((session) => session.id)
+      .filter(Boolean)
+  );
+}
+
+function filterSessionChildRecords(records = [], excludedIds = new Set()) {
+  return records.filter((record) => !excludedIds.has(record.sessionId));
+}
+
+function countSessionParticipants(sessions = []) {
+  return new Set(
+    sessions
+      .map((session) => session.participantId || session.participantCode)
+      .filter(Boolean)
+  ).size;
+}
+
+function getTotalParticipantCount(data = {}) {
+  if ((data.participants || []).length) return data.participants.length;
+  return countSessionParticipants(data.sessions || []);
+}
 
 /**
  * Hard-deletes a session document, its participant document, and ALL linked

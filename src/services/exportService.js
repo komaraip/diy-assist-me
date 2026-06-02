@@ -1,5 +1,10 @@
 import packageJson from "../../package.json";
-import { loadAdminData, buildSessionBundles } from "./adminDataService.js";
+import {
+  buildExportEligibleAdminData,
+  buildSessionBundles,
+  getExportEligibilitySummary,
+  loadAdminData,
+} from "./adminDataService.js";
 import { toCsv } from "../utils/csvExport.js";
 import { buildAnalysisReadyRows, buildTaskTrialValidation, calculateChapter4Metrics } from "../utils/chapter4Metrics.js";
 import { buildExportMetadata, toPrettyJson } from "../utils/jsonExport.js";
@@ -20,36 +25,13 @@ export const EXPORT_FILENAMES = {
 export async function generateExportFiles() {
   const dataResult = await loadAdminData();
   const rawData = dataResult.data || {};
-
-  // Collect IDs of sessions the researcher has flagged to exclude
-  const excludedIds = new Set(
-    (rawData.sessions || [])
-      .filter((session) => session.excludeFromExport === true)
-      .map((session) => session.id)
-  );
-
-  // Build a filtered view: drop excluded sessions and all their child records
-  function filterExcluded(records) {
-    return records.filter((record) => !excludedIds.has(record.sessionId));
-  }
-
-  const data = excludedIds.size > 0
-    ? {
-        ...rawData,
-        sessions: (rawData.sessions || []).filter((s) => !excludedIds.has(s.id)),
-        taskTrials: filterExcluded(rawData.taskTrials || []),
-        interactionLogs: filterExcluded(rawData.interactionLogs || []),
-        susResponses: filterExcluded(rawData.susResponses || []),
-        debriefResponses: filterExcluded(rawData.debriefResponses || []),
-        observerNotes: filterExcluded(rawData.observerNotes || []),
-        participants: rawData.participants || [],
-      }
-    : rawData;
+  const data = buildExportEligibleAdminData(rawData);
+  const eligibilitySummary = getExportEligibilitySummary(rawData);
 
   const metadata = buildExportMetadata({
     exportSource: dataResult.source,
     appVersion: packageJson.version,
-    excludedSessionCount: excludedIds.size,
+    excludedSessionCount: eligibilitySummary.excludedSessionCount,
   });
   const metrics = calculateChapter4Metrics(data);
   const taskTrialValidations = buildTaskTrialValidation(data);
@@ -58,7 +40,7 @@ export async function generateExportFiles() {
     appVersion: metadata.appVersion,
     source: metadata.source,
     exportSource: metadata.exportSource,
-    excludedSessionCount: excludedIds.size,
+    excludedSessionCount: eligibilitySummary.excludedSessionCount,
     researchQuestions: metrics.researchQuestions,
     dataQuality: metrics.dataQuality,
   };
@@ -124,7 +106,7 @@ export async function generateExportFiles() {
     {
       metadata,
       recordCounts: getRecordCounts(data),
-      excludedSessionCount: excludedIds.size,
+      excludedSessionCount: eligibilitySummary.excludedSessionCount,
       files,
     },
     dataResult.source,
