@@ -226,7 +226,6 @@ export function TaskTrialControls({
         </details>
       </form>
 
-      {/* Render ObserverNotesPanel */}
       {children}
 
       {!isCompleted ? (

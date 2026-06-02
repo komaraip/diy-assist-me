@@ -1,7 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ObserverNotesPanel } from "../components/guided-session/ObserverNotesPanel.jsx";
 import { TaskTrialControls } from "../components/guided-session/TaskTrialControls.jsx";
 import { TutorialDetailPage } from "./TutorialDetailPage.jsx";
 import { getStudySession } from "../services/studyService.js";
@@ -280,14 +279,7 @@ export function GuidedSessionTaskPage() {
           onComplete={handleCompleteTrial}
           requiredActionStatus={requiredActionStatus}
           language={language}
-        >
-          <details className="debrief-accordion" style={{ margin: 0 }}>
-            <summary>{copy.observerNotes.summary}</summary>
-            <div className="accordion-content" style={{ background: "var(--surface-soft)" }}>
-              <ObserverNotesPanel session={session} task={task} taskTrial={activeTrial} language={language} />
-            </div>
-          </details>
-        </TaskTrialControls>
+        />
       ) : null}
     </section>
   );
