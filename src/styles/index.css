@@ -2645,64 +2645,159 @@ button:disabled {
   backdrop-filter: blur(12px);
 }
 
-.tutorial-preview-card {
+.tutorial-editor-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--background);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 28px rgba(51, 56, 54, 0.1);
+  padding: 0.85rem;
+  backdrop-filter: blur(12px);
+}
+
+.tutorial-editor-header h2,
+.tutorial-editor-header p {
+  margin: 0;
+}
+
+.tutorial-editor-mode {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 900;
+  margin-top: 0.25rem !important;
+}
+
+.tutorial-editor-header h2 {
+  max-width: 32rem;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  margin-top: 0.25rem;
+}
+
+.tutorial-editor-header span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  margin-top: 0.2rem;
+  overflow-wrap: anywhere;
+}
+
+.tutorial-accordion-section {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.tutorial-accordion-section.has-error {
+  border-color: rgba(220, 38, 38, 0.28);
+}
+
+.tutorial-accordion-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.8rem;
+}
+
+.tutorial-accordion-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  padding: 0;
+  text-align: left;
+}
+
+.tutorial-accordion-toggle > svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.tutorial-accordion-toggle[aria-expanded="true"] > svg {
+  transform: rotate(180deg);
+}
+
+.tutorial-accordion-toggle span {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.tutorial-accordion-toggle strong {
+  font-size: 0.98rem;
+}
+
+.tutorial-accordion-toggle em {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.tutorial-accordion-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+}
+
+.tutorial-error-pill {
+  border-color: rgba(220, 38, 38, 0.24);
+  background: rgba(220, 38, 38, 0.08);
+  color: #8a2d22;
+}
+
+.tutorial-accordion-body {
+  display: grid;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
   padding: 1rem;
 }
 
-.tutorial-preview-card > span {
-  color: var(--primary-dark);
-  font-size: 0.82rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.tutorial-preview-card h3,
-.tutorial-preview-card p {
-  margin: 0;
-}
-
-.tutorial-preview-card h3 {
-  margin-top: 0.3rem;
-}
-
-.tutorial-preview-card p {
-  color: var(--muted);
-  margin-top: 0.45rem;
-}
-
-.tutorial-preview-meta {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
-  margin: 1rem 0;
-}
-
-.tutorial-preview-meta div {
-  border: 1px solid var(--border);
+.tutorial-editor-footer-actions {
+  bottom: 0;
+  margin-top: 0;
   border-radius: 8px;
-  background: white;
-  padding: 0.65rem;
 }
 
-.tutorial-preview-meta dt {
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-transform: uppercase;
+.tutorial-editor-page .tutorial-admin-form {
+  width: 100%;
+  max-width: none;
 }
 
-.tutorial-preview-meta dd {
-  margin: 0.2rem 0 0;
-  font-weight: 900;
+.tutorial-editor-page .admin-form-section,
+.tutorial-editor-page .admin-form-actions,
+.tutorial-editor-page .tutorial-editor-header {
+  width: 100%;
 }
 
-.tutorial-preview-steps {
-  margin: 0;
-  padding-left: 1.2rem;
-  color: var(--muted);
+@media (max-width: 900px) {
+  .tutorial-editor-header,
+  .tutorial-accordion-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tutorial-accordion-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 
 .result-panel.error {
@@ -3235,6 +3330,11 @@ button:disabled {
 .tutorial-manager .status-note {
   max-width: none;
   margin: 0 0 0;
+}
+
+.tutorial-admin-form .status-note {
+  max-width: none;
+  width: 100%;
 }
 
 .admin-toolbar,

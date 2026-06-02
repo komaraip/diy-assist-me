@@ -1,38 +1,27 @@
 import { Plus, RefreshCcw, Search, UploadCloud } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  createAdminTutorial,
   deleteAdminTutorial,
   importLocalTutorialDataset,
   isAdminTutorialCrudAvailable,
   listAdminTutorials,
-  updateAdminTutorial,
 } from "../../services/adminTutorialService.js";
-import {
-  createEmptyTutorialDraft,
-  createTutorialDraftFromRaw,
-  prepareTutorialForSave,
-  validateTutorialDraft,
-} from "../../utils/validateTutorial.js";
 import {
   getGuidedSessionTutorialIntegrity,
   REQUIRED_GUIDED_TUTORIALS,
 } from "../../utils/studyAssignments.js";
-import { TutorialForm } from "./TutorialForm.jsx";
 import { TutorialTable } from "./TutorialTable.jsx";
 
 export function TutorialManager() {
+  const navigate = useNavigate();
   const [tutorials, setTutorials] = useState([]);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [draft, setDraft] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [formErrors, setFormErrors] = useState({});
 
   const categories = useMemo(() => {
     return Array.from(
@@ -80,19 +69,11 @@ export function TutorialManager() {
   }, []);
 
   function handleCreate() {
-    setDraft(createEmptyTutorialDraft());
-    setEditingId(null);
-    setFormErrors({});
-    setStatusMessage("");
-    setErrorMessage("");
+    navigate("/admin/tutorials/new");
   }
 
   function handleEdit(tutorial) {
-    setDraft(createTutorialDraftFromRaw(tutorial.raw));
-    setEditingId(tutorial.id);
-    setFormErrors({});
-    setStatusMessage("");
-    setErrorMessage("");
+    navigate(`/admin/tutorials/${tutorial.id}/edit`);
   }
 
   async function handleDelete(tutorial) {
@@ -121,45 +102,12 @@ export function TutorialManager() {
     await loadTutorials();
   }
 
-  async function handleSave() {
-    const isCreate = !editingId;
-    const validation = validateTutorialDraft(draft, { isCreate });
-    setFormErrors(validation.errors);
-    setStatusMessage("");
-    setErrorMessage("");
-
-    if (!validation.isValid) {
-      setErrorMessage("Please fix the highlighted fields.");
-      return;
-    }
-
-    setIsSaving(true);
-    const prepared = prepareTutorialForSave(draft);
-    const result = isCreate
-      ? await createAdminTutorial(prepared)
-      : await updateAdminTutorial(editingId, { ...prepared, id: editingId });
-    setIsSaving(false);
-
-    if (!result.success) {
-      setErrorMessage(result.error);
-      return;
-    }
-
-    setStatusMessage(isCreate ? "Tutorial created." : "Tutorial updated.");
-    setDraft(null);
-    setEditingId(null);
-    await loadTutorials();
-  }
-
   async function handleImportLocalDataset() {
     const confirmed = window.confirm(
       "Import local dataset to Firebase? This will upsert all 12 local tutorials into the tutorials collection.",
     );
     if (!confirmed) return;
 
-    setDraft(null);
-    setEditingId(null);
-    setFormErrors({});
     setStatusMessage("");
     setErrorMessage("");
     setIsImporting(true);
@@ -259,22 +207,7 @@ export function TutorialManager() {
         <GuidedTutorialIntegrityNotice integrity={guidedTutorialIntegrity} />
       ) : null}
 
-      {draft ? (
-        <TutorialForm
-          draft={draft}
-          errors={formErrors}
-          isCreate={!editingId}
-          isSaving={isSaving}
-          statusMessage=""
-          onChange={setDraft}
-          onCancel={() => {
-            setDraft(null);
-            setEditingId(null);
-            setFormErrors({});
-          }}
-          onSubmit={handleSave}
-        />
-      ) : isLoading ? (
+      {isLoading ? (
         <p className="status-note">Loading tutorials...</p>
       ) : (
         <TutorialTable

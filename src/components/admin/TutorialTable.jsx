@@ -28,8 +28,11 @@ export function TutorialTable({ tutorials, onEdit, onDelete }) {
               </td>
               <td>{tutorial.normalized.category}</td>
               <td>
-                {formatStudyRole(tutorial.raw.study_role || tutorial.normalized.studyRole)}
-                {tutorial.raw.guided_session_priority || tutorial.normalized.guidedSessionPriority ? (
+                {formatStudyRole(
+                  tutorial.raw.study_role || tutorial.normalized.studyRole,
+                )}
+                {tutorial.raw.guided_session_priority ||
+                tutorial.normalized.guidedSessionPriority ? (
                   <span>Core</span>
                 ) : null}
               </td>
@@ -38,11 +41,19 @@ export function TutorialTable({ tutorials, onEdit, onDelete }) {
               <td>{formatDate(tutorial.raw.updatedAt || tutorial.raw.createdAt)}</td>
               <td>
                 <div className="admin-table-actions">
-                  <button type="button" className="button secondary-action" onClick={() => onEdit(tutorial)}>
+                  <button
+                    type="button"
+                    className="button secondary-action"
+                    onClick={() => onEdit(tutorial)}
+                  >
                     <Edit3 aria-hidden="true" />
                     Edit
                   </button>
-                  <button type="button" className="button secondary-action danger-action" onClick={() => onDelete(tutorial)}>
+                  <button
+                    type="button"
+                    className="button secondary-action danger-action"
+                    onClick={() => onDelete(tutorial)}
+                  >
                     <Trash2 aria-hidden="true" />
                     Delete
                   </button>
