@@ -5203,8 +5203,21 @@ button:disabled {
   background: var(--surface);
 }
 
+.session-review-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.session-review-table tbody tr:hover td {
+  background: var(--surface-soft);
+}
+
 .session-review-table tr.selected-row td {
   background: rgba(111, 144, 125, 0.1);
+}
+
+.session-review-table tr.selected-row:hover td {
+  background: rgba(111, 144, 125, 0.15);
 }
 
 .table-link-button {
@@ -5216,7 +5229,6 @@ button:disabled {
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
 }
 
 .session-code-line {
@@ -5447,7 +5459,11 @@ button:disabled {
   width: 100%;
 }
 
-.admin-table.session-review-table th,
+.admin-table.session-review-table th {
+  padding: 0.65rem 0.28rem;
+  vertical-align: middle;
+}
+
 .admin-table.session-review-table td {
   padding: 0.3rem 0.28rem;
   vertical-align: middle;
@@ -5456,6 +5472,7 @@ button:disabled {
 .admin-table.session-review-table th:nth-child(1),
 .admin-table.session-review-table td:nth-child(1) {
   width: 54%;
+  padding-left: 0.8rem;
 }
 
 .admin-table.session-review-table th:nth-child(2),
@@ -5466,6 +5483,7 @@ button:disabled {
 .admin-table.session-review-table th:nth-child(3),
 .admin-table.session-review-table td:nth-child(3) {
   width: 17%;
+  padding-right: 0.8rem;
 }
 
 .admin-table.session-review-table td:nth-child(3) {

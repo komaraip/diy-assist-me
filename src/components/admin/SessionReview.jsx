@@ -9,45 +9,14 @@ export function SessionReview({ adminData, dataSource = "" }) {
   // Keep local mutable copy so edits/deletes reflect instantly without a full reload
   const [sessions, setSessions] = useState(initialBundles);
   const [selectedSessionId, setSelectedSessionId] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortOrder, setSortOrder] = useState("newest");
-  const [page, setPage] = useState(1);
-  const filteredSessions = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    return sessions
-      .filter((session) => {
-        if (!query) return true;
-        return [
-          session.id,
-          session.participantId,
-          session.participantCode,
-          getParticipantDisplayName(session),
-          getSessionStatus(session),
-          session.sequenceAssignment,
-          session.tutorialRotation,
-        ].some((value) => String(value || "").toLowerCase().includes(query));
-      })
-      .filter((session) => {
-        if (statusFilter === "all") return true;
-        if (statusFilter === "excluded") return !!session.excludeFromExport;
-        if (statusFilter === "completed") return getSessionStatus(session).toLowerCase() === "completed";
-        if (statusFilter === "in-progress") return getSessionStatus(session).toLowerCase() !== "completed";
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortOrder === "code") {
-          return String(a.participantCode || "").localeCompare(String(b.participantCode || ""));
-        }
-        const aTime = new Date(a.startedAt || a.createdAt || 0).getTime();
-        const bTime = new Date(b.startedAt || b.createdAt || 0).getTime();
-        return sortOrder === "oldest" ? aTime - bTime : bTime - aTime;
-      });
-  }, [searchQuery, sessions, sortOrder, statusFilter]);
-  const totalPages = Math.max(1, Math.ceil(filteredSessions.length / SESSION_PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pagedSessions = filteredSessions.slice((safePage - 1) * SESSION_PAGE_SIZE, safePage * SESSION_PAGE_SIZE);
-  const selectedSession = filteredSessions.find((s) => s.id === selectedSessionId) || pagedSessions[0] || filteredSessions[0] || null;
+  const sortedSessions = useMemo(() => {
+    return [...sessions].sort((a, b) => {
+      const aTime = new Date(a.startedAt || a.createdAt || 0).getTime();
+      const bTime = new Date(b.startedAt || b.createdAt || 0).getTime();
+      return bTime - aTime;
+    });
+  }, [sessions]);
+  const selectedSession = sortedSessions.find((s) => s.id === selectedSessionId) || sortedSessions[0] || null;
 
   // ── Delete ──────────────────────────────────────────────────────────────────
   const [deleteTargetId, setDeleteTargetId] = useState(null);
@@ -149,40 +118,6 @@ export function SessionReview({ adminData, dataSource = "" }) {
       {sessions.length ? (
         <div className="session-review-workspace">
           <div className="session-review-browser">
-            <div className="session-review-toolbar">
-              <label className="field-label">
-                Search sessions
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => { setSearchQuery(event.target.value); setPage(1); }}
-                  placeholder="Search code, name, session ID..."
-                />
-              </label>
-              <label className="field-label">
-                Status
-                <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}>
-                  <option value="all">All sessions</option>
-                  <option value="completed">Completed</option>
-                  <option value="in-progress">In progress</option>
-                  <option value="excluded">Excluded</option>
-                </select>
-              </label>
-              <label className="field-label">
-                Sort
-                <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
-                  <option value="newest">Newest first</option>
-                  <option value="oldest">Oldest first</option>
-                  <option value="code">Participant code</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="session-table-meta">
-              <span>{filteredSessions.length} of {sessions.length} sessions</span>
-              <span>Page {safePage} of {totalPages}</span>
-            </div>
-
             <div className="table-wrap session-table-wrap">
               <table className="admin-table session-review-table">
                 <thead>
@@ -193,22 +128,19 @@ export function SessionReview({ adminData, dataSource = "" }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {pagedSessions.map((session) => (
+                  {sortedSessions.map((session) => (
                     <tr
                       key={session.id}
                       className={selectedSession?.id === session.id ? "selected-row" : ""}
+                      onClick={() => setSelectedSessionId(session.id)}
                     >
                       <td>
-                        <button
-                          type="button"
-                          className="table-link-button"
-                          onClick={() => setSelectedSessionId(session.id)}
-                        >
+                        <div className="table-link-button">
                           <span className="session-code-line">
                             <strong>{session.participantCode || "-"}</strong>
                           </span>
                           <span>{getParticipantDisplayName(session)}</span>
-                        </button>
+                        </div>
                       </td>
                       <td>
                         <span className="session-record-lines">
@@ -219,24 +151,31 @@ export function SessionReview({ adminData, dataSource = "" }) {
                       <td>
                         <div className="session-row-actions">
                           <div className="session-action-icons">
-                            <button type="button" className="button icon-button" title="View session" onClick={() => setSelectedSessionId(session.id)}>
-                              <Eye size={14} aria-hidden="true" />
-                            </button>
                             <button
                               type="button"
                               className="button icon-button danger-icon-button"
                               title="Delete session permanently"
-                              onClick={() => setDeleteTargetId(session.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteTargetId(session.id);
+                              }}
                               aria-label={`Delete session for ${getParticipantDisplayName(session)}`}
                             >
                               <Trash2 size={14} aria-hidden="true" />
                             </button>
                           </div>
-                          <label className="exclude-toggle-label compact" title="Toggle exclusion from exports">
+                          <label
+                            className="exclude-toggle-label compact"
+                            title="Toggle exclusion from exports"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <input
                               type="checkbox"
                               checked={!!session.excludeFromExport}
-                              onChange={() => handleToggleExclude(session.id, !!session.excludeFromExport)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleToggleExclude(session.id, !!session.excludeFromExport);
+                              }}
                               aria-label={`Exclude ${getParticipantDisplayName(session)} from exports`}
                             />
                           </label>
@@ -244,23 +183,8 @@ export function SessionReview({ adminData, dataSource = "" }) {
                       </td>
                     </tr>
                   ))}
-                  {!pagedSessions.length ? (
-                    <tr>
-                      <td colSpan={3}>No sessions match the current filters.</td>
-                    </tr>
-                  ) : null}
                 </tbody>
               </table>
-            </div>
-
-            <div className="session-pagination">
-              <button type="button" className="button secondary-action" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
-                Previous
-              </button>
-              <span>{safePage} / {totalPages}</span>
-              <button type="button" className="button secondary-action" disabled={safePage >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>
-                Next
-              </button>
             </div>
           </div>
 
