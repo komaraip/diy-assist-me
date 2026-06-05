@@ -9,6 +9,8 @@ const FIREBASE_FALLBACK_WARNING = "Session was saved on this device.";
 const LOCAL_READ_WARNING = "Session was loaded from this device.";
 const FIREBASE_READ_FALLBACK_WARNING = "Session was loaded from this device.";
 const SCHEMA_VERSION = "chapter4-rq1-rq3-v1";
+const UI_VERSION = "2.0";
+const UI_CHANGELOG = "Enhanced visual hierarchy, mobile layout, task guidance";
 
 export async function createSession({
   participantId,
@@ -35,6 +37,8 @@ export async function createSession({
     participantProfile: normalizeParticipantProfile(participantProfile),
     eligibility: normalizeEligibility(eligibility),
     schemaVersion: SCHEMA_VERSION,
+    uiVersion: UI_VERSION,
+    uiChangelog: UI_CHANGELOG,
     consentConfirmed: true,
     status: "created",
     startedAt: new Date().toISOString(),

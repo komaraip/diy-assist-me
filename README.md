@@ -2,6 +2,118 @@
 
 Research prototype for "Mitigating Situational Impairments in DIY Instructional Tasks: An Empirical Evaluation of Web-Native Voice-Driven Navigation." It compares conventional touch navigation with a constrained set of English voice commands in structured DIY tutorial tasks. The app is a Vite React JavaScript application with Firebase Firestore support and localStorage fallback.
 
+## UI Version
+
+**Current Version**: 2.0
+**Schema Version**: chapter4-rq1-rq3-v1
+**Last Updated**: 2026-06-05
+
+### Version History
+
+#### Version 2.0 (Current - Production)
+**Released**: 2026-06-05
+**Status**: ✅ Production Ready
+
+**UI Enhancements**:
+- Enhanced visual hierarchy with compact headers
+- Improved timer visibility (blue accent styling for better time awareness)
+- Structured task script display with numbered instructions
+- Two-column required actions checklist for better scanning (when >4 actions)
+- Side-by-side desktop layout (1/3 instructions, 2/3 tutorial)
+- Centered modal popovers for better mobile UX
+- Responsive grid system with mobile-first design
+
+**Data Collection**:
+- ✅ All data collection mechanisms preserved from v1.0
+- ✅ No database schema changes
+- ✅ Full backward compatibility with existing data
+- ✅ 25+ fields captured per interaction
+- ✅ Complete task trial lifecycle tracking
+- ✅ SUS scoring with 10-item instrument
+- ✅ Voice metrics: recognition accuracy, command success, recovery effort
+
+**Research Validity**:
+- All participants in final study use same UI version (v2.0)
+- UI changes documented in research methodology
+- Measurement instruments unchanged
+- Within-subject design preserved
+- AB/BA counterbalancing maintained
+
+#### Version 1.0 (Original)
+**Released**: 2025
+**Status**: ⚠️ Deprecated
+
+**Original Features**:
+- Basic layout with top/bottom positioning
+- Standard timer display
+- Single-column required actions
+- Full-width tutorial layout
+- Basic mobile responsiveness
+
+**Migration Notes**:
+- No data migration required
+- All v1.0 data compatible with v2.0
+- UI version tracking recommended for analysis
+
+### UI Version Tracking
+
+For research integrity, all sessions should be tagged with UI version:
+
+```javascript
+// Automatically added to session metadata
+{
+  uiVersion: "2.0",
+  uiChangelog: "Enhanced visual hierarchy and mobile layout"
+}
+```
+
+### Data Collection Fields
+
+**Core Collections** (unchanged across versions):
+- `sessions` - Participant session data
+- `taskTrials` - Task performance metrics
+- `interactionLogs` - Granular interaction tracking (25+ fields)
+- `susResponses` - System Usability Scale scores
+- `observerNotes` - Qualitative observations
+- `debriefResponses` - Post-session feedback
+
+**Key Metrics Captured**:
+- Task completion time (millisecond precision)
+- Task success (successful/partially_successful/unsuccessful)
+- SUS scores (0-100 scale)
+- Voice recognition accuracy (per command)
+- Command success rate (per interaction)
+- Recovery effort (repeated/rephrased commands, fallback usage)
+- Required actions completion (checklist tracking)
+- Timestamp sequences (for duration validation)
+
+### Troubleshooting
+
+**Common Issues**:
+
+1. **Timer not updating**: Check browser console for JavaScript errors
+2. **Required actions not tracking**: Verify interaction logs are being created
+3. **Modal not appearing**: Check z-index conflicts in custom CSS
+4. **Mobile layout broken**: Verify viewport meta tag is present
+5. **Data not saving**: Check Firebase connection and localStorage fallback
+
+**Debug Mode**:
+```javascript
+// Enable debug logging in browser console
+localStorage.setItem('DEBUG_MODE', 'true');
+```
+
+**Validation**:
+```bash
+# Validate current data integrity
+node src/scripts/validateData.js
+
+# Export validation report
+node src/scripts/validateData.js --export validation-report.json
+```
+
+See [`docs/QUICK_START.md`](docs/QUICK_START.md) for quick reference guide.
+
 ## Setup
 
 ```bash
