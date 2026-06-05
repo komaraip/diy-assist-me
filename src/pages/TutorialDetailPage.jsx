@@ -131,6 +131,36 @@ export function TutorialDetailPage({
     };
   }, [studyContext?.taskTrialId, studyContext?.startedAt, activeStepIndex, logTutorialTouch]);
 
+  useEffect(() => {
+    if (!studyContext?.taskTrialId || !task || !taskTrial || taskTrial.endedAt) return undefined;
+    if (task.modality !== "touch") return undefined;
+
+    const currentStepNumber = activeStepIndex + 1;
+    if (currentStepNumber < task.targetStep) return undefined;
+
+    const checkScrollabilityAndLog = () => {
+      const isWindowScrollable = typeof window !== "undefined" && 
+        document.documentElement.scrollHeight > window.innerHeight + 10;
+      
+      const shellElement = tutorialShellRef.current;
+      const isShellScrollable = shellElement && 
+        shellElement.scrollHeight > shellElement.clientHeight + 10;
+
+      if (!isWindowScrollable && !isShellScrollable) {
+        logTutorialTouch("scroll_down", {
+          metadata: {
+            autoScrollSatisfied: true,
+            scrollTarget: "auto_non_scrollable",
+            reason: "viewport_not_scrollable"
+          }
+        });
+      }
+    };
+
+    const timer = setTimeout(checkScrollabilityAndLog, 600);
+    return () => clearTimeout(timer);
+  }, [activeStepIndex, studyContext?.taskTrialId, task, taskTrial, logTutorialTouch]);
+
   const steps = tutorial?.steps || [];
   const currentStep = steps[activeStepIndex] || null;
   const isFirstStep = activeStepIndex === 0;
@@ -946,7 +976,7 @@ export function TutorialDetailPage({
                         <TutorialIconButton
                           label={copy.materialsTitle || "Materials"}
                           title={copy.materialsTitle || "Materials"}
-                          onClick={() => setActiveMobilePanel("materials")}
+                          onClick={() => handleOpenMaterialsPanel("mobileMaterials")}
                           isActive={activeMobilePanel === "materials" && !!taskTrial && !taskTrial.endedAt}
                           disabled={!taskTrial || !!taskTrial.endedAt}
                         >
