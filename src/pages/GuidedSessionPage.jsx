@@ -97,7 +97,7 @@ export function GuidedSessionPage() {
   }
 
   return (
-    <section className="page-section" style={{ display: "flex", flexDirection: "column", minHeight: "calc(100vh - 225px)", justifyContent: "space-between", paddingTop: "1.5rem", paddingBottom: "1rem" }}>
+    <section className="page-section" style={{ display: "flex", flexDirection: "column", paddingTop: "1.5rem", paddingBottom: "1rem" }}>
       <div>
         <Link className="inline-link" to="/guided-session" style={{ marginBottom: "0.5rem", display: "inline-flex", alignItems: "center" }}>
           <ArrowLeft aria-hidden="true" size={16} />
