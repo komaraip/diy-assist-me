@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "validate": "node src/scripts/validateDataNode.js",
-    "validate:export": "node src/scripts/validateDataNode.js --export=validation-report.json"
+    "validate": "node src/scripts/validateResearchExports.js"
   },
   "dependencies": {
     "firebase": "^11.10.0",
