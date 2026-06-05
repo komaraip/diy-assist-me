@@ -1,7 +1,8 @@
-import { ArrowLeft, ClipboardList } from "lucide-react";
+import { ArrowLeft, ClipboardList, ChevronLeft, ChevronRight, RotateCcw, Mic, MicOff, HelpCircle, CheckCircle2, Clock, Package } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { StepCard } from "../components/tutorial/StepCard.jsx";
+import { TaskTrialControls } from "../components/guided-session/TaskTrialControls.jsx";
 import { StepOverview } from "../components/tutorial/StepOverview.jsx";
 import { TutorialBottomBar } from "../components/tutorial/TutorialBottomBar.jsx";
 import { TutorialSearch } from "../components/tutorial/TutorialSearch.jsx";
@@ -13,6 +14,9 @@ import { getElapsedMsFromStartedAt } from "../utils/studyContext.js";
 import { VOICE_INTENTS, VOICE_STATES } from "../utils/voiceIntents.js";
 import { getSpeechRecognitionLocale, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
 import { TutorialPopover } from "../components/tutorial/TutorialPopover.jsx";
+import { MaterialsPanel } from "../components/tutorial/MaterialsPanel.jsx";
+import { VoiceControlPanel } from "../components/tutorial/VoiceControlPanel.jsx";
+import { TutorialIconButton } from "../components/tutorial/TutorialIconButton.jsx";
 
 const SCROLL_AMOUNT_RATIO = 0.6;
 const PAGE_AMOUNT_RATIO = 0.9;
@@ -26,6 +30,14 @@ export function TutorialDetailPage({
   backLabel = "Back to tutorials",
   embedded = false,
   language = "en",
+  task = null,
+  taskTrial = null,
+  isStarting = false,
+  isCompleting = false,
+  onStart = null,
+  onComplete = null,
+  requiredActionStatus = null,
+  taskScript = [],
 }) {
   const { tutorialId: routeTutorialId } = useParams();
   const tutorialId = tutorialIdOverride || routeTutorialId;
@@ -379,7 +391,7 @@ export function TutorialDetailPage({
   }
 
   function openMobilePanelIfCompact(panel) {
-    if (isCompactTutorialViewport()) {
+    if (embedded || isCompactTutorialViewport()) {
       setActivePanelTrigger(null);
       setActiveMobilePanel(panel);
     }
@@ -666,7 +678,7 @@ export function TutorialDetailPage({
     taskId: studyContext?.taskId || null,
     trialType: studyContext?.trialType || null,
     taskStartedAt: studyContext?.startedAt || null,
-    enabled: voiceControlsEnabled,
+    enabled: voiceControlsEnabled && !!taskTrial && !taskTrial.endedAt,
     language: normalizedLanguage,
     getStepIndex: () => activeStepIndex,
     onCommand: executeVoiceCommand,
@@ -690,6 +702,7 @@ export function TutorialDetailPage({
     voiceCommands.voiceState === VOICE_STATES.LISTENING ||
     voiceCommands.voiceState === VOICE_STATES.PROCESSING;
   const isVoiceListening = voiceCommands.voiceState === VOICE_STATES.LISTENING;
+  const shouldShowVoiceTranscript = voiceControlsEnabled && !!voiceCommands.transcript;
   const commandPopoverId = "tutorial-command-popover";
   const materialsPopoverId = "tutorial-materials-popover";
   const commandTriggerRef =
@@ -709,6 +722,22 @@ export function TutorialDetailPage({
       voiceCommands.startListening();
     }
   }
+
+  const voiceButtonLabel = !voiceCommands.browserSupported
+    ? copy.voiceUnavailable
+    : isVoiceOn
+      ? copy.voiceButtonOn
+      : copy.voiceButtonOff;
+
+  const commandButtonLabel = voiceControlsEnabled ? copy.commandButton : copy.commandUnavailable;
+
+  const commandExamples = (() => {
+    const commandHints = voiceCommands.commandHints || [];
+    const voiceCopy = pageCopy.voice;
+    const preferred = voiceCopy.preferredHints || [];
+    const available = preferred.filter((hint) => commandHints.includes(hint));
+    return available.length ? available : preferred;
+  })();
 
   return (
     <section className={embedded ? "study-tutorial-embed" : "page-section tutorial-page-section"}>
@@ -734,111 +763,440 @@ export function TutorialDetailPage({
 
         {tutorial && currentStep ? (
           <>
-            <div className="tutorial-task-layout">
-              <section
-                className="tutorial-main-column tutorial-content-card"
-                aria-label={copy.currentStepLabel}
-                ref={tutorialMainRef}
-                onScroll={handleTutorialScroll}
-              >
-                <div className="tutorial-runner-header">
-                  <div className="tutorial-header-topline">
-                    <p className="eyebrow">{copy.sectionLabel}</p>
+            {embedded ? (
+              taskTrial?.endedAt ? (
+                <section
+                  className="tutorial-content-card"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "4rem 2rem",
+                    border: "1px dashed var(--border)",
+                    background: "var(--surface-soft)",
+                    textAlign: "center",
+                    minHeight: "240px",
+                    gap: "1rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      background: "rgba(111, 144, 125, 0.12)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--primary-dark)",
+                    }}
+                  >
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: "700", margin: 0, color: "var(--foreground)" }}>
+                    Task Completed
+                  </h3>
+                  <p style={{ fontSize: "0.88rem", color: "var(--muted)", maxWidth: "300px", margin: 0, lineHeight: 1.45 }}>
+                    You have successfully completed this task.
+                  </p>
+                </section>
+              ) : (
+                <div className="tutorial-embedded-cards" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                  {/* Card 1: Header/Meta */}
+                  <section className="tutorial-content-card" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
+                      <h2 style={{ fontSize: "1.25rem", fontWeight: "800", margin: 0, color: "var(--foreground)", flex: "1 1 auto" }}>
+                        {tutorial.title}
+                      </h2>
+                      <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
+                        <span className="status-badge" style={{ textTransform: "capitalize", background: "rgba(111, 144, 125, 0.12)", color: "var(--primary-dark)", borderColor: "rgba(111, 144, 125, 0.3)", margin: 0 }}>
+                          {tutorial.category}
+                        </span>
+                        {tutorial.estimatedMinutes ? (
+                          <span className="status-badge" style={{ margin: 0 }}>
+                            <Clock size={12} style={{ marginRight: "0.25rem" }} />
+                            {tutorial.estimatedMinutes} {pageCopy.shared.minutesSuffix}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "0.25rem" }}>
+                      <div>
+                        <span className="status-badge" style={{ display: "inline-block" }}>
+                          {copy.stepProgress(activeStepIndex + 1, steps.length)}
+                        </span>
+                      </div>
+                      {/* Step Progress/Loading Bar UI */}
+                      <div
+                        className="progress-shell"
+                        aria-label={copy.stepProgress(activeStepIndex + 1, steps.length)}
+                        role="progressbar"
+                        aria-valuemin={1}
+                        aria-valuemax={steps.length}
+                        aria-valuenow={activeStepIndex + 1}
+                        style={{ height: "6px", background: "var(--border)", borderRadius: "3px", overflow: "hidden", display: "block" }}
+                      >
+                        <span style={{ width: `${progressValue}%`, display: "block", height: "100%", background: "var(--primary-dark)", borderRadius: "3px", transition: "width 0.25s ease-out" }} />
+                      </div>
+                    </div>
+                  </section>
 
-                    <div className="tutorial-meta-row">
-                      <span>{tutorial.category}</span>
-                      {tutorial.estimatedMinutes ? <span>{tutorial.estimatedMinutes} {pageCopy.shared.minutesSuffix}</span> : null}
-                      <span>{pageCopy.shared.stepsSuffix(steps.length)}</span>
+                  {/* Single Row: Tools Buttons + Start/Finish Controls */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {/* Tools toolbar buttons */}
+                      <div style={{ display: "flex", flexDirection: "row", gap: "0.5rem", alignItems: "center", flexWrap: "wrap", flex: "0 0 auto" }}>
+                        <TutorialIconButton
+                          label={copy.previousStep}
+                          title={copy.previousStep}
+                          onClick={handlePrevious}
+                          disabled={isFirstStep || !taskTrial || !!taskTrial.endedAt}
+                        >
+                          <ChevronLeft size={18} aria-hidden="true" />
+                        </TutorialIconButton>
+
+                        <TutorialIconButton
+                          label={copy.repeatInstruction}
+                          title={copy.repeatInstruction}
+                          onClick={handleRepeat}
+                          disabled={!taskTrial || !!taskTrial.endedAt}
+                        >
+                          <RotateCcw size={18} aria-hidden="true" />
+                        </TutorialIconButton>
+
+                        <TutorialIconButton
+                          label={isLastStep ? copy.finishTutorial : copy.nextStep}
+                          title={isLastStep ? copy.finishTutorial : copy.nextStep}
+                          onClick={isLastStep ? handleComplete : handleNext}
+                          disabled={(isLastStep ? isCompleted : false) || !taskTrial || !!taskTrial.endedAt}
+                        >
+                          {isLastStep ? <CheckCircle2 size={18} aria-hidden="true" /> : <ChevronRight size={18} aria-hidden="true" />}
+                        </TutorialIconButton>
+
+                        {voiceControlsEnabled && (
+                          <TutorialIconButton
+                            label={voiceButtonLabel}
+                            title={voiceButtonLabel}
+                            onClick={handleToggleVoice}
+                            disabled={!voiceCommands.browserSupported || !taskTrial || !!taskTrial.endedAt}
+                            aria-pressed={voiceCommands.browserSupported ? isVoiceOn : undefined}
+                            isActive={isVoiceOn && !!taskTrial && !taskTrial.endedAt}
+                            variant="primary"
+                            className={isVoiceListening && !!taskTrial && !taskTrial.endedAt ? "is-listening" : ""}
+                          >
+                            {isVoiceOn && voiceCommands.browserSupported ? <Mic size={18} aria-hidden="true" /> : <MicOff size={18} aria-hidden="true" />}
+                          </TutorialIconButton>
+                        )}
+
+                        {voiceControlsEnabled && (
+                          <TutorialIconButton
+                            label={commandButtonLabel}
+                            title={commandButtonLabel}
+                            onClick={() => setActiveMobilePanel("commands")}
+                            isActive={activeMobilePanel === "commands" && !!taskTrial && !taskTrial.endedAt}
+                            disabled={!taskTrial || !!taskTrial.endedAt}
+                          >
+                            <HelpCircle size={18} aria-hidden="true" />
+                          </TutorialIconButton>
+                        )}
+
+                        <TutorialIconButton
+                          label={copy.overview?.heading || "Overview"}
+                          title={copy.overview?.heading || "Overview"}
+                          onClick={() => setActiveMobilePanel("overview")}
+                          isActive={activeMobilePanel === "overview" && !!taskTrial && !taskTrial.endedAt}
+                          disabled={!taskTrial || !!taskTrial.endedAt}
+                        >
+                          <ClipboardList size={18} aria-hidden="true" />
+                        </TutorialIconButton>
+
+                        <TutorialIconButton
+                          label={copy.search?.heading || "Search"}
+                          title={copy.search?.heading || "Search"}
+                          onClick={() => setActiveMobilePanel("search")}
+                          isActive={activeMobilePanel === "search" && !!taskTrial && !taskTrial.endedAt}
+                          disabled={!taskTrial || !!taskTrial.endedAt}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
+                          </svg>
+                        </TutorialIconButton>
+
+                        <TutorialIconButton
+                          label={copy.materialsTitle || "Materials"}
+                          title={copy.materialsTitle || "Materials"}
+                          onClick={() => setActiveMobilePanel("materials")}
+                          isActive={activeMobilePanel === "materials" && !!taskTrial && !taskTrial.endedAt}
+                          disabled={!taskTrial || !!taskTrial.endedAt}
+                        >
+                          <Package size={18} aria-hidden="true" />
+                        </TutorialIconButton>
+                      </div>
+
+                      {/* Voice Transcript Display */}
+                      {voiceControlsEnabled && shouldShowVoiceTranscript ? (
+                        <div style={{ flex: "1 1 240px", minWidth: "220px" }}>
+                          <VoiceControlPanel
+                            voiceState={voiceCommands.voiceState}
+                            isVoiceEnabled={voiceCommands.isVoiceEnabled}
+                            isRestarting={voiceCommands.isRestarting}
+                            browserSupported={voiceCommands.browserSupported}
+                            transcript={voiceCommands.transcript}
+                            errorMessage={voiceCommands.errorMessage}
+                            voiceFeedback={voiceCommands.voiceFeedback}
+                            copy={pageCopy.voice}
+                            showLiveMessage={false}
+                            showWarning={false}
+                          />
+                        </div>
+                      ) : null}
+
+                    </div>
+
+                    {voiceControlsEnabled ? (
+                      <div>
+                        <VoiceControlPanel
+                          voiceState={voiceCommands.voiceState}
+                          isVoiceEnabled={voiceCommands.isVoiceEnabled}
+                          isRestarting={voiceCommands.isRestarting}
+                          browserSupported={voiceCommands.browserSupported}
+                          transcript={voiceCommands.transcript}
+                          errorMessage={voiceCommands.errorMessage}
+                          voiceFeedback={voiceCommands.voiceFeedback}
+                          copy={pageCopy.voice}
+                          showTranscript={false}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Card 3: Step Content */}
+                  <section
+                    className="tutorial-content-card"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: !taskTrial ? "center" : "stretch",
+                      justifyContent: !taskTrial ? "center" : "stretch",
+                      padding: !taskTrial ? "3rem 2rem" : "1.25rem",
+                      border: !taskTrial ? "1px dashed var(--border)" : "1px solid var(--border)",
+                      background: !taskTrial ? "var(--surface-soft)" : "rgba(255, 255, 255, 0.94)",
+                      textAlign: !taskTrial ? "center" : "left",
+                      minHeight: !taskTrial ? "240px" : "auto",
+                      gap: "1rem",
+                    }}
+                  >
+                    {!taskTrial ? (
+                      <>
+                        <div
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            borderRadius: "50%",
+                            background: "rgba(111, 144, 125, 0.12)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "var(--primary-dark)",
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <polygon points="10 8 16 12 10 16 10 8" />
+                          </svg>
+                        </div>
+                        <h3 style={{ fontSize: "1.1rem", fontWeight: "700", margin: 0, color: "var(--foreground)" }}>
+                          Tutorial Locked
+                        </h3>
+                        <p style={{ fontSize: "0.88rem", color: "var(--muted)", maxWidth: "300px", margin: 0, lineHeight: 1.45 }}>
+                          Click the "Start Task" button on the right of the tools card to unlock and start the tutorial steps.
+                        </p>
+                      </>
+                    ) : (
+                      <StepCard step={currentStep} isCurrent instructionLabel={copy.instructionTitle} />
+                    )}
+                  </section>
+                </div>
+              )
+            ) : (
+              <div className="tutorial-task-layout">
+                <section
+                  className="tutorial-main-column tutorial-content-card"
+                  aria-label={copy.currentStepLabel}
+                  ref={tutorialMainRef}
+                  onScroll={handleTutorialScroll}
+                >
+                  <div className="tutorial-runner-header">
+                    <div className="tutorial-header-topline">
+                      <p className="eyebrow">{copy.sectionLabel}</p>
+
+                      <div className="tutorial-meta-row">
+                        <span>{tutorial.category}</span>
+                        {tutorial.estimatedMinutes ? <span>{tutorial.estimatedMinutes} {pageCopy.shared.minutesSuffix}</span> : null}
+                        <span>{pageCopy.shared.stepsSuffix(steps.length)}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <TutorialHeading>{tutorial.title}</TutorialHeading>
                     </div>
                   </div>
 
-                  <div>
-                    <TutorialHeading>{tutorial.title}</TutorialHeading>
-                  </div>
-                </div>
-
-                <div className="tutorial-progress-block">
-                  <span className="tutorial-progress-label">
-                    {copy.stepProgress(activeStepIndex + 1, steps.length)}
-                  </span>
-                  <div
-                    className="progress-shell"
-                    aria-label={copy.stepProgress(activeStepIndex + 1, steps.length)}
-                    role="progressbar"
-                    aria-valuemin={1}
-                    aria-valuemax={steps.length}
-                    aria-valuenow={activeStepIndex + 1}
-                  >
-                    <span style={{ width: `${progressValue}%` }} />
-                  </div>
-                </div>
-
-                <div className="tutorial-mobile-tools-bar">
-                  <button
-                    type="button"
-                    className="button secondary-action"
-                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.45rem", fontSize: "0.88rem", padding: "0.55rem 0.75rem", borderRadius: "8px" }}
-                    onClick={() => setActiveMobilePanel("overview")}
-                  >
-                    <ClipboardList size={16} aria-hidden="true" />
-                    {copy.overview?.heading || "Overview"}
-                  </button>
-                  <button
-                    type="button"
-                    className="button secondary-action"
-                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.45rem", fontSize: "0.88rem", padding: "0.55rem 0.75rem", borderRadius: "8px" }}
-                    onClick={() => setActiveMobilePanel("search")}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
+                  <div className="tutorial-progress-block">
+                    <span className="tutorial-progress-label">
+                      {copy.stepProgress(activeStepIndex + 1, steps.length)}
+                    </span>
+                    <div
+                      className="progress-shell"
+                      aria-label={copy.stepProgress(activeStepIndex + 1, steps.length)}
+                      role="progressbar"
+                      aria-valuemin={1}
+                      aria-valuemax={steps.length}
+                      aria-valuenow={activeStepIndex + 1}
                     >
-                      <circle cx="11" cy="11" r="8" />
-                      <path d="m21 21-4.3-4.3" />
-                    </svg>
-                    Search
-                  </button>
-                </div>
+                      <span style={{ width: `${progressValue}%` }} />
+                    </div>
+                  </div>
 
-                <StepCard step={currentStep} isCurrent instructionLabel={copy.instructionTitle} />
-              </section>
+                  <div className="tutorial-mobile-tools-bar">
+                    <button
+                      type="button"
+                      className="button secondary-action"
+                      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.45rem", fontSize: "0.88rem", padding: "0.55rem 0.75rem", borderRadius: "8px" }}
+                      onClick={() => setActiveMobilePanel("overview")}
+                    >
+                      <ClipboardList size={16} aria-hidden="true" />
+                      {copy.overview?.heading || "Overview"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button secondary-action"
+                      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.45rem", fontSize: "0.88rem", padding: "0.55rem 0.75rem", borderRadius: "8px" }}
+                      onClick={() => setActiveMobilePanel("search")}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                      </svg>
+                      Search
+                    </button>
+                  </div>
 
-              <TutorialToolsSheet
+                  <StepCard step={currentStep} isCurrent instructionLabel={copy.instructionTitle} />
+                </section>
+
+                <TutorialToolsSheet
+                  copy={copy}
+                  sharedCopy={pageCopy.shared}
+                  voiceCopy={pageCopy.voice}
+                  commandPopoverId={commandPopoverId}
+                  materialsPopoverId={materialsPopoverId}
+                  activeMobilePanel={activeMobilePanel}
+                  onCloseMobilePanel={handleCloseMobilePanel}
+                  commandTriggerRef={commandTriggerRef}
+                  materialsTriggerRef={materialsTriggerRef}
+                  desktopCommandTriggerRef={desktopCommandsButtonRef}
+                  voiceControlsEnabled={voiceControlsEnabled}
+                  voicePanelProps={{
+                    voiceState: voiceCommands.voiceState,
+                    isVoiceEnabled: voiceCommands.isVoiceEnabled,
+                    isRestarting: voiceCommands.isRestarting,
+                    browserSupported: voiceCommands.browserSupported,
+                    transcript: voiceCommands.transcript,
+                    errorMessage: voiceCommands.errorMessage,
+                    voiceFeedback: voiceCommands.voiceFeedback,
+                  }}
+                  isVoiceOn={isVoiceOn}
+                  onToggleVoice={handleToggleVoice}
+                  onOpenCommandsPanel={handleOpenCommandsPanel}
+                  commandHints={voiceCommands.commandHints}
+                  materials={tutorial.materials || []}
+                  isMaterialsOpen={isMaterialsOpen}
+                  onToggleMaterials={handleToggleMaterials}
+                  isFirstStep={isFirstStep}
+                  isLastStep={isLastStep}
+                  isCompleted={isCompleted}
+                  onPrevious={handlePrevious}
+                  onRepeat={handleRepeat}
+                  onNext={handleNext}
+                  onComplete={handleComplete}
+                >
+                  <section className="tutorial-tool-card tutorial-overview-card" aria-labelledby="tutorial-overview-heading">
+                    <StepOverview
+                      headingId="tutorial-overview-heading"
+                      steps={steps}
+                      activeStepIndex={activeStepIndex}
+                      onJumpToStep={handleOverviewJump}
+                      isOpen={isOverviewOpen}
+                      onToggle={handleToggleOverview}
+                      copy={copy}
+                    />
+                  </section>
+
+                  <section className="tutorial-tool-card tutorial-search-card">
+                    <TutorialSearch
+                      query={tutorialSearchQuery}
+                      onQueryChange={handleTutorialSearchChange}
+                      results={searchResults}
+                      onJumpToStep={handleSearchJump}
+                      copy={copy}
+                    />
+                  </section>
+                </TutorialToolsSheet>
+              </div>
+            )}
+
+            {!embedded && (
+              <TutorialBottomBar
                 copy={copy}
-                sharedCopy={pageCopy.shared}
-                voiceCopy={pageCopy.voice}
-                commandPopoverId={commandPopoverId}
-                materialsPopoverId={materialsPopoverId}
-                activeMobilePanel={activeMobilePanel}
-                onCloseMobilePanel={handleCloseMobilePanel}
-                commandTriggerRef={commandTriggerRef}
-                materialsTriggerRef={materialsTriggerRef}
-                desktopCommandTriggerRef={desktopCommandsButtonRef}
-                voiceControlsEnabled={voiceControlsEnabled}
-                voicePanelProps={{
-                  voiceState: voiceCommands.voiceState,
-                  isVoiceEnabled: voiceCommands.isVoiceEnabled,
-                  isRestarting: voiceCommands.isRestarting,
-                  browserSupported: voiceCommands.browserSupported,
-                  transcript: voiceCommands.transcript,
-                  errorMessage: voiceCommands.errorMessage,
-                  voiceFeedback: voiceCommands.voiceFeedback,
-                }}
+                showVoiceControl={voiceControlsEnabled}
                 isVoiceOn={isVoiceOn}
+                browserSupported={voiceCommands.browserSupported}
                 onToggleVoice={handleToggleVoice}
-                onOpenCommandsPanel={handleOpenCommandsPanel}
-                commandHints={voiceCommands.commandHints}
-                materials={tutorial.materials || []}
-                isMaterialsOpen={isMaterialsOpen}
-                onToggleMaterials={handleToggleMaterials}
+                isListening={isVoiceListening}
                 isFirstStep={isFirstStep}
                 isLastStep={isLastStep}
                 isCompleted={isCompleted}
@@ -846,54 +1204,42 @@ export function TutorialDetailPage({
                 onRepeat={handleRepeat}
                 onNext={handleNext}
                 onComplete={handleComplete}
-              >
-                <section className="tutorial-tool-card tutorial-overview-card" aria-labelledby="tutorial-overview-heading">
-                  <StepOverview
-                    headingId="tutorial-overview-heading"
-                    steps={steps}
-                    activeStepIndex={activeStepIndex}
-                    onJumpToStep={handleOverviewJump}
-                    isOpen={isOverviewOpen}
-                    onToggle={handleToggleOverview}
-                    copy={copy}
-                  />
-                </section>
+                onOpenCommands={() => handleOpenCommandsPanel("mobileCommands")}
+                onOpenMaterials={() => handleOpenMaterialsPanel("mobileMaterials")}
+                isCommandsOpen={activeMobilePanel === "commands"}
+                isMaterialsOpen={activeMobilePanel === "materials"}
+                commandsPanelId={commandPopoverId}
+                materialsPanelId={materialsPopoverId}
+                commandsButtonRef={commandsButtonRef}
+                materialsButtonRef={materialsButtonRef}
+              />
+            )}
 
-                <section className="tutorial-tool-card tutorial-search-card">
-                  <TutorialSearch
-                    query={tutorialSearchQuery}
-                    onQueryChange={handleTutorialSearchChange}
-                    results={searchResults}
-                    onJumpToStep={handleSearchJump}
-                    copy={copy}
-                  />
-                </section>
-              </TutorialToolsSheet>
-            </div>
+            <TutorialPopover
+              id={commandPopoverId}
+              title={copy.voiceCommandsTitle}
+              isOpen={activeMobilePanel === "commands"}
+              onClose={handleCloseMobilePanel}
+              triggerRef={null}
+              closeLabel={copy.closePanel(copy.voiceCommandsTitle)}
+            >
+              <ul className="tutorial-command-list">
+                {commandExamples.map((hint) => (
+                  <li key={hint}>{hint}</li>
+                ))}
+              </ul>
+            </TutorialPopover>
 
-            <TutorialBottomBar
-              copy={copy}
-              showVoiceControl={voiceControlsEnabled}
-              isVoiceOn={isVoiceOn}
-              browserSupported={voiceCommands.browserSupported}
-              onToggleVoice={handleToggleVoice}
-              isListening={isVoiceListening}
-              isFirstStep={isFirstStep}
-              isLastStep={isLastStep}
-              isCompleted={isCompleted}
-              onPrevious={handlePrevious}
-              onRepeat={handleRepeat}
-              onNext={handleNext}
-              onComplete={handleComplete}
-              onOpenCommands={() => handleOpenCommandsPanel("mobileCommands")}
-              onOpenMaterials={() => handleOpenMaterialsPanel("mobileMaterials")}
-              isCommandsOpen={activeMobilePanel === "commands"}
-              isMaterialsOpen={activeMobilePanel === "materials"}
-              commandsPanelId={commandPopoverId}
-              materialsPanelId={materialsPopoverId}
-              commandsButtonRef={commandsButtonRef}
-              materialsButtonRef={materialsButtonRef}
-            />
+            <TutorialPopover
+              id={materialsPopoverId}
+              title={copy.materialsTitle}
+              isOpen={activeMobilePanel === "materials"}
+              onClose={handleCloseMobilePanel}
+              triggerRef={null}
+              closeLabel={copy.closePanel(copy.materialsTitle)}
+            >
+              <MaterialsPanel materials={tutorial.materials || []} variant="content" panelId="mobile-materials-panel" copy={copy} />
+            </TutorialPopover>
 
             <TutorialPopover
               id="mobile-overview-popover"

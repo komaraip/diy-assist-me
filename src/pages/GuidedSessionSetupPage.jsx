@@ -144,8 +144,8 @@ export function GuidedSessionSetupPage() {
   }
 
   return (
-    <section className="page-section study-setup-page">
-      <div className="page-header">
+    <section className="page-section study-setup-page" style={{ paddingTop: "4rem", paddingBottom: "1rem" }}>
+      <div className="page-header support-page-header">
         <h1>{copy.setupPage.title}</h1>
         <p>{copy.setupPage.description}</p>
       </div>

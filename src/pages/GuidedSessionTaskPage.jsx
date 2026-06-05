@@ -193,16 +193,14 @@ export function GuidedSessionTaskPage() {
     );
   }
 
-  const canRenderTutorial = !!activeTrial && !activeTrial.endedAt;
-
   return (
-    <section className="page-section" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      <Link className="inline-link" to={`/guided-session/${session.id}`}>
-        <ArrowLeft aria-hidden="true" />
+    <section className="page-section" style={{ display: "flex", flexDirection: "column", gap: "1.25rem", paddingTop: "1.5rem", paddingBottom: "1rem" }}>
+      <Link className="inline-link" to={`/guided-session/${session.id}`} style={{ marginBottom: "0.5rem", display: "inline-flex", alignItems: "center" }}>
+        <ArrowLeft aria-hidden="true" size={16} />
         {copy.taskPage.back}
       </Link>
 
-      <div className="page-header compact-header" style={{ margin: 0 }}>
+      <div className="page-header compact-header" style={{ marginTop: "0.25rem", marginBottom: "0.25rem" }}>
         <h1>{task.trialType === "measured" ? copy.tasks.measuredLabel : copy.tasks.practiceLabel}</h1>
         <span className="session-code">
           {copy.shared.sessionCode}: {session.participantCode} | {formatModality(task.modality, language)}
@@ -211,76 +209,66 @@ export function GuidedSessionTaskPage() {
       </div>
 
 
-      <div className="three-column-grid" style={{ margin: 0 }}>
-        <section className="study-panel what-next-panel" style={{ margin: 0 }} aria-labelledby="what-next-heading">
-          <h2 id="what-next-heading">{copy.taskPage.whatNextTitle}</h2>
-          <ol className="plain-list">
-            {copy.taskPage.whatNextItems(getModeHelper(task.modality, copy)).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="study-panel" style={{ margin: 0 }} aria-labelledby="task-script-heading">
-          <h2 id="task-script-heading">{task.trialType === "measured" ? copy.taskPage.measuredScriptHeading : copy.taskPage.practiceScriptHeading}</h2>
-          <ol className="plain-list">
-            {(() => {
+      <div className="guided-task-grid" style={{ margin: 0 }}>
+        <div className="left-column">
+          {/* Combined Card: Task Guide */}
+          <TaskTrialControls
+            mode="display"
+            task={task}
+            taskTrial={activeTrial}
+            isStarting={isStarting}
+            isCompleting={isCompleting}
+            onStart={handleStartTrial}
+            onComplete={handleCompleteTrial}
+            requiredActionStatus={requiredActionStatus}
+            language={language}
+            taskScript={(() => {
               const isPractice = task.trialType === "practice";
               const isVoice = task.modality === "voice";
-              const script = isPractice
+              return isPractice
                 ? (isVoice ? copy.tasks.voicePracticeScript : copy.tasks.touchPracticeScript)
                 : (isVoice
                     ? copy.tasks.voiceMeasuredScript({ targetKeyword: task.targetKeyword, targetStep: task.targetStep })
                     : copy.tasks.touchMeasuredScript({ targetKeyword: task.targetKeyword, targetStep: task.targetStep })
                   );
-              return (script || []).map((scriptItem) => (
-                <li key={scriptItem}>{scriptItem}</li>
-              ));
             })()}
-          </ol>
-        </section>
-
-        <TaskTrialControls
-          position="top"
-          task={task}
-          taskTrial={activeTrial}
-          isStarting={isStarting}
-          isCompleting={isCompleting}
-          onStart={handleStartTrial}
-          onComplete={handleCompleteTrial}
-          requiredActionStatus={requiredActionStatus}
-          language={language}
-        />
-      </div>
-      {statusMessage ? <p className="status-note" role="status" style={{ margin: 0 }}>{statusMessage}</p> : null}
-
-      {canRenderTutorial ? (
-        <div className="tutorial-container" style={{ margin: 0 }}>
-          <TutorialDetailPage
-            tutorialIdOverride={task.tutorialId}
-            studyContext={studyContext}
-            allowedModality={task.modality}
             backLink={`/guided-session/${session.id}`}
-            backLabel={copy.taskPage.embeddedBackLabel}
-            language={language}
-            embedded
           />
-        </div>
-      ) : null}
 
-      {activeTrial ? (
-        <TaskTrialControls
-          position="bottom"
-          task={task}
-          taskTrial={activeTrial}
-          isStarting={isStarting}
-          isCompleting={isCompleting}
-          onStart={handleStartTrial}
-          onComplete={handleCompleteTrial}
-          requiredActionStatus={requiredActionStatus}
-          language={language}
-        />
-      ) : null}
+          {statusMessage ? <p className="status-note" role="status" style={{ margin: "0.5rem 0 0 0" }}>{statusMessage}</p> : null}
+        </div>
+
+        <div className="right-column">
+          <div className="tutorial-container" style={{ margin: 0 }}>
+            <TutorialDetailPage
+              tutorialIdOverride={task.tutorialId}
+              studyContext={studyContext}
+              allowedModality={task.modality}
+              backLink={`/guided-session/${session.id}`}
+              backLabel={copy.taskPage.embeddedBackLabel}
+              language={language}
+              embedded
+              task={task}
+              taskTrial={activeTrial}
+              isStarting={isStarting}
+              isCompleting={isCompleting}
+              onStart={handleStartTrial}
+              onComplete={handleCompleteTrial}
+              requiredActionStatus={requiredActionStatus}
+              taskScript={(() => {
+                const isPractice = task.trialType === "practice";
+                const isVoice = task.modality === "voice";
+                return isPractice
+                  ? (isVoice ? copy.tasks.voicePracticeScript : copy.tasks.touchPracticeScript)
+                  : (isVoice
+                      ? copy.tasks.voiceMeasuredScript({ targetKeyword: task.targetKeyword, targetStep: task.targetStep })
+                      : copy.tasks.touchMeasuredScript({ targetKeyword: task.targetKeyword, targetStep: task.targetStep })
+                    );
+              })()}
+            />
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

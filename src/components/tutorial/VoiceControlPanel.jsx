@@ -10,6 +10,9 @@ export function VoiceControlPanel({
   errorMessage,
   voiceFeedback,
   copy,
+  showTranscript = true,
+  showLiveMessage = true,
+  showWarning = true,
 }) {
   const liveMessage = getLiveMessage({
     browserSupported,
@@ -20,36 +23,44 @@ export function VoiceControlPanel({
     voiceFeedback,
     voiceState,
   });
-  const shouldShowLiveMessage = shouldRenderLiveMessage({
+  const shouldShowLiveMessage = showLiveMessage && shouldRenderLiveMessage({
     browserSupported,
     errorMessage,
     isRestarting,
     voiceFeedback,
     voiceState,
   });
+  const shouldShowWarning = showWarning && !browserSupported;
+  const shouldShowTranscript = showTranscript && transcript;
+
+  if (!shouldShowWarning && !shouldShowTranscript && !showLiveMessage) {
+    return null;
+  }
 
   return (
     <section className={`voice-panel ${voiceState}`} aria-label={copy.feedbackAria}>
-      {!browserSupported ? (
+      {shouldShowWarning ? (
         <div className="voice-warning" role="status">
           <AlertTriangle aria-hidden="true" />
           <p>{copy.unavailableBrowser}</p>
         </div>
       ) : null}
 
-      {transcript ? (
+      {shouldShowTranscript ? (
         <p className="voice-heard-line">
           <span>{copy.heard}</span> {transcript}
         </p>
       ) : null}
 
-      <div
-        className={shouldShowLiveMessage ? "voice-live-region" : "voice-live-region sr-only"}
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {liveMessage}
-      </div>
+      {showLiveMessage ? (
+        <div
+          className={shouldShowLiveMessage ? "voice-live-region" : "voice-live-region sr-only"}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {liveMessage}
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -85,12 +85,12 @@ export function DebriefPage() {
   }
 
   return (
-    <section className="page-section">
-      <Link className="inline-link" to={`/guided-session/${session.id}`}>
-        <ArrowLeft aria-hidden="true" />
+    <section className="page-section" style={{ paddingTop: "1.5rem", paddingBottom: "1rem" }}>
+      <Link className="inline-link" to={`/guided-session/${session.id}`} style={{ marginBottom: "0.5rem", display: "inline-flex", alignItems: "center" }}>
+        <ArrowLeft aria-hidden="true" size={16} />
         {copy.debriefPage.back}
       </Link>
-      <div className="page-header compact-header">
+      <div className="page-header compact-header" style={{ marginTop: "0.25rem", marginBottom: "1.25rem" }}>
         <h1>{copy.debriefPage.title}</h1>
         <span className="session-code">
           {copy.shared.sessionCode}: {session.participantCode}

@@ -8,6 +8,8 @@ export function RootLayout() {
     /^\/tutorials\/[^/]+\/?$/.test(location.pathname) ||
     /^\/guided-session\/[^/]+\/task\/[^/]+\/?$/.test(location.pathname);
 
+  const isGuidedSession = location.pathname.startsWith("/guided-session");
+
   return (
     <div className={isFocusedTutorialRunner ? "app-shell tutorial-runner-route" : "app-shell"}>
       <a className="skip-link" href="#main-content">
@@ -17,7 +19,7 @@ export function RootLayout() {
       <main id="main-content">
         <Outlet />
       </main>
-      <AppFooter />
+      {!isGuidedSession && <AppFooter />}
     </div>
   );
 }
