@@ -7,6 +7,7 @@ import { AnalysisInterpretation } from "../components/admin/AnalysisInterpretati
 import { AnalysisIssues } from "../components/admin/AnalysisIssues.jsx";
 import { EvidenceChecklist } from "../components/admin/EvidenceChecklist.jsx";
 import { ExportControls } from "../components/admin/ExportControls.jsx";
+import { FixFieldsPanel } from "../components/admin/FixFieldsPanel.jsx";
 import { InteractionLogViewer } from "../components/admin/InteractionLogViewer.jsx";
 import { MetricsSummary } from "../components/admin/MetricsSummary.jsx";
 import { PurgeButton } from "../components/admin/PurgeButton.jsx";
@@ -110,16 +111,20 @@ function DataDashboard({ activeTab }) {
       )}
       
       {activeTab === "analysis" && (
-        <div className="admin-thesis-overview-grid">
-          <div className="admin-thesis-overview-column">
-            <MetricsSummary adminData={exportEligibleAdminData} />
-            <AnalysisIssues adminData={exportEligibleAdminData} />
+        <>
+          <div className="admin-thesis-overview-grid">
+            <div className="admin-thesis-overview-column">
+              <MetricsSummary adminData={exportEligibleAdminData} />
+              <AnalysisIssues adminData={exportEligibleAdminData} />
+            </div>
+            <div className="admin-thesis-overview-column">
+              <EvidenceChecklist adminData={exportEligibleAdminData} />
+              <AnalysisInterpretation adminData={exportEligibleAdminData} />
+            </div>
           </div>
-          <div className="admin-thesis-overview-column">
-            <EvidenceChecklist adminData={exportEligibleAdminData} />
-            <AnalysisInterpretation adminData={exportEligibleAdminData} />
-          </div>
-        </div>
+          
+          <FixFieldsPanel />
+        </>
       )}
       
       {activeTab === "exports" && (
