@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 
 const INITIAL_FILTERS = {
   sessionId: "all",
-  participantId: "all",
+  participantCode: "all",
   conditionId: "all",
   taskId: "all",
   modality: "all",
@@ -70,11 +70,11 @@ export function InteractionLogViewer({ logs = [] }) {
       {showFilters && (
         <div id="log-filters-panel" className="compact-filters-container">
           <FilterSelect label="Session" value={filters.sessionId} values={uniqueValues(logs, "sessionId")} onChange={(value) => updateFilter("sessionId", value)} />
-          <FilterSelect label="Participant" value={filters.participantId} values={uniqueValues(logs, "participantId")} onChange={(value) => updateFilter("participantId", value)} />
-          <FilterSelect label="Condition" value={filters.conditionId} values={uniqueValues(logs, "conditionId")} onChange={(value) => updateFilter("conditionId", value)} />
-          <FilterSelect label="Task" value={filters.taskId} values={uniqueValues(logs, "taskId")} onChange={(value) => updateFilter("taskId", value)} />
+          <FilterSelect label="Participant" value={filters.participantCode} values={uniqueValues(logs, "participantCode")} onChange={(value) => updateFilter("participantCode", value)} />
+          <FilterSelect label="Condition" value={filters.conditionId} values={uniqueValues(logs, "conditionId")} onChange={(value) => updateFilter("conditionId", value)} formatDisplay={true} />
+          <FilterSelect label="Task" value={filters.taskId} values={uniqueValues(logs, "taskId")} onChange={(value) => updateFilter("taskId", value)} formatDisplay={true} />
           <FilterSelect label="Modality" value={filters.modality} values={uniqueValues(logs, "modality")} onChange={(value) => updateFilter("modality", value)} />
-          <FilterSelect label="Event type" value={filters.eventType} values={uniqueValues(logs, "eventType")} onChange={(value) => updateFilter("eventType", value)} />
+          <FilterSelect label="Event type" value={filters.eventType} values={uniqueValues(logs, "eventType")} onChange={(value) => updateFilter("eventType", value)} formatDisplay={true} />
           <div className="compact-filter-field">
             <span className="compact-filter-label">Command success:</span>
             <select 
@@ -101,7 +101,6 @@ export function InteractionLogViewer({ logs = [] }) {
               <th>Task</th>
               <th>Modality</th>
               <th>Event</th>
-              <th>Intent</th>
               <th>Success</th>
               <th>Transcript</th>
             </tr>
@@ -110,13 +109,12 @@ export function InteractionLogViewer({ logs = [] }) {
             {filteredLogs.slice(0, 100).map((log) => (
               <tr key={log.id || `${log.timestamp}-${log.eventType}`}>
                 <td>{formatDate(log.timestamp)}</td>
-                <td>{log.participantId || "-"}</td>
-                <td>{log.conditionId || "-"}</td>
-                <td>{log.taskId || "-"}</td>
+                <td>{log.participantCode || "-"}</td>
+                <td>{formatText(log.conditionId)}</td>
+                <td>{formatText(log.taskId)}</td>
                 <td>{log.modality || "-"}</td>
-                <td>{log.eventType || "-"}</td>
-                <td>{log.matchedIntent || "-"}</td>
-                <td>{formatCommandSuccess(log.commandSuccess)}</td>
+                <td>{formatText(log.eventType)}</td>
+                <td>{formatCommandSuccess(log.commandSuccess, log.modality)}</td>
                 <td>{log.rawTranscript || log.normalizedTranscript || "-"}</td>
               </tr>
             ))}
@@ -127,18 +125,20 @@ export function InteractionLogViewer({ logs = [] }) {
   );
 }
 
-function FilterSelect({ label, value, values, onChange }) {
+function FilterSelect({ label, value, values, onChange, formatDisplay = false }) {
   return (
     <div className="compact-filter-field">
       <span className="compact-filter-label">{label}:</span>
-      <select 
+      <select
         className="compact-filter-select"
-        value={value} 
+        value={value}
         onChange={(event) => onChange(event.target.value)}
       >
         <option value="all">All</option>
         {values.map((item) => (
-          <option key={item} value={item}>{item}</option>
+          <option key={item} value={item}>
+            {formatDisplay ? formatText(item) : item}
+          </option>
         ))}
       </select>
     </div>
@@ -147,7 +147,7 @@ function FilterSelect({ label, value, values, onChange }) {
 
 function filterLogs(logs, filters) {
   return logs.filter((log) => {
-    const matchesFields = ["sessionId", "participantId", "conditionId", "taskId", "modality", "eventType"].every((field) =>
+    const matchesFields = ["sessionId", "participantCode", "conditionId", "taskId", "modality", "eventType"].every((field) =>
       filters[field] === "all" || String(log[field] || "") === filters[field]
     );
 
@@ -162,10 +162,19 @@ function uniqueValues(logs, field) {
   return Array.from(new Set(logs.map((log) => log[field]).filter(Boolean))).sort();
 }
 
-function formatCommandSuccess(value) {
+function formatCommandSuccess(value, modality) {
+  // Touch interactions are always successful
+  if (modality === "touch") return "Yes";
+  
+  // Voice command success/failure
   if (value === true) return "Yes";
   if (value === false) return "No";
   return "-";
+}
+
+function formatText(value) {
+  if (!value) return "-";
+  return String(value).replace(/_/g, " ");
 }
 
 function formatDate(value) {

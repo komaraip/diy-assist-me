@@ -1,5 +1,5 @@
-import { BookOpenText, Database, Home, LogOut, TableProperties } from "lucide-react";
-import { useEffect } from "react";
+import { BookOpenText, ChevronLeft, ChevronRight, Database, Home, LogOut, Settings, TableProperties } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { logoutAdmin } from "../../services/adminAuthService.js";
 import { AdminGate } from "./AdminGate.jsx";
@@ -58,6 +58,7 @@ function AdminShell() {
   const { adminProfile } = useAdminAuth();
   const navigate = useNavigate();
   const adminName = adminProfile?.displayName || adminProfile?.username || "Admin";
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   async function handleLogout() {
     await logoutAdmin();
@@ -66,21 +67,36 @@ function AdminShell() {
 
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar" aria-label="Admin navigation">
-        <div className="admin-brand">
-          <span className="admin-brand-icon">
-            <img src="/logo-2.png" alt="DIY Assist" />
-          </span>
-          <div>
-            <strong>DIY Assist</strong>
-            <span>Admin Dashboard</span>
+      <aside className={`admin-sidebar ${sidebarExpanded ? 'expanded' : 'collapsed'}`} aria-label="Admin navigation">
+        <button
+          type="button"
+          className="admin-sidebar-toggle"
+          onClick={() => setSidebarExpanded(!sidebarExpanded)}
+          aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+          title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {sidebarExpanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+        </button>
+
+        {sidebarExpanded ? (
+          <>
+            <div className="admin-brand">
+              <span className="admin-brand-icon">
+                <img src="/logo-2.png" alt="DIY Assist" />
+              </span>
+              <div>
+                <strong>DIY Assist</strong>
+                <span>Admin Dashboard</span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="admin-brand-collapsed">
+            <span className="admin-brand-icon">
+              <img src="/logo-2.png" alt="DIY Assist" />
+            </span>
           </div>
-        </div>
-
-        <div className="admin-user-card" aria-label="Signed in admin">
-        <strong>{adminName}</strong>
-        </div>
-
+        )}
         <nav className="admin-nav" aria-label="Admin sections">
           {adminNavItems.map((item) => {
             const Icon = item.icon;
@@ -92,22 +108,23 @@ function AdminShell() {
                 className={({ isActive }) =>
                   isActive ? "admin-nav-link active" : "admin-nav-link"
                 }
+                title={!sidebarExpanded ? item.label : undefined}
               >
                 <Icon aria-hidden="true" />
-                <span>{item.label}</span>
+                {sidebarExpanded && <span>{item.label}</span>}
               </NavLink>
             );
           })}
         </nav>
 
         <div className="admin-sidebar-actions">
-          <Link className="admin-back-link" to="/">
-            <Home aria-hidden="true" />
-            Back to site
+          <Link className="admin-logout-button" to="/admin/settings" title={!sidebarExpanded ? "Settings" : undefined}>
+            <Settings aria-hidden="true" />
+            {sidebarExpanded && "Settings"}
           </Link>
-          <button type="button" className="admin-logout-button" onClick={handleLogout}>
+          <button type="button" className="admin-logout-button" onClick={handleLogout} title={!sidebarExpanded ? "Log out" : undefined}>
             <LogOut aria-hidden="true" />
-            Log out
+            {sidebarExpanded && "Log out"}
           </button>
         </div>
       </aside>
