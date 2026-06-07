@@ -370,6 +370,12 @@ export function GuidedSessionSetupPage() {
         <div className={sessionResult?.error ? "result-panel error" : "result-panel"} role="status">
           <h2>{sessionResult?.error ? copy.setupPage.sessionErrorTitle : copy.setupPage.sessionReadyTitle}</h2>
           <p>{statusMessage}</p>
+          {sessionResult && !sessionResult.error ? (
+            <p className={sessionResult.warning || sessionResult.source === "local" ? "data-source-note warning" : "data-source-note"}>
+              Data source: {formatSessionSource(sessionResult.source)}
+              {sessionResult.warning ? ". " + sessionResult.warning : ""}
+            </p>
+          ) : null}
           {sessionResult?.data?.participantCode && <p>{copy.shared.sessionCode}: {sessionResult.data.participantCode}</p>}
           {sessionResult?.data?.id && (
             <Link className="button primary-button result-action" to={`/guided-session/${sessionResult.data.id}`}>
@@ -429,6 +435,11 @@ function isEligibleForStudy(participantProfile, eligibility) {
   const englishEligible = participantProfile.englishAbility === "can_understand" ||
     participantProfile.englishAbility === "comfortable_commands";
   return ageEligible && englishEligible && Object.values(eligibility).every(Boolean);
+}
+
+
+function formatSessionSource(source) {
+  return source === "firebase" ? "Firebase" : "this device";
 }
 
 

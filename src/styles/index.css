@@ -1048,6 +1048,11 @@ button:disabled {
   color: #a3402e;
 }
 
+.data-source-note.warning {
+  background: rgba(245, 158, 11, 0.14);
+  color: #8a4f08;
+}
+
 .tutorial-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
