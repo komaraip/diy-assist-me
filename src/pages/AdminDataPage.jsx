@@ -107,7 +107,7 @@ function DataDashboard({ activeTab }) {
       )}
       
       {activeTab === "logs" && (
-        <InteractionLogViewer logs={adminData.interactionLogs || []} />
+        <InteractionLogViewer logs={exportEligibleAdminData.interactionLogs || []} />
       )}
       
       {activeTab === "analysis" && (

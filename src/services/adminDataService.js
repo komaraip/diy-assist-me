@@ -76,13 +76,16 @@ export function buildSessionBundles(data = {}) {
 }
 
 export function buildExportEligibleAdminData(data = {}) {
-  const excludedIds = getExcludedSessionIds(data);
-  if (!excludedIds.size) return normalizeAdminDataCollections(data);
-
   const normalizedData = normalizeAdminDataCollections(data);
+  const excludedIds = getExcludedSessionIds(normalizedData);
+  if (!excludedIds.size) return normalizedData;
+
+  const eligibleSessions = normalizedData.sessions.filter((session) => !excludedIds.has(session.id));
+
   return {
     ...normalizedData,
-    sessions: normalizedData.sessions.filter((session) => !excludedIds.has(session.id)),
+    participants: filterParticipantsBySessions(normalizedData.participants, eligibleSessions),
+    sessions: eligibleSessions,
     taskTrials: filterSessionChildRecords(normalizedData.taskTrials, excludedIds),
     interactionLogs: filterSessionChildRecords(normalizedData.interactionLogs, excludedIds),
     susResponses: filterSessionChildRecords(normalizedData.susResponses, excludedIds),
@@ -131,14 +134,42 @@ function normalizeAdminDataCollections(data = {}) {
 function getExcludedSessionIds(data = {}) {
   return new Set(
     (data.sessions || [])
-      .filter((session) => session.excludeFromExport === true)
+      .filter(isSessionExcluded)
       .map((session) => session.id)
       .filter(Boolean)
   );
 }
 
+export function isSessionExcluded(session = {}) {
+  const value = session.excludeFromExport;
+  if (value === true) return true;
+  if (typeof value === "string") {
+    return ["true", "yes", "1", "excluded"].includes(value.trim().toLowerCase());
+  }
+  return value === 1;
+}
+
 function filterSessionChildRecords(records = [], excludedIds = new Set()) {
   return records.filter((record) => !excludedIds.has(record.sessionId));
+}
+
+function filterParticipantsBySessions(participants = [], sessions = []) {
+  const eligibleParticipantIds = new Set(
+    sessions
+      .map((session) => session.participantId)
+      .filter(Boolean)
+  );
+  const eligibleParticipantCodes = new Set(
+    sessions
+      .map((session) => session.participantCode)
+      .filter(Boolean)
+  );
+
+  return participants.filter((participant) =>
+    eligibleParticipantIds.has(participant.id) ||
+    eligibleParticipantIds.has(participant.participantId) ||
+    eligibleParticipantCodes.has(participant.participantCode)
+  );
 }
 
 function countSessionParticipants(sessions = []) {

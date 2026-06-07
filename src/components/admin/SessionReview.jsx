@@ -1,6 +1,6 @@
 import { Check, ClipboardList, Eye, Pencil, Trash2, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { buildSessionBundles, createAdminRecord, deleteSessionBundle, updateAdminRecord, updateSessionMeta } from "../../services/adminDataService.js";
+import { buildSessionBundles, createAdminRecord, deleteSessionBundle, isSessionExcluded, updateAdminRecord, updateSessionMeta } from "../../services/adminDataService.js";
 
 const SESSION_PAGE_SIZE = 10;
 
@@ -166,17 +166,17 @@ export function SessionReview({ adminData, dataSource = "" }) {
                           </div>
                           <label
                             className="exclude-toggle-label compact"
-                            title="Toggle exclusion from exports"
+                            title="Toggle exclusion from analysis and exports"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <input
                               type="checkbox"
-                              checked={!!session.excludeFromExport}
+                              checked={isSessionExcluded(session)}
                               onChange={(e) => {
                                 e.stopPropagation();
-                                handleToggleExclude(session.id, !!session.excludeFromExport);
+                                handleToggleExclude(session.id, isSessionExcluded(session));
                               }}
-                              aria-label={`Exclude ${getParticipantDisplayName(session)} from exports`}
+                              aria-label={`Exclude ${getParticipantDisplayName(session)} from analysis and exports`}
                             />
                           </label>
                         </div>
@@ -218,8 +218,8 @@ function SessionDetail({ session, dataSource, onSaveEdit }) {
         </div>
         <div className="session-detail-header-actions">
           <span className="status-badge">{getSessionStatus(session)}</span>
-          {session.excludeFromExport && (
-            <span className="exclude-badge">Excluded from export</span>
+          {isSessionExcluded(session) && (
+            <span className="exclude-badge">Excluded from analysis and exports</span>
           )}
           <button
             type="button"
@@ -508,7 +508,7 @@ function SessionEditForm({ session, onSave, onCancel }) {
     observerNotes: stringifyJson(session.observerNotes || []),
     interactionLogs: stringifyJson(session.interactionLogs || []),
   }));
-  const [excludeFromExport, setExcludeFromExport] = useState(!!session.excludeFromExport);
+  const [excludeFromExport, setExcludeFromExport] = useState(isSessionExcluded(session));
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
@@ -674,7 +674,7 @@ function SessionEditForm({ session, onSave, onCancel }) {
             checked={excludeFromExport}
             onChange={(e) => setExcludeFromExport(e.target.checked)}
           />
-          Exclude this session from all exports
+          Exclude this session from analysis and exports
         </label>
       </div>
 

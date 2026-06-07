@@ -1,5 +1,6 @@
 import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
+import { isSessionExcluded } from "./adminDataService.js";
 import { createLocalRecord, getLocalRecord, listLocalRecords, updateLocalRecord } from "./localStore.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 import { DEFAULT_STUDY_LANGUAGE, getStudyCopy, normalizeStudyLanguage } from "../config/guidedSessionContent.js";
@@ -165,7 +166,7 @@ export async function getSessionBalanceSummary() {
   const source = isFirebaseEnabled && db ? "firebase" : "local";
 
   const summarize = (sessions) => {
-    const activeSessions = (sessions || []).filter((session) => session.excludeFromExport !== true);
+    const activeSessions = (sessions || []).filter((session) => !isSessionExcluded(session));
     const countBy = (field, value) => activeSessions.filter((session) => session[field] === value).length;
     const balanceCells = [
       { sequenceAssignment: "AB", tutorialRotation: "rotation_a" },
