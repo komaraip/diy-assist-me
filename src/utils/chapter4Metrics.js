@@ -997,8 +997,10 @@ function summarizeTaskSuccessByModality(records) {
 }
 
 function summarizeSusByModality(records) {
+  const uniqueRecords = getLatestUniqueSusResponses(records);
+
   return Object.fromEntries(
-    Object.entries(groupBy(records, "modality")).map(([modality, items]) => {
+    Object.entries(groupBy(uniqueRecords, "modality")).map(([modality, items]) => {
       const scores = items
         .map((item) => Number(item.susScore))
         .filter((value) => Number.isFinite(value));
@@ -1014,6 +1016,31 @@ function summarizeSusByModality(records) {
       ];
     })
   );
+}
+
+function getLatestUniqueSusResponses(records = []) {
+  const latestByKey = new Map();
+
+  records.forEach((record) => {
+    const key = getSusResponseKey(record);
+    const current = latestByKey.get(key);
+    if (!current || getSusResponseTime(record) >= getSusResponseTime(current)) {
+      latestByKey.set(key, record);
+    }
+  });
+
+  return Array.from(latestByKey.values());
+}
+
+function getSusResponseKey(record = {}) {
+  const sessionKey = record.sessionId || record.participantId || record.participantCode || "unknown-session";
+  const conditionKey = record.conditionId || record.conditionOrder || "unknown-condition";
+  return [sessionKey, conditionKey, record.modality || "unknown-modality"].join("|");
+}
+
+function getSusResponseTime(record = {}) {
+  const value = new Date(record.timestamp || record.createdAt || 0).getTime();
+  return Number.isFinite(value) ? value : 0;
 }
 
 function summarizePairedDifferences(rows) {

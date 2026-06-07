@@ -20,7 +20,7 @@ export function MetricsSummary({ adminData }) {
       ],
     },
     {
-      label: "RQ1 SUS responses",
+      label: "RQ1 unique SUS responses",
       value: Object.values(rq1.susByModality).reduce((total, summary) => total + summary.count, 0),
       status: "Per modality",
       tone: "neutral",
@@ -115,7 +115,7 @@ function formatSusDetails(byModality) {
   const entries = Object.entries(byModality || {});
   if (!entries.length) return ["No SUS scores yet"];
   return entries.map(([modality, summary]) =>
-    `${formatAnalysisLabel(modality)}: ${summary.averageSusScore ?? "n/a"} average from ${summary.count} response${summary.count === 1 ? "" : "s"}`,
+    `${formatAnalysisLabel(modality)}: ${summary.averageSusScore ?? "n/a"} average from ${summary.count} unique response${summary.count === 1 ? "" : "s"}`,
   );
 }
 
