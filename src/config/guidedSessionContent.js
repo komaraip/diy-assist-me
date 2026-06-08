@@ -240,6 +240,7 @@ const en = {
       `Target keyword: ${targetKeyword || "not set"}. Target step: ${targetStep || "not set"}. Success criteria: ${successCriteria}`,
     startedStatus: "Task started. Follow the tutorial below.",
     finishedStatus: "Task finished. You can return to the guided session.",
+    practiceResetStatus: "Practice task reset. Start it again when you are ready.",
     completedTitle: "Task completed",
     startTutorialTitle: "Start the task to open the tutorial",
     startTutorialDescription: "The tutorial will appear here after the task starts.",

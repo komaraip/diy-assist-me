@@ -34,10 +34,13 @@ export function TutorialDetailPage({
   taskTrial = null,
   isStarting = false,
   isCompleting = false,
+  isResettingPractice = false,
   onStart = null,
   onComplete = null,
+  onResetPracticeTask = null,
   requiredActionStatus = null,
   taskScript = [],
+  onInteractionLogged = null,
 }) {
   const { tutorialId: routeTutorialId } = useParams();
   const tutorialId = tutorialIdOverride || routeTutorialId;
@@ -196,6 +199,10 @@ export function TutorialDetailPage({
         ...voiceTouchMetadata,
         ...(details.metadata || {}),
       },
+    }).then((result) => {
+      if (!result?.error && result?.data) {
+        onInteractionLogged?.(result.data);
+      }
     });
   }
 
@@ -713,9 +720,15 @@ export function TutorialDetailPage({
     getStepIndex: () => activeStepIndex,
     onCommand: executeVoiceCommand,
     onVoiceFailure: (failure) => {
+      if (failure?.log) {
+        onInteractionLogged?.(failure.log);
+      }
       lastVoiceFailureRef.current = failure;
     },
-    onVoiceSuccess: () => {
+    onVoiceSuccess: (success) => {
+      if (success?.log) {
+        onInteractionLogged?.(success.log);
+      }
       lastVoiceFailureRef.current = null;
     },
   });
@@ -830,6 +843,17 @@ export function TutorialDetailPage({
                   <p style={{ fontSize: "0.88rem", color: "var(--muted)", maxWidth: "300px", margin: 0, lineHeight: 1.45 }}>
                     You have successfully completed this task.
                   </p>
+                  {task?.trialType === "practice" && onResetPracticeTask ? (
+                    <button
+                      type="button"
+                      className="button secondary-action"
+                      onClick={onResetPracticeTask}
+                      disabled={isResettingPractice}
+                      style={{ marginTop: "0.5rem" }}
+                    >
+                      {isResettingPractice ? "Resetting practice..." : "Repeat practice task"}
+                    </button>
+                  ) : null}
                 </section>
               ) : (
                 <div className="tutorial-embedded-cards" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>

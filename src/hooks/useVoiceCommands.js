@@ -103,6 +103,7 @@ export function useVoiceCommands({
       });
       onVoiceFailureRef.current?.({
         eventId: logResult.data?.id || "",
+        log: logResult.data || null,
         eventType: recognitionErrorCode === "unsupported-browser" ? "voice_unsupported" : "voice_recognition_error",
         timestamp: Date.now(),
         failureReason: message,
@@ -162,6 +163,7 @@ export function useVoiceCommands({
         });
         onVoiceFailureRef.current?.({
           eventId: logResult.data?.id || "",
+          log: logResult.data || null,
           eventType: "voice_no_match",
           timestamp: Date.now(),
           failureReason: "no_matching_intent",
@@ -225,6 +227,7 @@ export function useVoiceCommands({
         lastFailureRef.current = null;
         onVoiceSuccessRef.current?.({
           eventId: logResult.data?.id || "",
+          log: logResult.data || null,
           eventType: dispatchResult?.eventType || "voice_command",
           timestamp: Date.now(),
         });
@@ -236,6 +239,7 @@ export function useVoiceCommands({
         };
         onVoiceFailureRef.current?.({
           eventId: logResult.data?.id || "",
+          log: logResult.data || null,
           eventType: dispatchResult?.eventType || "voice_command_failed",
           timestamp: Date.now(),
           failureReason: dispatchResult?.failureReason || null,

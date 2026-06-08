@@ -4,8 +4,8 @@ import { Link, useParams } from "react-router-dom";
 import { TaskTrialControls } from "../components/guided-session/TaskTrialControls.jsx";
 import { TutorialDetailPage } from "./TutorialDetailPage.jsx";
 import { getStudySession } from "../services/studyService.js";
-import { listInteractionLogsBySession, logTouchInteraction, logVoiceInteraction } from "../services/logService.js";
-import { completeTaskTrial, listTaskTrialsBySession, startTaskTrial } from "../services/taskTrialService.js";
+import { deleteInteractionLogsForTask, listInteractionLogsBySession, logTouchInteraction, logVoiceInteraction } from "../services/logService.js";
+import { completeTaskTrial, deleteTaskTrial, listTaskTrialsBySession, startTaskTrial } from "../services/taskTrialService.js";
 import { findStudyTask } from "../utils/studyAssignments.js";
 import { buildStudyLogContext } from "../utils/studyContext.js";
 import { getRequiredActionCoverage } from "../utils/chapter4Metrics.js";
@@ -21,6 +21,7 @@ export function GuidedSessionTaskPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isResettingPractice, setIsResettingPractice] = useState(false);
   const tutorialOpenLogRef = useRef(new Set());
   const language = normalizeStudyLanguage(session?.language);
   const copy = getStudyCopy(language);
@@ -76,6 +77,11 @@ export function GuidedSessionTaskPage() {
     });
   }, [activeTrial, interactionLogs, session, task]);
 
+  function handleInteractionLogged(logRecord) {
+    if (!logRecord) return;
+    setInteractionLogs((current) => upsertInteractionLog(current, logRecord));
+  }
+
   useEffect(() => {
     if (!activeTrial || activeTrial.endedAt) return undefined;
 
@@ -117,6 +123,10 @@ export function GuidedSessionTaskPage() {
         taskTrialId: activeTrial.id,
         source: "guided_task_render",
       },
+    }).then((result) => {
+      if (!result?.error && result?.data) {
+        handleInteractionLogged(result.data);
+      }
     });
   }, [activeTrial, session, task]);
 
@@ -172,6 +182,52 @@ export function GuidedSessionTaskPage() {
       setTaskTrials((current) => current.map((trial) => (trial.id === result.data.id ? result.data : trial)));
     }
     setIsCompleting(false);
+  }
+
+  async function handleResetPracticeTask() {
+    if (!session || !task || task.trialType !== "practice") return;
+
+    const practiceTrials = taskTrials.filter((trial) =>
+      trial.id &&
+      trial.sessionId === session.id &&
+      trial.taskId === task.id &&
+      trial.trialType === "practice"
+    );
+
+    if (!practiceTrials.length) return;
+
+    setIsResettingPractice(true);
+    setStatusMessage("");
+
+    const logsResult = await deleteInteractionLogsForTask({
+      sessionId: session.id,
+      taskId: task.id,
+      trialType: "practice",
+    });
+
+    if (logsResult.error) {
+      setStatusMessage(logsResult.error);
+      setIsResettingPractice(false);
+      return;
+    }
+
+    for (const trial of practiceTrials) {
+      const result = await deleteTaskTrial(trial.id);
+      if (result.error) {
+        setStatusMessage(result.error);
+        setIsResettingPractice(false);
+        return;
+      }
+    }
+
+    const deletedTrialIds = new Set(practiceTrials.map((trial) => trial.id));
+    setTaskTrials((current) => current.filter((trial) => !deletedTrialIds.has(trial.id)));
+    setInteractionLogs((current) => current.filter((log) =>
+      !(log.sessionId === session.id && log.taskId === task.id && log.trialType === "practice")
+    ));
+    practiceTrials.forEach((trial) => tutorialOpenLogRef.current.delete(trial.id));
+    setStatusMessage(copy.taskPage.practiceResetStatus);
+    setIsResettingPractice(false);
   }
 
   if (isLoading) {
@@ -252,8 +308,10 @@ export function GuidedSessionTaskPage() {
               taskTrial={activeTrial}
               isStarting={isStarting}
               isCompleting={isCompleting}
+              isResettingPractice={isResettingPractice}
               onStart={handleStartTrial}
               onComplete={handleCompleteTrial}
+              onResetPracticeTask={handleResetPracticeTask}
               requiredActionStatus={requiredActionStatus}
               taskScript={(() => {
                 const isPractice = task.trialType === "practice";
@@ -265,6 +323,7 @@ export function GuidedSessionTaskPage() {
                       : copy.tasks.touchMeasuredScript({ targetKeyword: task.targetKeyword, targetStep: task.targetStep })
                     );
               })()}
+              onInteractionLogged={handleInteractionLogged}
             />
           </div>
         </div>
@@ -307,4 +366,14 @@ function findLatestTrial(taskTrials, taskId) {
   return [...taskTrials]
     .filter((trial) => trial.taskId === taskId)
     .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())[0] || null;
+}
+
+function upsertInteractionLog(logs, nextLog) {
+  const logId = nextLog?.id;
+  if (!logId) return [...logs, nextLog];
+
+  const existingIndex = logs.findIndex((log) => log.id === logId);
+  if (existingIndex < 0) return [...logs, nextLog];
+
+  return logs.map((log, index) => (index === existingIndex ? nextLog : log));
 }

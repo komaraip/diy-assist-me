@@ -1,6 +1,6 @@
-import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
-import { createLocalRecord, listLocalRecords, updateLocalRecord } from "./localStore.js";
+import { createLocalRecord, deleteLocalRecord, listLocalRecords, updateLocalRecord } from "./localStore.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 
 const LOCAL_CONFIG_WARNING = "Task was saved on this device.";
@@ -163,6 +163,27 @@ export async function listTaskTrialsBySession(sessionId) {
     const localResult = listLocalRecords("taskTrials");
     const taskTrials = (localResult.data || []).filter((trial) => trial.sessionId === sessionId);
     return serviceSuccess(taskTrials, "local", FIREBASE_READ_FALLBACK_WARNING);
+  }
+}
+
+export async function deleteTaskTrial(taskTrialId) {
+  const source = isFirebaseEnabled && db ? "firebase" : "local";
+
+  if (!taskTrialId) {
+    return serviceFailure("Task trial id is required.", source);
+  }
+
+  if (!isFirebaseEnabled || !db) {
+    const localResult = deleteLocalRecord("taskTrials", taskTrialId);
+    if (localResult.error) return localResult;
+    return serviceSuccess(localResult.data, "local", LOCAL_CONFIG_WARNING);
+  }
+
+  try {
+    await deleteDoc(doc(db, "taskTrials", taskTrialId));
+    return serviceSuccess({ id: taskTrialId }, "firebase");
+  } catch (error) {
+    return serviceFailure(`Failed to delete task trial: ${error?.message || error}`, "firebase");
   }
 }
 

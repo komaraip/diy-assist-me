@@ -1,6 +1,6 @@
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, query, where } from "firebase/firestore";
 import { db, isFirebaseEnabled } from "./firebase.js";
-import { createLocalRecord, listLocalRecords } from "./localStore.js";
+import { createLocalRecord, deleteLocalRecord, listLocalRecords } from "./localStore.js";
 import { serviceFailure, serviceSuccess } from "../utils/serviceResult.js";
 
 const LOCAL_CONFIG_WARNING = "Interaction was saved on this device.";
@@ -50,6 +50,37 @@ export async function listInteractionLogsBySession(sessionId) {
       "local",
       FIREBASE_FALLBACK_WARNING
     );
+  }
+}
+
+export async function deleteInteractionLogsForTask({ sessionId, taskId, trialType } = {}) {
+  const source = isFirebaseEnabled && db ? "firebase" : "local";
+
+  if (!sessionId || !taskId || !trialType) {
+    return serviceFailure("Session, task, and trial type are required to delete interaction logs.", source);
+  }
+
+  const matchesTask = (log) =>
+    log.sessionId === sessionId &&
+    log.taskId === taskId &&
+    log.trialType === trialType;
+
+  if (!isFirebaseEnabled || !db) {
+    const logs = listLocalRecords("interactionLogs").data || [];
+    const matchingLogs = logs.filter(matchesTask);
+    matchingLogs.forEach((log) => {
+      if (log.id) deleteLocalRecord("interactionLogs", log.id);
+    });
+    return serviceSuccess({ deletedCount: matchingLogs.length }, "local", LOCAL_CONFIG_WARNING);
+  }
+
+  try {
+    const snapshot = await getDocs(query(collection(db, "interactionLogs"), where("sessionId", "==", sessionId)));
+    const matchingDocs = snapshot.docs.filter((logDoc) => matchesTask({ id: logDoc.id, ...logDoc.data() }));
+    await Promise.all(matchingDocs.map((logDoc) => deleteDoc(doc(db, "interactionLogs", logDoc.id))));
+    return serviceSuccess({ deletedCount: matchingDocs.length }, "firebase");
+  } catch (error) {
+    return serviceFailure(`Failed to delete interaction logs: ${error?.message || error}`, source);
   }
 }
 
