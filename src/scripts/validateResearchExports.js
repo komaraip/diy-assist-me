@@ -142,6 +142,25 @@ function readJSON(filePath) {
   return JSON.parse(content);
 }
 
+function hasMeaningfulValue(value) {
+  return value !== undefined && value !== null && String(value).trim() !== '';
+}
+
+function isTruthyValue(value) {
+  return value === true || String(value).trim().toLowerCase() === 'true' || String(value).trim() === '1';
+}
+
+function hasRecoveryEvidence(log) {
+  return (
+    hasMeaningfulValue(log.recoveryType) ||
+    hasMeaningfulValue(log.recoveryAttemptType) ||
+    isTruthyValue(log.isRecoveryAttempt) ||
+    isTruthyValue(log.fallbackUsed) ||
+    hasMeaningfulValue(log.previousVoiceFailureEventId) ||
+    hasMeaningfulValue(log.failureReason)
+  );
+}
+
 /**
  * Validate file existence
  */
@@ -363,6 +382,8 @@ function validateRQ2Metrics() {
   
   try {
     const { rows: voiceLogs } = readCSV(EXPORT_FILES.voice_logs.path);
+    const summaryMetrics = readJSON(EXPORT_FILES.chapter4_summary_metrics.path);
+    const summaryRecoveryEffort = summaryMetrics.researchQuestions?.RQ2?.metrics?.recoveryEffort;
     
     // Recognition accuracy
     const logsWithRecognition = voiceLogs.filter(log => log.recognized !== undefined);
@@ -372,9 +393,15 @@ function validateRQ2Metrics() {
     const logsWithSuccess = voiceLogs.filter(log => log.commandSuccess !== undefined);
     const hasCommandSuccess = logsWithSuccess.length > 0;
     
-    // Recovery effort (fallback actions, repeated commands)
-    const logsWithFallback = voiceLogs.filter(log => log.fallbackAction !== undefined);
-    const hasRecoveryData = logsWithFallback.length > 0;
+    // Recovery effort (fallback actions, repeated/rephrased commands)
+    const logsWithRecoveryEvidence = voiceLogs.filter(hasRecoveryEvidence);
+    const summaryRecoveryCount = Number(summaryRecoveryEffort?.totalCount);
+    const hasSummaryRecoveryData = Number.isFinite(summaryRecoveryCount);
+    const recoveryEffortCount = hasSummaryRecoveryData ? summaryRecoveryCount : logsWithRecoveryEvidence.length;
+    const recoveryEffortSource = hasSummaryRecoveryData
+      ? EXPORT_FILES.chapter4_summary_metrics.path
+      : EXPORT_FILES.voice_logs.path;
+    const hasRecoveryData = hasSummaryRecoveryData || logsWithRecoveryEvidence.length > 0;
     
     validationReport.metrics.RQ2 = {
       recognitionAccuracy: {
@@ -389,16 +416,17 @@ function validateRQ2Metrics() {
       },
       recoveryEffort: {
         present: hasRecoveryData,
-        count: logsWithFallback.length,
-        required: true
+        count: recoveryEffortCount,
+        required: true,
+        source: recoveryEffortSource
       }
     };
     
-    console.log(`${hasRecognitionData ? '✓' : '❌'} Recognition accuracy: ${logsWithRecognition.length} records`);
-    console.log(`${hasCommandSuccess ? '✓' : '❌'} Command success rate: ${logsWithSuccess.length} records`);
-    console.log(`${hasRecoveryData ? '✓' : '⚠️ '} Recovery effort: ${logsWithFallback.length} records`);
+    console.log(`${hasRecognitionData ? '[OK]' : '[MISSING]'} Recognition accuracy: ${logsWithRecognition.length} records`);
+    console.log(`${hasCommandSuccess ? '[OK]' : '[MISSING]'} Command success rate: ${logsWithSuccess.length} records`);
+    console.log(`${hasRecoveryData ? '[OK]' : '[MISSING]'} Recovery effort: ${recoveryEffortCount} records`);
     
-    if (!hasRecognitionData || !hasCommandSuccess) {
+    if (!hasRecognitionData || !hasCommandSuccess || !hasRecoveryData) {
       validationReport.issues.push({
         severity: 'critical',
         category: 'RQ2',
