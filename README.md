@@ -32,9 +32,8 @@ The study focuses on situational impairment contexts where the participant's han
 | Prototype source | `src/` | React/Vite implementation of tutorial browsing, guided study flow, admin review, and exports. |
 | Curated tutorial dataset | [data.json](data.json) | Machine-readable fallback and seed copy for the 12 curated tutorial tasks. |
 | Dataset documentation | [DATA.md](DATA.md) | Public source URLs, guided-session core tutorial list, and the embedded JSON snapshot used for traceability. |
-| Exported thesis data | `docs/export_data/` | CSV/JSON exports used for Chapter 4 analysis and validation. |
 | Analysis utilities | `src/utils/chapter4Metrics.js`, `src/utils/analysisDisplay.js`, `src/scripts/validateResearchExports.js` | Metrics, evidence mapping, and export validation logic. |
-| Local run instructions | `SETUP.md` | Separate technical guide for installing, configuring, and running the app. |
+| Local instructions | `SETUP.md` | Separate technical guide for installing, configuring, and running the app. |
 
 ## Prototype Scope
 
@@ -114,6 +113,4 @@ The CSV exports are intended for thesis/paper analysis and use participant codes
 
 ## Local Execution
 
-Readers who want to run the prototype can use the separate local guide:
-
-[SETUP.md](SETUP.md)
+Readers who want to run the prototype can use the separate local guide: [SETUP.md](SETUP.md)
