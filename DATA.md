@@ -1,6 +1,6 @@
 # Curated Source List for Thesis DIY Dataset
 
-`data_sources.md` is the current source list for `data.json`. The guided session core set is:
+`DATA.md` is the current source list for `data.json`. The guided session core set is:
 
 - `tutorial_001` core practice A: No-Heat Overnight Oats Bowl
 - `tutorial_002` core measured A: Microwave Egg and Cheese Wrap
