@@ -715,7 +715,7 @@ export function TutorialDetailPage({
     taskId: studyContext?.taskId || null,
     trialType: studyContext?.trialType || null,
     taskStartedAt: studyContext?.startedAt || null,
-    enabled: voiceControlsEnabled && !!taskTrial && !taskTrial.endedAt,
+    enabled: voiceControlsEnabled && (!embedded || (!!taskTrial && !taskTrial.endedAt)),
     language: normalizedLanguage,
     getStepIndex: () => activeStepIndex,
     onCommand: executeVoiceCommand,
@@ -1095,7 +1095,7 @@ export function TutorialDetailPage({
                           Tutorial Locked
                         </h3>
                         <p style={{ fontSize: "0.88rem", color: "var(--muted)", maxWidth: "300px", margin: 0, lineHeight: 1.45 }}>
-                          Click the "Start Task" button on the right of the tools card to unlock and start the tutorial steps.
+                          Click the "Start Task" button to unlock and start the tutorial steps.
                         </p>
                       </>
                     ) : (
