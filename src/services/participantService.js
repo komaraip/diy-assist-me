@@ -110,7 +110,9 @@ async function getNextFirebaseParticipantCode() {
     const snapshot = await getDocs(collection(db, "participants"));
     return formatParticipantCode(snapshot.size + 1);
   } catch {
-    return `P${Date.now().toString().slice(-6)}`;
+    const localParticipants = listLocalRecords("participants").data || [];
+    const fallbackNumber = localParticipants.length + 1;
+    return formatParticipantCode(fallbackNumber);
   }
 }
 

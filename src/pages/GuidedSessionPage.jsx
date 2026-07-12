@@ -1,5 +1,5 @@
 import { ArrowLeft, ClipboardList, FileText, Lock, MessageSquareText } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { InfoPopover } from "../components/guided-session/InfoPopover.jsx";
 import { listTaskTrialsBySession } from "../services/taskTrialService.js";
@@ -19,6 +19,30 @@ export function GuidedSessionPage() {
 
   const language = normalizeStudyLanguage(session?.language);
   const copy = getStudyCopy(language);
+
+  const refreshSessionData = useCallback(async (showLoading = false) => {
+    let isMounted = true;
+    if (showLoading) setIsLoading(true);
+
+    const [sessionResult, trialsResult, susResult] = await Promise.all([
+      getStudySession(sessionId),
+      listTaskTrialsBySession(sessionId),
+      listSusResponsesBySession(sessionId),
+    ]);
+
+    if (!isMounted) return;
+    setSession(sessionResult.data);
+    setTaskTrials(trialsResult.data || []);
+    setSusResponses(susResult.data || []);
+    setResultMeta({
+      source: sessionResult.source,
+      warning: [sessionResult.warning, trialsResult.warning, susResult.warning].filter(Boolean).join(" ") || null,
+      error: sessionResult.error,
+    });
+    if (showLoading) setIsLoading(false);
+
+    return () => { isMounted = false; };
+  }, [sessionId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -48,6 +72,26 @@ export function GuidedSessionPage() {
       isMounted = false;
     };
   }, [sessionId]);
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        refreshSessionData(false);
+      }
+    }
+
+    function handleFocus() {
+      refreshSessionData(false);
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [refreshSessionData]);
 
   function isConditionComplete(condition) {
     const condTasks = condition.tasks || [];
